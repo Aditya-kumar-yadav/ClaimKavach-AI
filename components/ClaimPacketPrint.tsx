@@ -26,7 +26,7 @@ export const ClaimPacketPrint: React.FC<ClaimPacketPrintProps> = ({ claim, resul
         </div>
         <div className="text-right">
           <span className="text-[10px] font-mono text-slate-500 uppercase block">Evaluation Timestamp</span>
-          <span className="text-xs font-bold text-slate-900">{new Date(result.evaluatedAt).toLocaleString("en-IN")}</span>
+          <span className="text-xs font-bold text-slate-900" suppressHydrationWarning>{new Date(result.evaluatedAt).toLocaleString("en-IN")}</span>
         </div>
       </div>
 

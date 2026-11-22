@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractWithGemini } from "@/lib/gemini-ocr";
 
+// Allow up to 30 seconds for Gemini Multimodal OCR on slow connections
+export const maxDuration = 30;
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
