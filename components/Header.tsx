@@ -19,15 +19,15 @@ export const Header: React.FC<HeaderProps> = ({ language, setLanguage }) => {
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-xl tracking-tight text-slate-900">
+              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900">
                 ClaimKavach <span className="text-sky-600 font-black">AI</span>
               </span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold flex items-center gap-1">
+              <span className="hidden sm:inline-flex text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 PM-JAY & IRDAI Aligned
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="hidden xs:block text-[11px] sm:text-xs text-slate-500 font-medium truncate max-w-[200px] sm:max-w-none">
               {language === "hi"
                 ? "माइक्रो-इंश्योरेंस क्लेम प्री-एडजुडिकेशन एवं दस्तावेज़ अनुपालन प्रणाली"
                 : "Deterministic Pre-Adjudication & Compliance Engine for Bharat"}

@@ -27,7 +27,7 @@ Crucially, over **80% of these rejections are not caused by fraud**, but by prev
 
 **ClaimKavach AI** is a web-based micro-insurance pre-adjudication engine that catches these errors *before* claims are submitted to insurers:
 
-* 📄 **Multimodal OCR Ingestion:** Scans printed and handwritten hospital bills + discharge summaries (powered by Google Gemini 2.5 Flash Vision with zero-downtime offline fallbacks).
+* 📄 **Multimodal OCR Ingestion:** Scans printed and handwritten hospital bills + discharge summaries (powered by Google Gemini 3.5 Flash Lite Vision with client-side canvas compression and zero-downtime offline fallbacks).
 * ⚖️ **IRDAI 2024 Deterministic Compliance Engine:** Pure mathematical validation against IRDAI Lists I–IV, 60-Month Moratorium protections, statutory procedure waiting periods, and room-rent capping.
 * 🇮🇳 **Official NHA-ABDM / NHCX Integration (Digital Public Infrastructure):** Generates an official HL7 FHIR Release 4 Claim Bundle strictly adhering to **National Health Claims Exchange (NHCX)** and **Swasth Alliance HCX** specifications.
 * ⚡ **Interactive "Fix-It" Simulator:** Click "Mark as Fixed" on errors live on stage to see the score jump in real time from **28% RED → 64% YELLOW → 96% GREEN** with animated money saved counters!
@@ -72,7 +72,7 @@ Crucially, over **80% of these rejections are not caused by fraud**, but by prev
 ## 🚀 Quickstart & Local Installation
 
 ```bash
-git clone <YOUR_REPO_URL>
+git clone https://github.com/Aditya-kumar-yadav/ClaimKavach-AI.git
 cd claimkavach-ai
 npm install
 npm run dev

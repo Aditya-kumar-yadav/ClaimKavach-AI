@@ -109,13 +109,15 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalyze, isLoading, la
                 <span className="text-xs font-bold text-sky-700">
                   {language === "hi" ? "फोटो को कंप्रेस किया जा रहा है..." : "Compressing High-Res Photo for OCR..."}
                 </span>
-                <span className="text-[11px] text-slate-400 mt-0.5">Under Vercel 4.5 MB Limit</span>
+                <span className="text-[11px] text-slate-400 mt-0.5">
+                  {language === "hi" ? "Vercel 4.5 MB सीमा के भीतर" : "Under Vercel 4.5 MB Limit"}
+                </span>
               </div>
             ) : billImage ? (
               <div className="w-full h-32 rounded-xl overflow-hidden relative border border-slate-200 bg-white flex items-center justify-center">
                 <img src={billImage} alt="Bill Preview" className="object-contain h-full w-full" />
                 <span className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                  ✓ Uploaded
+                  {language === "hi" ? "✓ अपलोड हो गया" : "✓ Uploaded"}
                 </span>
                 {billStats && billStats.reductionPercentage > 0 && (
                   <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-xs text-emerald-300 text-[10px] px-2 py-0.5 rounded-md font-mono flex items-center gap-1">
@@ -158,13 +160,15 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalyze, isLoading, la
                 <span className="text-xs font-bold text-indigo-700">
                   {language === "hi" ? "फोटो को कंप्रेस किया जा रहा है..." : "Compressing High-Res Photo for OCR..."}
                 </span>
-                <span className="text-[11px] text-slate-400 mt-0.5">Under Vercel 4.5 MB Limit</span>
+                <span className="text-[11px] text-slate-400 mt-0.5">
+                  {language === "hi" ? "Vercel 4.5 MB सीमा के भीतर" : "Under Vercel 4.5 MB Limit"}
+                </span>
               </div>
             ) : summaryImage ? (
               <div className="w-full h-32 rounded-xl overflow-hidden relative border border-slate-200 bg-white flex items-center justify-center">
                 <img src={summaryImage} alt="Summary Preview" className="object-contain h-full w-full" />
                 <span className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                  ✓ Uploaded
+                  {language === "hi" ? "✓ अपलोड हो गया" : "✓ Uploaded"}
                 </span>
                 {summaryStats && summaryStats.reductionPercentage > 0 && (
                   <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-xs text-emerald-300 text-[10px] px-2 py-0.5 rounded-md font-mono flex items-center gap-1">

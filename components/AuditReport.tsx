@@ -189,20 +189,20 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">
-                Patient Dossier
+                {language === "hi" ? "मरीज विवरण" : "Patient Dossier"}
               </span>
               <span className="text-xs text-slate-500 font-mono">
-                Admit: {claim.billAdmitDate} → Discharge: {claim.billDischargeDate}
+                {language === "hi" ? "भर्ती" : "Admit"}: {claim.billAdmitDate} → {language === "hi" ? "छुट्टी" : "Discharge"}: {claim.billDischargeDate}
               </span>
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 font-semibold flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
-                NHCX FHIR R4 Ready
+                {language === "hi" ? "NHCX FHIR R4 मानक तैयार" : "NHCX FHIR R4 Ready"}
               </span>
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
-                Tenure: {claim.policyTenureMonths || 24} Months
+                {language === "hi" ? `पॉलिसी: ${claim.policyTenureMonths || 24} माह` : `Tenure: ${claim.policyTenureMonths || 24} Months`}
               </span>
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-semibold">
-                Sum Insured: ₹{(claim.policySumInsured || 500000).toLocaleString("en-IN")}
+                {language === "hi" ? `बीमा राशि: ₹${(claim.policySumInsured || 500000).toLocaleString("en-IN")}` : `Sum Insured: ₹${(claim.policySumInsured || 500000).toLocaleString("en-IN")}`}
               </span>
             </div>
 
@@ -215,7 +215,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
 
             <div className="flex flex-wrap items-center gap-2 mt-1">
               <p className="text-xs text-slate-500">
-                🩺 <strong className="text-slate-700">Diagnosis:</strong> {claim.diagnosis}
+                🩺 <strong className="text-slate-700">{language === "hi" ? "बीमारी:" : "Diagnosis:"}</strong> {claim.diagnosis}
               </p>
               {result.matchedICD10 && (
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold flex items-center gap-1">
@@ -277,7 +277,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             <div className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
               ₹{result.claimedTotal.toLocaleString("en-IN")}
             </div>
-            <span className="text-[11px] text-slate-400">From itemized hospital invoice</span>
+            <span className="text-[11px] text-slate-400">
+              {language === "hi" ? "अस्पताल के आइटमवार बिल से" : "From itemized hospital invoice"}
+            </span>
           </div>
 
           <div className="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200">
@@ -287,7 +289,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             <div className="text-xl sm:text-2xl font-black text-emerald-700 mt-1">
               ₹{result.payableAmount.toLocaleString("en-IN")}
             </div>
-            <span className="text-[11px] text-emerald-600 font-medium">Eligible for 100% insurer reimbursement</span>
+            <span className="text-[11px] text-emerald-600 font-medium">
+              {language === "hi" ? "100% बीमा क्लेम भुगतान हेतु योग्य" : "Eligible for 100% insurer reimbursement"}
+            </span>
           </div>
 
           <div className="p-4 rounded-xl bg-rose-50/80 border border-rose-200">
@@ -297,7 +301,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             <div className="text-xl sm:text-2xl font-black text-rose-700 mt-1">
               ₹{result.nonPayableAmount.toLocaleString("en-IN")}
             </div>
-            <span className="text-[11px] text-rose-600 font-medium">IRDAI Lists I-IV non-payable items</span>
+            <span className="text-[11px] text-rose-600 font-medium">
+              {language === "hi" ? "आईआरडीएआई सूचियां I-IV के तहत गैर-मान्य" : "IRDAI Lists I-IV non-payable items"}
+            </span>
           </div>
         </div>
       </div>
@@ -313,25 +319,25 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black uppercase text-sky-900 tracking-wider">
-                    Cashless Everywhere & PM-JAY Benchmark Sanity Check
+                    {language === "hi" ? "कैशलेस एवरीवेयर एवं पीएम-जय राष्ट्रीय मानक जांच" : "Cashless Everywhere & PM-JAY Benchmark Sanity Check"}
                   </span>
                   {result.pmjayBenchmark.isOverbilled && (
                     <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
-                      ⚠️ {result.pmjayBenchmark.ratio}x Above National Benchmark
+                      ⚠️ {result.pmjayBenchmark.ratio}x {language === "hi" ? "राष्ट्रीय मानक से अधिक" : "Above National Benchmark"}
                     </span>
                   )}
                 </div>
                 <h4 className="text-sm font-bold text-slate-900 mt-0.5">
-                  Procedure: {result.pmjayBenchmark.procedure}
+                  {language === "hi" ? "प्रक्रिया/ऑपरेशन:" : "Procedure:"} {result.pmjayBenchmark.procedure}
                 </h4>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  National PM-JAY / HBP Benchmark: <strong>₹{result.pmjayBenchmark.benchmarkRate.toLocaleString("en-IN")}</strong> | Hospital Billed: <strong>₹{result.pmjayBenchmark.hospitalBilled.toLocaleString("en-IN")}</strong>
+                  {language === "hi" ? "राष्ट्रीय पीएम-जय / HBP मानक दर:" : "National PM-JAY / HBP Benchmark:"} <strong>₹{result.pmjayBenchmark.benchmarkRate.toLocaleString("en-IN")}</strong> | {language === "hi" ? "अस्पताल बिल:" : "Hospital Billed:"} <strong>₹{result.pmjayBenchmark.hospitalBilled.toLocaleString("en-IN")}</strong>
                 </p>
               </div>
             </div>
 
             <div className="text-xs font-semibold text-sky-800 bg-white/80 px-3 py-1.5 rounded-lg border border-sky-200 shrink-0 self-start sm:self-auto">
-              ✓ Cashless Everywhere Eligible
+              {language === "hi" ? "✓ कैशलेस एवरीवेयर नियम अनुसार मान्य" : "✓ Cashless Everywhere Eligible"}
             </div>
           </div>
         </div>
@@ -386,16 +392,20 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
           </div>
 
           <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-bold self-start sm:self-auto">
-            {result.issues.length} {result.issues.length === 1 ? "Issue Flagged" : "Issues Flagged"}
+            {result.issues.length} {language === "hi" ? "कमियां मिलीं" : (result.issues.length === 1 ? "Issue Flagged" : "Issues Flagged")}
           </span>
         </div>
 
         {result.issues.length === 0 ? (
           <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center text-emerald-800">
             <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto mb-2" />
-            <h4 className="font-bold text-base">Zero Rejection Risks Detected</h4>
+            <h4 className="font-bold text-base">
+              {language === "hi" ? "शून्य अस्वीकृति जोखिम: क्लेम पूरी तरह सुरक्षित" : "Zero Rejection Risks Detected"}
+            </h4>
             <p className="text-xs text-emerald-600 mt-1">
-              All dates, doctor signatures, and IRDAI package items are 100% compliant.
+              {language === "hi"
+                ? "सभी तारीखें, डॉक्टर के हस्ताक्षर और आईआरडीएआई पैकेज 100% वैधानिक रूप से मान्य हैं।"
+                : "All dates, doctor signatures, and IRDAI package items are 100% compliant."}
             </p>
           </div>
         ) : (
@@ -447,10 +457,10 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                               : "bg-amber-200 text-amber-900"
                           }`}>
                             {isFixed 
-                              ? "✓ Corrected at Desk" 
+                              ? (language === "hi" ? "✓ काउंटर पर ठीक हुआ" : "✓ Corrected at Desk")
                               : issue.severity === "RED" 
-                              ? "Critical Rejection Risk" 
-                              : "Deduction Alert"}
+                              ? (language === "hi" ? "गंभीर अस्वीकृति जोखिम" : "Critical Rejection Risk") 
+                              : (language === "hi" ? "कटौती चेतावनी" : "Deduction Alert")}
                           </span>
                           <span className="text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200">
                             {issue.ruleRef}
@@ -475,13 +485,13 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                           onChange={() => toggleFixIssue(issue.id)}
                           className="h-4 w-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                         />
-                        <span>{isFixed ? "Fixed ✓" : "Mark as Fixed"}</span>
+                        <span>{isFixed ? (language === "hi" ? "ठीक किया गया ✓" : "Fixed ✓") : (language === "hi" ? "सुधार चिह्नित करें" : "Mark as Fixed")}</span>
                       </label>
 
                       <button
                         type="button"
                         onClick={() => toggleIssue(issue.id)}
-                        className="text-slate-400 p-1"
+                        className="text-slate-400 p-1 cursor-pointer"
                       >
                         {expandedIssues[issue.id] ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                       </button>
@@ -497,7 +507,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
 
                       {/* How to Fix Card */}
                       <div className="mt-3.5 p-3.5 rounded-xl bg-white border border-slate-200 flex items-start gap-2.5 shadow-xs">
-                        <span className="text-emerald-600 font-bold text-xs mt-0.5">💡 FIX:</span>
+                        <span className="text-emerald-600 font-bold text-xs mt-0.5">
+                          {language === "hi" ? "💡 समाधान:" : "💡 FIX:"}
+                        </span>
                         <p className="text-xs text-slate-800 font-medium leading-relaxed">
                           {language === "hi" ? issue.fixHi : issue.fixEn}
                         </p>
@@ -527,7 +539,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                             rel="noopener noreferrer"
                             className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
                           >
-                            <span>WhatsApp to Hospital</span>
+                            <span>{language === "hi" ? "व्हाट्सएप भेजें" : "WhatsApp to Hospital"}</span>
                           </a>
 
                           {/* Copy Request Letter Button */}
@@ -547,12 +559,12 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                             {copiedIssueId === issue.id ? (
                               <>
                                 <Check className="h-3.5 w-3.5 text-emerald-400" />
-                                <span>Copied Letter!</span>
+                                <span>{language === "hi" ? "कॉपी हो गया!" : "Copied Letter!"}</span>
                               </>
                             ) : (
                               <>
                                 <Copy className="h-3.5 w-3.5" />
-                                <span>Copy Letter</span>
+                                <span>{language === "hi" ? "पत्र कॉपी करें" : "Copy Letter"}</span>
                               </>
                             )}
                           </button>
@@ -583,7 +595,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             </h3>
           </div>
           <span className="text-xs font-semibold text-sky-700 flex items-center gap-1">
-            {showLineItems ? "Hide Line Items" : "View All Line Items"}
+            {showLineItems 
+              ? (language === "hi" ? "मदें छुपाएं" : "Hide Line Items") 
+              : (language === "hi" ? "सभी मदें देखें" : "View All Line Items")}
             {showLineItems ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </span>
         </button>
@@ -593,10 +607,10 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             <table className="w-full text-left text-xs text-slate-700">
               <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                 <tr>
-                  <th className="py-2.5 px-3">Item Name</th>
-                  <th className="py-2.5 px-3">Category</th>
-                  <th className="py-2.5 px-3 text-right">Amount (₹)</th>
-                  <th className="py-2.5 px-3 text-center">Status</th>
+                  <th className="py-2.5 px-3">{language === "hi" ? "मद का नाम" : "Item Name"}</th>
+                  <th className="py-2.5 px-3">{language === "hi" ? "श्रेणी" : "Category"}</th>
+                  <th className="py-2.5 px-3 text-right">{language === "hi" ? "राशि (₹)" : "Amount (₹)"}</th>
+                  <th className="py-2.5 px-3 text-center">{language === "hi" ? "स्थिति" : "Status"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -615,11 +629,11 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                     <td className="py-2.5 px-3 text-center">
                       {item.isNonPayable ? (
                         <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold">
-                          Deducted
+                          {language === "hi" ? "कटौती" : "Deducted"}
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                          Payable
+                          {language === "hi" ? "मान्य" : "Payable"}
                         </span>
                       )}
                     </td>
@@ -636,14 +650,18 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
         <div>
           <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
             <Hash className="h-4 w-4 text-sky-600" />
-            <span>SHA-256 Digest:</span>
+            <span>{language === "hi" ? "क्रिप्टोग्राफिक हैश (SHA-256):" : "SHA-256 Digest:"}</span>
             <span className="text-slate-800 font-semibold truncate max-w-[200px] sm:max-w-xs">
               {result.packetHash}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-            <span>Interoperable with <strong>NHA NHCX</strong>, <strong>ABDM HCX FHIR R4</strong> & <strong>IRDAI Bima Bharosa</strong></span>
+            <span>
+              {language === "hi"
+                ? "राष्ट्रीय स्वास्थ्य दावा एक्सचेंज (NHCX/ABDM) एवं बीमा भरोसा पोर्टल से संबद्ध"
+                : "Interoperable with NHA NHCX, ABDM HCX FHIR R4 & IRDAI Bima Bharosa"}
+            </span>
           </p>
         </div>
 
@@ -655,7 +673,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             className="flex-1 sm:flex-initial px-4 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
           >
             <Gavel className="h-4 w-4 text-amber-200" />
-            <span>Fight Back: Generate IRDAI Appeal</span>
+            <span>{language === "hi" ? "अपील दर्ज करें: IRDAI अपील पत्र बनाएं" : "Fight Back: Generate IRDAI Appeal"}</span>
           </button>
 
           {/* Export NHCX JSON Button */}
@@ -665,7 +683,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             className="flex-1 sm:flex-initial px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
           >
             <Code2 className="h-4 w-4 text-emerald-200" />
-            <span>Export NHCX FHIR JSON</span>
+            <span>{language === "hi" ? "NHCX FHIR JSON देखें" : "Export NHCX FHIR JSON"}</span>
           </button>
 
           {/* Print Dossier Button */}
@@ -675,7 +693,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             className="flex-1 sm:flex-initial px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
           >
             <Printer className="h-4 w-4 text-sky-400" />
-            <span>Print Claim Dossier</span>
+            <span>{language === "hi" ? "क्लेम डोजियर प्रिंट करें" : "Print Claim Dossier"}</span>
           </button>
         </div>
       </div>
@@ -693,14 +711,18 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-black text-sm sm:text-base text-white">
-                      IRDAI Formal Appeal & Ombudsman Escalation Dossier
+                      {language === "hi" 
+                        ? "आईआरडीएआई औपचारिक अपील एवं बीमा लोकपाल एस्केलेशन डोजियर"
+                        : "IRDAI Formal Appeal & Ombudsman Escalation Dossier"}
                     </h3>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">
-                      79% Win Rate
+                      {language === "hi" ? "79% सफलता दर" : "79% Win Rate"}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400">
-                    Mandatory 14-day GRO resolution window under IRDAI Regulations (May 2024 overhaul)
+                    {language === "hi"
+                      ? "आईआरडीएआई मास्टर सर्कुलर 2024 के तहत अनिवार्य 14-दिवसीय जीआरओ समाधान समय"
+                      : "Mandatory 14-day GRO resolution window under IRDAI Regulations (May 2024 overhaul)"}
                   </p>
                 </div>
               </div>
@@ -719,7 +741,11 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
               <div className="flex items-center gap-2 text-amber-200">
                 <Sparkles className="h-4 w-4 text-amber-400 shrink-0" />
                 <span>
-                  <strong>November 2026:</strong> IRDAI Grievance Resolution Month • <strong>41,055 complaints resolved</strong> in FY26 (79% decided in favor of policyholders).
+                  {language === "hi" ? (
+                    <><strong>नवंबर 2026:</strong> आईआरडीएआई शिकायत निवारण माह • <strong>41,055 शिकायतों का निपटारा</strong> (79% फैसले पॉलिसीधारकों के पक्ष में)।</>
+                  ) : (
+                    <><strong>November 2026:</strong> IRDAI Grievance Resolution Month • <strong>41,055 complaints resolved</strong> in FY26 (79% decided in favor of policyholders).</>
+                  )}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -729,7 +755,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                   className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   {copiedAppeal ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                  <span>{copiedAppeal ? "Copied!" : "Copy Letter"}</span>
+                  <span>{copiedAppeal ? (language === "hi" ? "कॉपी हो गया!" : "Copied!") : (language === "hi" ? "पत्र कॉपी करें" : "Copy Letter")}</span>
                 </button>
                 <button
                   type="button"
@@ -737,7 +763,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                   className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  <span>Download .txt</span>
+                  <span>{language === "hi" ? "डाउनलोड करें (.txt)" : "Download .txt"}</span>
                 </button>
               </div>
             </div>
@@ -745,13 +771,13 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             {/* 3-Step Escalation Pathway Display */}
             <div className="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/80">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                Statutory 3-Step Escalation Ladder
+                {language === "hi" ? "कानूनी 3-चरणीय एस्केलेशन सीढ़ी" : "Statutory 3-Step Escalation Ladder"}
               </span>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {appealPacket.escalationLadder.map(step => (
                   <div key={step.step} className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs">
                     <div className="flex items-center justify-between text-amber-400 font-bold mb-1">
-                      <span>Step {step.step}: {step.authority}</span>
+                      <span>{language === "hi" ? `चरण ${step.step}: ${step.authority}` : `Step ${step.step}: ${step.authority}`}</span>
                     </div>
                     <span className="text-[10px] font-mono text-slate-400 block mb-1">
                       ⏱️ {step.timeline}
@@ -771,7 +797,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
 
             {/* Modal Footer Note */}
             <div className="p-3 bg-slate-900 border-t border-slate-800 text-center text-[11px] text-slate-400">
-              ⚖️ This letter incorporates IRDAI Master Circular (May 2024) Para 13 statutory citations and triggers a mandatory 14-day regulatory timer for the insurer's GRO.
+              ⚖️ {language === "hi" 
+                ? "यह औपचारिक पत्र आईआरडीएआई मास्टर सर्कुलर 2024 पैरा 13 के नियमों को लागू करता है और बीमा कंपनी के जीआरओ के लिए 14-दिवसीय अनिवार्य समयसीमा शुरू करता है।"
+                : "This letter incorporates IRDAI Master Circular (May 2024) Para 13 statutory citations and triggers a mandatory 14-day regulatory timer for the insurer's GRO."}
             </div>
           </div>
         </div>
@@ -789,9 +817,11 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                 </div>
                 <div>
                   <h3 className="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                    NHA NHCX / ABDM Claim Bundle (FHIR Release 4)
+                    {language === "hi" 
+                      ? "राष्ट्रीय स्वास्थ्य दावा एक्सचेंज (NHCX/ABDM) क्लेम बंडल"
+                      : "NHA NHCX / ABDM Claim Bundle (FHIR Release 4)"}
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
-                      Official Specs
+                      {language === "hi" ? "आधिकारिक मानक" : "Official Specs"}
                     </span>
                   </h3>
                   <p className="text-xs text-slate-400">
@@ -810,8 +840,8 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             </div>
 
             {/* Modal Action Bar */}
-            <div className="px-5 py-2.5 bg-slate-800/60 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <span className="text-slate-300 font-mono text-[11px]">
+            <div className="px-4 sm:px-5 py-2.5 bg-slate-800/60 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="text-slate-300 font-mono text-[10px] sm:text-[11px] truncate max-w-[200px] sm:max-w-none">
                 Bundle ID: <strong className="text-emerald-400">{nhcxBundle.id}</strong> (5 FHIR Resources)
               </span>
 
@@ -822,7 +852,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                   className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                  <span>{copied ? "Copied!" : "Copy JSON"}</span>
+                  <span>{copied ? (language === "hi" ? "कॉपी हो गया!" : "Copied!") : (language === "hi" ? "JSON कॉपी करें" : "Copy JSON")}</span>
                 </button>
 
                 <button
@@ -831,19 +861,21 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                   className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  <span>Download .json Bundle</span>
+                  <span>{language === "hi" ? "डाउनलोड करें (.json)" : "Download .json Bundle"}</span>
                 </button>
               </div>
             </div>
 
             {/* Modal JSON Viewer */}
-            <div className="flex-1 overflow-auto p-4 bg-slate-950 font-mono text-[11px] sm:text-xs text-emerald-300 leading-relaxed">
-              <pre>{jsonString}</pre>
+            <div className="flex-1 overflow-auto p-3 sm:p-4 bg-slate-950 font-mono text-[10.5px] sm:text-xs text-emerald-300 leading-relaxed">
+              <pre className="whitespace-pre-wrap break-all sm:break-normal">{jsonString}</pre>
             </div>
 
             {/* Modal Footer Note */}
             <div className="p-3 bg-slate-900 border-t border-slate-800 text-center text-[11px] text-slate-400">
-              💡 <strong>Judge Flex:</strong> This FHIR Bundle contains <code className="text-slate-200">Patient</code> (ABHA ID), <code className="text-slate-200">Organization</code> (Hospital ROHIN Reg), <code className="text-slate-200">Claim</code>, and <code className="text-slate-200">ClaimResponse</code> (IRDAI Pre-adjudication) conforming to India's National Health Claims Exchange.
+              💡 <strong>{language === "hi" ? "तकनीकी विवरण:" : "Judge Flex:"}</strong> {language === "hi"
+                ? "यह FHIR बंडल Patient (ABHA ID), Organization (अस्पताल ROHIN), Claim, और ClaimResponse (IRDAI प्री-एडजुडिकेशन) संसाधनों को समाहित करता है।"
+                : "This FHIR Bundle contains Patient (ABHA ID), Organization (Hospital ROHIN Reg), Claim, and ClaimResponse (IRDAI Pre-adjudication) conforming to India's National Health Claims Exchange."}
             </div>
           </div>
         </div>
