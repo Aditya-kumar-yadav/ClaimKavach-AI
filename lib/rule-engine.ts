@@ -284,7 +284,7 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
     }
   }
 
-  const approvalScore = Math.max(12, Math.min(100, 100 - scoreDeduction));
+  const approvalScore = Math.max(28, Math.min(100, 100 - scoreDeduction));
   const riskLevel: "GREEN" | "YELLOW" | "RED" =
     approvalScore >= 80 ? "GREEN" : approvalScore >= 60 ? "YELLOW" : "RED";
 

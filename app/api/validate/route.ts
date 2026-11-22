@@ -5,7 +5,9 @@ import { evaluateClaim } from "@/lib/rule-engine";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const parsedClaim = ExtractedClaimSchema.parse(body);
+    // Accept either direct claim object or { claim, policy } wrapper
+    const claimData = body && body.claim ? body.claim : body;
+    const parsedClaim = ExtractedClaimSchema.parse(claimData);
 
     const auditResult = evaluateClaim(parsedClaim);
     return NextResponse.json(auditResult);

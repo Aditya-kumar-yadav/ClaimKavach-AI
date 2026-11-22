@@ -41,7 +41,7 @@ export const AudioExplainer: React.FC<AudioExplainerProps> = ({ hindiSummary, la
           <button
             type="button"
             onClick={handleTogglePlay}
-            className={`h-13 w-13 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 ${
+            className={`h-12 w-12 sm:h-14 sm:w-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 cursor-pointer ${
               isPlaying
                 ? "bg-rose-500 text-white shadow-rose-500/30 animate-pulse"
                 : "bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/30"

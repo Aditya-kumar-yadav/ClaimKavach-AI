@@ -79,16 +79,16 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
     let score = result.approvalScore;
     
     fixedIssueIds.forEach(id => {
-      if (id.includes("DATE")) score += 35;
-      else if (id.includes("DOC_SEAL")) score += 25;
-      else if (id.includes("DIAGNOSIS")) score += 30;
-      else if (id.includes("NON_PAYABLE")) score += 15;
-      else if (id.includes("ROOM_RENT")) score += 15;
-      else if (id.includes("WAITING_PERIOD")) score += 30;
-      else score += 15;
+      if (id.includes("DATE")) score += 36;
+      else if (id.includes("DOC_SEAL")) score += 20;
+      else if (id.includes("DIAGNOSIS")) score += 15;
+      else if (id.includes("NON_PAYABLE")) score += 12;
+      else if (id.includes("ROOM_RENT")) score += 10;
+      else if (id.includes("WAITING_PERIOD")) score += 15;
+      else score += 10;
     });
 
-    const finalScore = Math.min(100, Math.max(12, score));
+    const finalScore = Math.min(96, Math.max(result.approvalScore, score));
     const finalRisk: "GREEN" | "YELLOW" | "RED" =
       finalScore >= 80 ? "GREEN" : finalScore >= 60 ? "YELLOW" : "RED";
 
@@ -103,12 +103,16 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
 
   // Trigger celebratory confetti when all critical issues are fixed
   React.useEffect(() => {
-    if (fixedIssueIds.size > 0 && simulatedScore >= 85) {
-      confetti({
-        particleCount: 60,
-        spread: 60,
-        origin: { y: 0.5 }
-      });
+    if (typeof window !== "undefined" && fixedIssueIds.size > 0 && simulatedScore >= 85) {
+      try {
+        confetti({
+          particleCount: 60,
+          spread: 60,
+          origin: { y: 0.5 }
+        });
+      } catch {
+        // Safe fallback
+      }
     }
   }, [simulatedScore, fixedIssueIds.size]);
 
@@ -493,7 +497,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                           {/* Exact WhatsApp Message from DhananjayBhosale template */}
                           <a
                             href={`https://wa.me/?text=${encodeURIComponent(
-                              `नमस्ते, हमारे डिस्चार्ज समरी (${claim.summaryAdmitDate}) और बिल (${claim.billAdmitDate}) में भर्ती की तारीख अलग है और डॉक्टर की मोहर (${claim.doctorRegNo || "NMC Reg No."}) नहीं है। कृपया इसे ठीक करके नया बिल दें ताकि इंश्योरेंस क्लेम पास हो सके। मरीज: ${claim.patientName}।`
+                              language === "hi"
+                                ? (issue.billingDeskMsgHi || `नमस्ते, हमारे अस्पताल बिल एवं डिस्चार्ज समरी में '${issue.titleHi}' को कृपया ठीक करके अस्पताल की मुहर लगा नया बिल दें ताकि इंश्योरेंस क्लेम पास हो सके। मरीज: ${claim.patientName}।`)
+                                : (issue.billingDeskMsgEn || `Hello, please rectify '${issue.titleEn}' in our hospital bill/records and provide an updated stamped copy to ensure insurance claim approval. Patient: ${claim.patientName}.`)
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"

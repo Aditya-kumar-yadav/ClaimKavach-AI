@@ -2,12 +2,26 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ExtractedClaim, ExtractedClaimSchema } from "@/types/claim";
 import { FLAWED_DEMO_CLAIM, CLEAN_DEMO_CLAIM } from "./mock-data";
 
-// Fallback models in priority order: ultra-fast lightweight 3.5-flash-lite first, then 3.8-flash, then flash-latest
+// Fallback models in priority order: lightweight 3.5-flash-lite first, then 3.8-flash, then flash-latest
 const CANDIDATE_MODELS = [
   "gemini-3.5-flash-lite",
   "gemini-3.8-flash",
   "gemini-flash-latest",
 ];
+
+function parseBase64File(dataUrl: string): { mimeType: string; data: string } {
+  const match = dataUrl.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+  if (match) {
+    return {
+      mimeType: match[1],
+      data: match[2]
+    };
+  }
+  return {
+    mimeType: "image/jpeg",
+    data: dataUrl.replace(/^data:[^;]+;base64,/, "")
+  };
+}
 
 export async function extractWithGemini(
   billBase64?: string,
@@ -71,19 +85,21 @@ Rules:
   const parts: any[] = [{ text: prompt }];
 
   if (billBase64) {
+    const parsed = parseBase64File(billBase64);
     parts.push({
       inlineData: {
-        mimeType: "image/jpeg",
-        data: billBase64.replace(/^data:image\/\w+;base64,/, "")
+        mimeType: parsed.mimeType,
+        data: parsed.data
       }
     });
   }
 
   if (summaryBase64) {
+    const parsed = parseBase64File(summaryBase64);
     parts.push({
       inlineData: {
-        mimeType: "image/jpeg",
-        data: summaryBase64.replace(/^data:image\/\w+;base64,/, "")
+        mimeType: parsed.mimeType,
+        data: parsed.data
       }
     });
   }
