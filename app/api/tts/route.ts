@@ -27,12 +27,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 });
     }
 
-    const promptText = language === "hi"
-      ? `Speak the following in clear, natural, warm Hindi: ${text}`
-      : `Speak the following in clear, reassuring Indian English: ${text}`;
+    // Pass the clean text directly without any "Speak the following" prompt wrapper!
+    // The TTS model speaks whatever string is passed in the part.
+    const cleanSpeechText = text.trim();
 
-    // Target Google Gemini Studio-Quality Flash TTS models
-    const models = ["gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts", "gemini-3.1-flash-tts-preview"];
+    // Target Google Gemini Studio-Quality Flash TTS models (Flash-Lite first for maximum speed and quota)
+    const models = ["gemini-3.8-flash-lite-tts", "gemini-3.8-flash-tts", "gemini-3.1-flash-tts-preview"];
     let lastError: any = null;
 
     for (const model of models) {
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }],
+            contents: [{ parts: [{ text: cleanSpeechText }] }],
             generationConfig: {
               responseModalities: ["AUDIO"],
               speechConfig: {
