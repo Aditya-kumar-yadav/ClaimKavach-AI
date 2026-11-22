@@ -254,8 +254,6 @@ export default function Home() {
             language={language}
             activeClaim={claim}
             onReset={handleReset}
-            onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
-            hasCustomKey={hasCustomKey}
             externalError={extractionError}
             onClearError={() => setExtractionError(null)}
           />

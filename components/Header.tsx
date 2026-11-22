@@ -44,24 +44,24 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Controls */}
         <div className="flex items-center space-x-2.5">
-          {/* Gemini API Key Configuration Button (For Hackathon Judges) */}
+          {/* EXCLUSIVE SINGLE GEMINI API KEY BUTTON AT THE TOP (For Judges & Evaluators) */}
           <button
             type="button"
             onClick={onOpenApiKeyModal}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-2xs ${
+            className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-2xs hover:scale-102 active:scale-98 ${
               hasCustomKey
-                ? "bg-emerald-50/80 hover:bg-emerald-100/80 border-emerald-200 text-emerald-800"
-                : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 hover:border-sky-300"
+                ? "bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-900"
+                : "bg-amber-50/90 hover:bg-amber-100 border-amber-300 text-amber-950"
             }`}
-            title={language === "hi" ? "Google Gemini API की सेटिंग्स" : "Google Gemini API Key Settings"}
+            title={language === "hi" ? "Google Gemini API की सेटिंग्स" : "Configure Google Gemini API Key"}
           >
-            <Key className={`h-3.5 w-3.5 ${hasCustomKey ? "text-emerald-600" : "text-sky-600"}`} />
-            <span className="hidden xs:inline">
+            <Key className={`h-3.5 w-3.5 ${hasCustomKey ? "text-emerald-600" : "text-amber-600"}`} />
+            <span className="font-extrabold">
               {hasCustomKey 
-                ? (language === "hi" ? "API की: सक्रिय" : "API Key: Active") 
-                : (language === "hi" ? "API की जोड़ें" : "Gemini API Key")}
+                ? (language === "hi" ? "Gemini Key: Active ✓" : "Gemini Key: Active ✓") 
+                : (language === "hi" ? "🔑 Gemini Key" : "🔑 Gemini Key")}
             </span>
-            <span className={`h-2 w-2 rounded-full shrink-0 ${hasCustomKey ? "bg-emerald-500 animate-pulse" : "bg-amber-400"}`}></span>
+            <span className={`h-2 w-2 rounded-full shrink-0 ${hasCustomKey ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}></span>
           </button>
 
           {/* Language Switcher */}

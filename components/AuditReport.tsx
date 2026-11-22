@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { ExtractedClaim, AuditResult, AuditIssue } from "@/types/claim";
 import { generateNHCXClaimBundle } from "@/lib/nhcx-fhir";
-import { generateIRDAIAppealLetter } from "@/lib/appeal-generator";
+import { generateIRDAIAppealLetter, POPULAR_INDIAN_INSURERS } from "@/lib/appeal-generator";
 
 interface AuditReportProps {
   claim: ExtractedClaim;
@@ -165,6 +165,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
   const [showLineItems, setShowLineItems] = useState(false);
   const [showNHCXModal, setShowNHCXModal] = useState(false);
   const [showAppealModal, setShowAppealModal] = useState(false);
+  const [selectedInsurer, setSelectedInsurer] = useState<string>("Star Health and Allied Insurance Co. Ltd.");
   const [copied, setCopied] = useState(false);
   const [copiedAppeal, setCopiedAppeal] = useState(false);
   const [copiedIssueId, setCopiedIssueId] = useState<string | null>(null);
@@ -197,7 +198,10 @@ export const AuditReport: React.FC<AuditReportProps> = ({
 
   const nhcxBundle = generateNHCXClaimBundle(claim, result);
   const jsonString = JSON.stringify(nhcxBundle, null, 2);
-  const appealPacket = generateIRDAIAppealLetter(claim, result);
+  const appealPacket = useMemo(
+    () => generateIRDAIAppealLetter(claim, result, selectedInsurer),
+    [claim, result, selectedInsurer]
+  );
 
   const getDocumentFile = (): File | null => {
     try {
@@ -1002,8 +1006,8 @@ export const AuditReport: React.FC<AuditReportProps> = ({
 
       {/* Feature 1: IRDAI Appeal & Ombudsman Escalation Modal */}
       {showAppealModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="bg-slate-900 text-slate-100 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl border border-amber-500/30 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-200">
+          <div className="bg-slate-900 text-slate-100 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl border border-amber-500/30 overflow-hidden">
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950">
               <div className="flex items-center gap-3">
@@ -1014,17 +1018,17 @@ export const AuditReport: React.FC<AuditReportProps> = ({
                   <div className="flex items-center gap-2">
                     <h3 className="font-black text-sm sm:text-base text-white">
                       {language === "hi" 
-                        ? "आईआरडीएआई औपचारिक अपील एवं बीमा लोकपाल एस्केलेशन डोजियर"
-                        : "IRDAI Formal Appeal & Ombudsman Escalation Dossier"}
+                        ? "आईआरडीएआई कानूनी अपील एवं बीमा लोकपाल डोजियर"
+                        : "IRDAI Statutory Legal Appeal & Ombudsman Dossier"}
                     </h3>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">
-                      {language === "hi" ? "79% सफलता दर" : "79% Win Rate"}
+                      79% Win Rate
                     </span>
                   </div>
                   <p className="text-xs text-slate-400">
                     {language === "hi"
-                      ? "आईआरडीएआई मास्टर सर्कुलर 2024 के तहत अनिवार्य 14-दिवसीय जीआरओ समाधान समय"
-                      : "Mandatory 14-day GRO resolution window under IRDAI Regulations (May 2024 overhaul)"}
+                      ? "बीमा कंपनी के जीआरओ हेतु अनिवार्य 14-दिवसीय आईआरडीएआई कानूनी नोटिस (मई 2024 मास्टर सर्कुलर)"
+                      : "Mandatory 14-day statutory resolution notice for Insurer's GRO under IRDAI May 2024 overhaul"}
                   </p>
                 </div>
               </div>
@@ -1038,70 +1042,79 @@ export const AuditReport: React.FC<AuditReportProps> = ({
               </button>
             </div>
 
-            {/* Campaign Callout Banner (The Stage Flex) */}
-            <div className="px-5 py-3 bg-amber-950/40 border-b border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-2 text-amber-200">
-                <Sparkles className="h-4 w-4 text-amber-400 shrink-0" />
-                <span>
-                  {language === "hi" ? (
-                    <><strong>नवंबर 2026:</strong> आईआरडीएआई शिकायत निवारण माह • <strong>41,055 शिकायतों का निपटारा</strong> (79% फैसले पॉलिसीधारकों के पक्ष में)।</>
-                  ) : (
-                    <><strong>November 2026:</strong> IRDAI Grievance Resolution Month • <strong>41,055 complaints resolved</strong> in FY26 (79% decided in favor of policyholders).</>
-                  )}
+            {/* Insurer Selector & Quick Actions Bar */}
+            <div className="px-4 sm:px-5 py-3 bg-slate-950/90 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <span className="font-bold text-amber-400 shrink-0 text-xs">
+                  {language === "hi" ? "🏢 बीमा कंपनी (Insurer):" : "🏢 Target Insurer / TPA:"}
                 </span>
+                <select
+                  value={selectedInsurer}
+                  onChange={(e) => setSelectedInsurer(e.target.value)}
+                  className="bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-amber-500/30 outline-none w-full max-w-sm truncate cursor-pointer hover:border-amber-400"
+                >
+                  {POPULAR_INDIAN_INSURERS.map((ins) => (
+                    <option key={ins} value={ins} className="bg-slate-900 text-slate-100">
+                      {ins}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="flex items-center gap-2">
+
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={handleCopyAppeal}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
                 >
                   {copiedAppeal ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                  <span>{copiedAppeal ? (language === "hi" ? "कॉपी हो गया!" : "Copied!") : (language === "hi" ? "पत्र कॉपी करें" : "Copy Letter")}</span>
+                  <span>{copiedAppeal ? (language === "hi" ? "कॉपी हो गया!" : "Copied!") : (language === "hi" ? "पत्र कॉपी करें" : "Copy Legal Letter")}</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleDownloadAppeal}
-                  className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  <span>{language === "hi" ? "डाउनलोड करें (.txt)" : "Download .txt"}</span>
+                  <span>{language === "hi" ? "डाउनलोड (.txt)" : "Download (.txt)"}</span>
                 </button>
               </div>
             </div>
 
-            {/* 3-Step Escalation Pathway Display */}
-            <div className="p-4 sm:p-5 border-b border-slate-800 bg-slate-900/80">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                {language === "hi" ? "कानूनी 3-चरणीय एस्केलेशन सीढ़ी" : "Statutory 3-Step Escalation Ladder"}
-              </span>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {appealPacket.escalationLadder.map(step => (
-                  <div key={step.step} className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs">
-                    <div className="flex items-center justify-between text-amber-400 font-bold mb-1">
-                      <span>{language === "hi" ? `चरण ${step.step}: ${step.authority}` : `Step ${step.step}: ${step.authority}`}</span>
-                    </div>
-                    <span className="text-[10px] font-mono text-slate-400 block mb-1">
-                      ⏱️ {step.timeline}
-                    </span>
-                    <p className="text-slate-300 text-[11px] leading-relaxed">
-                      {step.action}
-                    </p>
-                  </div>
-                ))}
+            {/* Compact 3-Step Escalation Pathway Strip */}
+            <div className="px-4 sm:px-5 py-2.5 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+              <div className="flex items-center gap-1.5 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                <Scale className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                <span>Statutory Escalation Ladder:</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 text-[10.5px]">
+                <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/25 font-medium">
+                  <strong>Step 1:</strong> Insurer GRO (14-Day Clock)
+                </span>
+                <span className="text-slate-600">→</span>
+                <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700 font-medium">
+                  <strong>Step 2:</strong> Bima Bharosa (Day 15+ Token)
+                </span>
+                <span className="text-slate-600">→</span>
+                <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 font-medium">
+                  <strong>Step 3:</strong> Ombudsman (79% Win Rate)
+                </span>
               </div>
             </div>
 
-            {/* Formatted Legal Letter Content */}
-            <div className="flex-1 overflow-auto p-4 sm:p-5 bg-slate-950 font-mono text-[11px] sm:text-xs text-slate-300 leading-relaxed whitespace-pre-wrap selection:bg-amber-500 selection:text-black">
+            {/* Formatted Legal Letter Content - Large, clean, highly readable document paper */}
+            <div className="flex-1 overflow-y-auto p-5 sm:p-7 bg-slate-950 font-mono text-xs sm:text-[13px] text-slate-200 leading-relaxed whitespace-pre-wrap selection:bg-amber-500 selection:text-black">
               {appealPacket.letterText}
             </div>
 
             {/* Modal Footer Note */}
-            <div className="p-3 bg-slate-900 border-t border-slate-800 text-center text-[11px] text-slate-400">
-              ⚖️ {language === "hi" 
-                ? "यह औपचारिक पत्र आईआरडीएआई मास्टर सर्कुलर 2024 पैरा 13 के नियमों को लागू करता है और बीमा कंपनी के जीआरओ के लिए 14-दिवसीय अनिवार्य समयसीमा शुरू करता है।"
-                : "This letter incorporates IRDAI Master Circular (May 2024) Para 13 statutory citations and triggers a mandatory 14-day regulatory timer for the insurer's GRO."}
+            <div className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+              <span className="truncate">
+                ⚖️ <strong>IRDAI Master Circular (May 2024) Para 13</strong> • 60-Month Moratorium on Rejections
+              </span>
+              <span className="text-amber-400 font-semibold shrink-0">
+                14-Day Mandatory GRO Resolution Window
+              </span>
             </div>
           </div>
         </div>

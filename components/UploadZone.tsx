@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Upload, FileText, Sparkles, Check, AlertCircle, Zap, ChevronUp, ChevronDown, Trash2, X, Key, Info } from "lucide-react";
+import { Upload, FileText, Sparkles, Check, AlertCircle, Zap, ChevronUp, ChevronDown, Trash2, X } from "lucide-react";
 import { compressImageFile, CompressionResult } from "@/lib/image-compressor";
 import { ExtractedClaim } from "@/types/claim";
 import { DEMO_SCENARIO_LIST } from "@/lib/mock-data";
@@ -16,8 +16,6 @@ interface UploadZoneProps {
   language: "en" | "hi";
   activeClaim?: ExtractedClaim | null;
   onReset?: () => void;
-  onOpenApiKeyModal?: () => void;
-  hasCustomKey?: boolean;
   externalError?: string | null;
   onClearError?: () => void;
 }
@@ -28,8 +26,6 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
   language,
   activeClaim,
   onReset,
-  onOpenApiKeyModal,
-  hasCustomKey = false,
   externalError,
   onClearError
 }) => {
@@ -107,10 +103,11 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
     activeError.includes("NO_API_KEY") || 
     activeError.includes("INVALID_API_KEY") || 
     activeError.includes("GEMINI_QUOTA_EXCEEDED") ||
-    activeError.includes("API_KEY")
+    activeError.includes("API_KEY") ||
+    activeError.includes("API key")
   );
 
-  // Requirement 1: Once an audit is active, collapse into a slim 1-line bar
+  // Once an audit is active, collapse into a slim 1-line bar
   if (activeClaim && isCollapsed) {
     return (
       <div className="glass-card rounded-2xl px-4 sm:px-6 py-3 mb-6 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/95 backdrop-blur-sm transition-all duration-300">
@@ -192,7 +189,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
           </p>
         </div>
 
-        {/* Pre-loaded Scenarios Dropdown & API Key Button */}
+        {/* Pre-loaded Scenarios Dropdown */}
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-bold text-slate-500 hidden sm:inline">
@@ -220,22 +217,6 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
             </select>
           </div>
 
-          {onOpenApiKeyModal && (
-            <button
-              type="button"
-              onClick={onOpenApiKeyModal}
-              className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
-                hasCustomKey 
-                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100" 
-                  : "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
-              }`}
-              title="Configure Google Gemini API Key"
-            >
-              <Key className="h-3.5 w-3.5" />
-              <span>{hasCustomKey ? "Custom Key ✓" : (language === "hi" ? "🔑 API की जोड़ें" : "🔑 Add API Key")}</span>
-            </button>
-          )}
-
           {activeClaim && (
             <button
               type="button"
@@ -251,58 +232,26 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
 
       {/* Prominent API Key / Extraction Error Notice */}
       {activeError && (
-        <div className={`mb-5 p-4 rounded-2xl border text-xs font-medium flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200 ${
+        <div className={`mb-5 p-4 rounded-2xl border text-xs font-medium flex items-start gap-2.5 animate-in fade-in duration-200 ${
           isKeyError 
-            ? "bg-amber-50 border-amber-300 text-amber-900 shadow-xs" 
+            ? "bg-amber-50 border-amber-300 text-amber-950 shadow-xs" 
             : "bg-rose-50 border-rose-200 text-rose-800"
         }`}>
-          <div className="flex items-start gap-2.5">
-            <AlertCircle className={`h-4 w-4 shrink-0 mt-0.5 ${isKeyError ? "text-amber-600" : "text-rose-600"}`} />
-            <div>
-              <p className="font-bold text-[13px] mb-0.5">
-                {isKeyError 
-                  ? (language === "hi" ? "Google Gemini API की आवश्यक है" : "Google Gemini API Key Required") 
-                  : (language === "hi" ? "दस्तावेज़ विश्लेषण में त्रुटि" : "Extraction Error")}
-              </p>
-              <p className="text-xs leading-relaxed opacity-90">
-                {activeError}
-              </p>
-            </div>
+          <AlertCircle className={`h-4 w-4 shrink-0 mt-0.5 ${isKeyError ? "text-amber-600" : "text-rose-600"}`} />
+          <div className="flex-1">
+            <p className="font-bold text-[13px] mb-0.5">
+              {isKeyError 
+                ? (language === "hi" ? "Google Gemini API की आवश्यक है" : "Google Gemini API Key Required") 
+                : (language === "hi" ? "दस्तावेज़ विश्लेषण में त्रुटि" : "Extraction Error")}
+            </p>
+            <p className="text-xs leading-relaxed opacity-90">
+              {isKeyError
+                ? (language === "hi"
+                    ? "कस्टम अस्पताल बिल का लाइव एआई विश्लेषण करने के लिए, कृपया स्क्रीन के शीर्ष (Header) पर दिए गए 'Gemini API Key' बटन पर क्लिक करके अपनी Google AI Studio की जोड़ें (या ऊपर दिए गए 5 प्री-लोडेड केस में से चुनें)।"
+                    : "To audit your custom hospital document with live Google Gemini OCR, please configure your free Gemini API key using the button at the top header (or test with 5 pre-loaded scenarios above).")
+                : activeError}
+            </p>
           </div>
-
-          {onOpenApiKeyModal && (
-            <button
-              type="button"
-              onClick={onOpenApiKeyModal}
-              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-            >
-              <Key className="h-3.5 w-3.5" />
-              <span>{language === "hi" ? "नि:शुल्क की दर्ज करें (10s)" : "Enter Free API Key"}</span>
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Helper Banner for Custom Document Users */}
-      {(billImage || summaryImage) && !hasCustomKey && !activeError && (
-        <div className="mb-5 p-3 rounded-xl bg-sky-50 border border-sky-200 text-xs text-sky-900 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Info className="h-4 w-4 text-sky-600 shrink-0" />
-            <span>
-              {language === "hi"
-                ? "💡 क्या आप अपने अस्पताल बिल का लाइव एआई परीक्षण कर रहे हैं? असीमित ऑडिट के लिए अपनी निःशुल्क Gemini Key जोड़ें।"
-                : "💡 Auditing your own hospital bill? Add your free Google AI Studio key for direct live multimodal vision extraction."}
-            </span>
-          </div>
-          {onOpenApiKeyModal && (
-            <button
-              type="button"
-              onClick={onOpenApiKeyModal}
-              className="text-sky-700 hover:text-sky-950 font-bold underline shrink-0 cursor-pointer"
-            >
-              {language === "hi" ? "की जोड़ें" : "Add Key"}
-            </button>
-          )}
         </div>
       )}
 
