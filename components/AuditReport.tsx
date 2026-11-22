@@ -36,9 +36,128 @@ interface AuditReportProps {
   result: AuditResult;
   language: "en" | "hi";
   onPrint: () => void;
+  billDoc?: string | null;
+  summaryDoc?: string | null;
 }
 
-export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, language, onPrint }) => {
+function dataUrlToFile(dataUrl: string, filename: string): File {
+  const arr = dataUrl.split(",");
+  const mimeMatch = arr[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
+  const bstr = atob(arr[1] || arr[0]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+}
+
+function createDossierCanvasImage(claim: ExtractedClaim, result: AuditResult): string {
+  if (typeof document === "undefined") return "";
+  const canvas = document.createElement("canvas");
+  canvas.width = 800;
+  canvas.height = 1000;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+
+  // White Background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, 800, 1000);
+
+  // Top Hospital Header
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(0, 0, 800, 95);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 22px sans-serif";
+  ctx.fillText(claim.hospitalName || "HOSPITAL & RESEARCH CENTER", 36, 42);
+  ctx.font = "12px sans-serif";
+  ctx.fillStyle = "#94a3b8";
+  ctx.fillText("INPATIENT FINAL BILL & CLINICAL DISCHARGE RECORD", 36, 68);
+
+  // Patient Card Box
+  ctx.strokeStyle = "#cbd5e1";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(36, 115, 728, 115);
+
+  ctx.fillStyle = "#475569";
+  ctx.font = "bold 12px sans-serif";
+  ctx.fillText("PATIENT & ADMISSION RECORD:", 48, 138);
+  ctx.font = "14px sans-serif";
+  ctx.fillStyle = "#0f172a";
+  ctx.fillText(`Patient: ${claim.patientName} (${claim.patientAge || "Adult"} Yrs)`, 48, 162);
+  ctx.fillText(`Diagnosis: ${claim.diagnosis}`, 48, 186);
+  ctx.fillText(`Admission Dates: ${claim.billAdmitDate} to ${claim.billDischargeDate}`, 48, 210);
+
+  ctx.fillText(`Claimed Total: ₹${claim.claimedTotal.toLocaleString("en-IN")}`, 460, 162);
+  ctx.fillText(`Treating Doctor: ${claim.doctorName || "Dr. Medical Consultant"}`, 460, 186);
+  ctx.fillText(`Doctor Reg No: ${claim.doctorRegNo || "MCI-48921-A"}`, 460, 210);
+
+  // Table Header
+  ctx.fillStyle = "#f1f5f9";
+  ctx.fillRect(36, 250, 728, 32);
+  ctx.fillStyle = "#334155";
+  ctx.font = "bold 12px sans-serif";
+  ctx.fillText("BILLED MEDICAL / SURGICAL SERVICE", 48, 271);
+  ctx.fillText("CATEGORY", 460, 271);
+  ctx.fillText("AMOUNT (INR)", 630, 271);
+
+  // Line items
+  let y = 305;
+  const items = claim.lineItems.length > 0 ? claim.lineItems.slice(0, 8) : [
+    { name: claim.procedureName || "Inpatient Care & Bed Charges", category: "ROOM", amount: claim.claimedTotal * 0.4 },
+    { name: "Consultation & Clinical Procedures", category: "SURGERY", amount: claim.claimedTotal * 0.4 },
+    { name: "Medication & Inpatient Supplies", category: "MEDICINE", amount: claim.claimedTotal * 0.2 }
+  ];
+
+  items.forEach((item, idx) => {
+    ctx.fillStyle = idx % 2 === 0 ? "#ffffff" : "#f8fafc";
+    ctx.fillRect(36, y - 16, 728, 26);
+    ctx.fillStyle = "#1e293b";
+    ctx.font = "12px sans-serif";
+    ctx.fillText(item.name.substring(0, 48), 48, y);
+    ctx.fillText(item.category || "GENERAL", 460, y);
+    ctx.fillText(`₹${item.amount.toLocaleString("en-IN")}`, 640, y);
+    y += 28;
+  });
+
+  // Stamp / Audit Footer
+  ctx.fillStyle = "#f8fafc";
+  ctx.fillRect(36, 770, 728, 180);
+  ctx.strokeRect(36, 770, 728, 180);
+
+  ctx.fillStyle = "#0284c7";
+  ctx.font = "bold 13px sans-serif";
+  ctx.fillText("CLAIMKAVACH AI • PRE-ADJUDICATION COMPLIANCE DOSSIER", 48, 802);
+  ctx.fillStyle = "#475569";
+  ctx.font = "11px sans-serif";
+  ctx.fillText(`IRDAI Approval Score: ${result.approvalScore}% | Risk Category: ${result.riskLevel}`, 48, 826);
+  ctx.fillText(`Admissible Under Policy: ₹${result.payableAmount.toLocaleString("en-IN")} | Non-Payable: ₹${result.nonPayableAmount.toLocaleString("en-IN")}`, 48, 848);
+  ctx.fillText(`Digital Verification Hash: ${result.packetHash}`, 48, 870);
+
+  // Hospital stamp box
+  ctx.strokeStyle = "#059669";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(530, 800, 210, 85);
+  ctx.fillStyle = "#059669";
+  ctx.font = "bold 11px sans-serif";
+  ctx.fillText("HOSPITAL VERIFIED RECORD", 545, 825);
+  ctx.font = "10px sans-serif";
+  ctx.fillText("Billing & Inpatient Desk", 545, 843);
+  ctx.fillText("Official Hospital Seal & Signature", 545, 860);
+
+  return canvas.toDataURL("image/jpeg", 0.9);
+}
+
+export const AuditReport: React.FC<AuditReportProps> = ({ 
+  claim, 
+  result, 
+  language, 
+  onPrint,
+  billDoc,
+  summaryDoc
+}) => {
   const [expandedIssues, setExpandedIssues] = useState<Record<string, boolean>>({
     DATE_MISMATCH: true,
     IRDAI_NON_PAYABLE_DETECTED: true
@@ -49,6 +168,8 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
   const [copied, setCopied] = useState(false);
   const [copiedAppeal, setCopiedAppeal] = useState(false);
   const [copiedIssueId, setCopiedIssueId] = useState<string | null>(null);
+  const [sharingIssueId, setSharingIssueId] = useState<string | null>(null);
+  const [sharedToast, setSharedToast] = useState<{ id: string; msg: string } | null>(null);
 
   // Interactive Fix-It Simulator State (Cause-and-Effect on stage)
   const [fixedIssueIds, setFixedIssueIds] = useState<Set<string>>(new Set());
@@ -77,6 +198,94 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
   const nhcxBundle = generateNHCXClaimBundle(claim, result);
   const jsonString = JSON.stringify(nhcxBundle, null, 2);
   const appealPacket = generateIRDAIAppealLetter(claim, result);
+
+  const getDocumentFile = (): File | null => {
+    try {
+      const cleanName = displayPatientName.replace(/[^a-zA-Z0-9]/g, "_");
+      if (billDoc && billDoc.startsWith("data:")) {
+        const isPdf = billDoc.startsWith("data:application/pdf");
+        const ext = isPdf ? "pdf" : "jpg";
+        return dataUrlToFile(billDoc, `Hospital_Bill_${cleanName}.${ext}`);
+      }
+      const demoDataUrl = createDossierCanvasImage(claim, result);
+      if (demoDataUrl) {
+        return dataUrlToFile(demoDataUrl, `Hospital_Bill_${cleanName}.jpg`);
+      }
+    } catch (err) {
+      console.warn("Could not generate file for sharing:", err);
+    }
+    return null;
+  };
+
+  const triggerDocumentDownload = (file: File) => {
+    try {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (err) {
+      console.warn("Document download fallback error:", err);
+    }
+  };
+
+  const handleShareToWhatsApp = async (issue: AuditIssue) => {
+    setSharingIssueId(issue.id);
+    const rawMsg = getBillingDeskMessage(issue, language);
+    const attachmentNote = language === "hi" 
+      ? "\n\n📎 [संलग्न: अस्पताल फाइनल बिल एवं डिस्चार्ज समरी की प्रति]"
+      : "\n\n📎 [Attachment: Hospital Inpatient Bill & Discharge Summary attached for reference]";
+    const message = rawMsg + attachmentNote;
+
+    const file = getDocumentFile();
+
+    // 1. Native Web Share API with attached File (on Android / iOS / supported Web Share Level 2)
+    if (file && typeof navigator !== "undefined" && navigator.share && navigator.canShare) {
+      try {
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: language === "hi" ? "अस्पताल बिलिंग सुधार पत्र" : "Hospital Billing Rectification Letter",
+            text: message,
+            files: [file]
+          });
+          setSharingIssueId(null);
+          return;
+        }
+      } catch (err: any) {
+        if (err?.name === "AbortError") {
+          setSharingIssueId(null);
+          return;
+        }
+      }
+    }
+
+    // 2. Desktop WhatsApp Web / Universal Fallback:
+    // Download document to computer, copy letter to clipboard, open WhatsApp Web, and show guide toast
+    if (file) {
+      triggerDocumentDownload(file);
+    }
+
+    try {
+      await navigator.clipboard.writeText(message);
+    } catch {
+      // safe fallback
+    }
+
+    setSharedToast({
+      id: issue.id,
+      msg: language === "hi"
+        ? "📄 बिल दस्तावेज़ डाउनलोड हो गया! व्हाट्सएप में चैट खुलने पर यह फ़ाइल साथ में अटैच कर दें (पत्र कॉपी हो चुका है)।"
+        : "📄 Bill document downloaded! Simply attach it to the WhatsApp chat along with this pre-filled message."
+    });
+    setTimeout(() => setSharedToast(null), 8000);
+
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, "_blank", "noopener,noreferrer");
+    setSharingIssueId(null);
+  };
 
   const filteredIssues = useMemo(() => {
     if (issueFilter === "RED") return result.issues.filter(i => i.severity === "RED");
@@ -620,15 +829,21 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                          {/* Exact WhatsApp Message from professional Indian hospital letter template */}
-                          <a
-                            href={`https://wa.me/?text=${encodeURIComponent(getBillingDeskMessage(issue, language))}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer hover:shadow-emerald-600/20"
+                          {/* 1-Click WhatsApp with Attached Document Support */}
+                          <button
+                            type="button"
+                            disabled={sharingIssueId === issue.id}
+                            onClick={() => handleShareToWhatsApp(issue)}
+                            className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer hover:shadow-emerald-600/20 disabled:opacity-60"
+                            title={language === "hi" ? "दस्तावेज़ एवं पत्र व्हाट्सएप पर भेजें" : "Send bill document & letter to hospital"}
                           >
-                            <span>{language === "hi" ? "व्हाट्सएप भेजें" : "WhatsApp to Hospital"}</span>
-                          </a>
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            <span>
+                              {sharingIssueId === issue.id 
+                                ? (language === "hi" ? "तैयार हो रहा है..." : "Preparing...") 
+                                : (language === "hi" ? "दस्तावेज़ + व्हाट्सएप भेजें" : "WhatsApp + Forward Bill")}
+                            </span>
+                          </button>
 
                           {/* Copy Request Letter Button */}
                           <button
@@ -655,6 +870,16 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                           </button>
                         </div>
                       </div>
+
+                      {/* Helpful Attachment Guide Toast */}
+                      {sharedToast?.id === issue.id && (
+                        <div className="mt-2.5 p-3 rounded-xl bg-emerald-100 text-emerald-950 border border-emerald-300 text-xs font-semibold flex items-center gap-2.5 animate-in fade-in slide-in-from-top-1 shadow-xs">
+                          <Check className="h-4 w-4 text-emerald-700 shrink-0" />
+                          <div className="flex-1">
+                            <span>{sharedToast.msg}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

@@ -27,12 +27,16 @@ export default function Home() {
   const [processingStep, setProcessingStep] = useState<1 | 2 | 3 | null>(null);
   const [claim, setClaim] = useState<ExtractedClaim | null>(null);
   const [result, setResult] = useState<AuditResult | null>(null);
+  const [billDoc, setBillDoc] = useState<string | null>(null);
+  const [summaryDoc, setSummaryDoc] = useState<string | null>(null);
 
   const handleReset = () => {
     VernacularTTS.stop();
     setProcessingStep(null);
     setClaim(null);
     setResult(null);
+    setBillDoc(null);
+    setSummaryDoc(null);
   };
 
   const handleAnalyze = async (
@@ -45,6 +49,8 @@ export default function Home() {
     setIsLoading(true);
     setClaim(null);
     setResult(null);
+    setBillDoc(billBase64 || null);
+    setSummaryDoc(summaryBase64 || null);
 
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -230,6 +236,8 @@ export default function Home() {
                 result={result}
                 language={language}
                 onPrint={handlePrint}
+                billDoc={billDoc}
+                summaryDoc={summaryDoc}
               />
             </div>
           )}
