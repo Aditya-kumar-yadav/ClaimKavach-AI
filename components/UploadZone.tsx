@@ -1,12 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { Upload, FileText, Image as ImageIcon, Sparkles, Check, AlertCircle, Zap, ChevronUp } from "lucide-react";
+import { Upload, FileText, Image as ImageIcon, Sparkles, Check, AlertCircle, Zap, ChevronUp, ChevronDown } from "lucide-react";
 import { compressImageFile, CompressionResult } from "@/lib/image-compressor";
 import { ExtractedClaim } from "@/types/claim";
+import { DEMO_SCENARIO_LIST } from "@/lib/mock-data";
 
 interface UploadZoneProps {
-  onAnalyze: (billBase64?: string, summaryBase64?: string, preset?: "flawed" | "clean") => void;
+  onAnalyze: (
+    billBase64?: string, 
+    summaryBase64?: string, 
+    preset?: "flawed" | "overbilled" | "waiting" | "roomrent" | "clean"
+  ) => void;
   isLoading: boolean;
   language: "en" | "hi";
   activeClaim?: ExtractedClaim | null;
@@ -88,25 +93,29 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-          {/* Quick presets for stage flex */}
-          <div className="flex items-center gap-1.5 mr-1">
-            <button
-              type="button"
+        <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto shrink-0">
+          {/* Quick Scenario Dropdown Selector */}
+          <div className="relative">
+            <select
               disabled={isLoading}
-              onClick={() => onAnalyze(undefined, undefined, "flawed")}
-              className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 text-[11px] font-semibold transition-all cursor-pointer"
+              defaultValue=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  onAnalyze(undefined, undefined, e.target.value as any);
+                  e.target.value = "";
+                }
+              }}
+              className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-slate-800 shadow-2xs hover:border-sky-500 focus:ring-2 focus:ring-sky-500/20 cursor-pointer transition-all"
             >
-              {language === "hi" ? "खारिज (28%)" : "Flawed (28%)"}
-            </button>
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={() => onAnalyze(undefined, undefined, "clean")}
-              className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-[11px] font-semibold transition-all cursor-pointer"
-            >
-              {language === "hi" ? "मान्य (100%)" : "Clean (100%)"}
-            </button>
+              <option value="" disabled>
+                {language === "hi" ? "⚡ अन्य डेमो केस चुनें (Dropdown)..." : "⚡ Switch Scenario Dropdown..."}
+              </option>
+              {DEMO_SCENARIO_LIST.map((sc) => (
+                <option key={sc.id} value={sc.id}>
+                  {sc.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <button
@@ -140,36 +149,44 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
           </p>
         </div>
 
-        {/* 1-Click Demo Presets & Optional Collapse Button */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* 1-Click Demo Scenario Dropdown in Main Header */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-slate-500 hidden sm:inline">
+              {language === "hi" ? "🎯 टेस्ट केस चुनें:" : "🎯 Pre-loaded Scenarios:"}
+            </span>
+            <select
+              disabled={isLoading || isCompressing !== null}
+              defaultValue=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  onAnalyze(undefined, undefined, e.target.value as any);
+                  e.target.value = "";
+                }
+              }}
+              className="text-xs font-bold px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-950 border border-sky-300 shadow-xs focus:ring-2 focus:ring-sky-500/30 cursor-pointer transition-all"
+            >
+              <option value="" disabled>
+                {language === "hi" ? "5 आईआरडीएआई केस में से चुनें (Dropdown)..." : "Select from 5 IRDAI Cases (Dropdown)..."}
+              </option>
+              {DEMO_SCENARIO_LIST.map((sc) => (
+                <option key={sc.id} value={sc.id}>
+                  {sc.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {activeClaim && (
             <button
               type="button"
               onClick={() => setIsCollapsed(true)}
-              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer mr-1"
+              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer ml-1"
             >
               <ChevronUp className="h-3.5 w-3.5 text-slate-500" />
               <span>{language === "hi" ? "समेटें (Collapse)" : "Collapse"}</span>
             </button>
           )}
-          <button
-            type="button"
-            disabled={isLoading || isCompressing !== null}
-            onClick={() => onAnalyze(undefined, undefined, "flawed")}
-            className="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-          >
-            <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
-            {language === "hi" ? "सैंपल: खारिज होने वाला क्लेम" : "Preset: Flawed Claim (28% Rejection Risk)"}
-          </button>
-          <button
-            type="button"
-            disabled={isLoading || isCompressing !== null}
-            onClick={() => onAnalyze(undefined, undefined, "clean")}
-            className="px-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-          >
-            <Check className="h-3.5 w-3.5 text-emerald-600" />
-            {language === "hi" ? "सैंपल: मान्य क्लेम (100%)" : "Preset: Clean Validated Claim (100%)"}
-          </button>
         </div>
       </div>
 

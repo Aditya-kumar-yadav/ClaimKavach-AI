@@ -52,10 +52,17 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
 
   // Interactive Fix-It Simulator State (Cause-and-Effect on stage)
   const [fixedIssueIds, setFixedIssueIds] = useState<Set<string>>(new Set());
+  const [issueFilter, setIssueFilter] = useState<"ALL" | "RED" | "YELLOW">("ALL");
 
   const nhcxBundle = generateNHCXClaimBundle(claim, result);
   const jsonString = JSON.stringify(nhcxBundle, null, 2);
   const appealPacket = generateIRDAIAppealLetter(claim, result);
+
+  const filteredIssues = useMemo(() => {
+    if (issueFilter === "RED") return result.issues.filter(i => i.severity === "RED");
+    if (issueFilter === "YELLOW") return result.issues.filter(i => i.severity === "YELLOW");
+    return result.issues;
+  }, [result.issues, issueFilter]);
 
   const toggleIssue = (id: string) => {
     setExpandedIssues(prev => ({ ...prev, [id]: !prev[id] }));
@@ -438,26 +445,44 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             </p>
           </div>
 
-          <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-bold self-start sm:self-auto">
-            {result.issues.length} {language === "hi" ? "कमियां मिलीं" : (result.issues.length === 1 ? "Issue Flagged" : "Issues Flagged")}
-          </span>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            {/* Issue Severity Filter Dropdown */}
+            <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-200">
+              <span className="text-[11px] font-bold text-slate-500">
+                {language === "hi" ? "फ़िल्टर:" : "Filter:"}
+              </span>
+              <select
+                value={issueFilter}
+                onChange={(e) => setIssueFilter(e.target.value as any)}
+                className="text-xs font-bold bg-transparent text-slate-800 cursor-pointer outline-hidden"
+              >
+                <option value="ALL">{language === "hi" ? `सभी (${result.issues.length})` : `All Issues (${result.issues.length})`}</option>
+                <option value="RED">🚨 {language === "hi" ? "केवल गंभीर (Critical Red)" : "Critical Red Only"}</option>
+                <option value="YELLOW">⚠️ {language === "hi" ? "केवल कटौती (Deductions)" : "Deductions Only"}</option>
+              </select>
+            </div>
+
+            <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-bold">
+              {filteredIssues.length} {language === "hi" ? "दिख रहे हैं" : (filteredIssues.length === 1 ? "Issue" : "Issues")}
+            </span>
+          </div>
         </div>
 
-        {result.issues.length === 0 ? (
+        {filteredIssues.length === 0 ? (
           <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center text-emerald-800">
             <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto mb-2" />
             <h4 className="font-bold text-base">
-              {language === "hi" ? "शून्य अस्वीकृति जोखिम: क्लेम पूरी तरह सुरक्षित" : "Zero Rejection Risks Detected"}
+              {language === "hi" ? "इस श्रेणी में कोई कमी नहीं मिली" : "No Issues Found in this Category"}
             </h4>
             <p className="text-xs text-emerald-600 mt-1">
               {language === "hi"
-                ? "सभी तारीखें, डॉक्टर के हस्ताक्षर और आईआरडीएआई पैकेज 100% वैधानिक रूप से मान्य हैं।"
-                : "All dates, doctor signatures, and IRDAI package items are 100% compliant."}
+                ? "अन्य कमियां देखने के लिए ऊपर दिए गए फ़िल्टर को बदलें।"
+                : "Switch the filter above to inspect other compliance categories."}
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {result.issues.map((issue) => {
+            {filteredIssues.map((issue) => {
               const isFixed = fixedIssueIds.has(issue.id);
 
               return (

@@ -9,7 +9,14 @@ import { AudioExplainer } from "@/components/AudioExplainer";
 import { ClaimPacketPrint } from "@/components/ClaimPacketPrint";
 import { ProcessingPipeline } from "@/components/ProcessingPipeline";
 import { ExtractedClaim, AuditResult } from "@/types/claim";
-import { FLAWED_DEMO_CLAIM, CLEAN_DEMO_CLAIM } from "@/lib/mock-data";
+import { 
+  FLAWED_DEMO_CLAIM, 
+  CLEAN_DEMO_CLAIM, 
+  OVERBILLED_PMJAY_CLAIM, 
+  WAITING_PERIOD_CLAIM, 
+  ROOM_RENT_CAPPING_CLAIM,
+  DEMO_SCENARIO_LIST 
+} from "@/lib/mock-data";
 import { evaluateClaim } from "@/lib/rule-engine";
 import { VernacularTTS } from "@/lib/tts";
 import { ShieldCheck, Sparkles, AlertCircle, FileCheck2, ArrowRight, RotateCcw } from "lucide-react";
@@ -31,7 +38,7 @@ export default function Home() {
   const handleAnalyze = async (
     billBase64?: string,
     summaryBase64?: string,
-    preset?: "flawed" | "clean"
+    preset?: "flawed" | "overbilled" | "waiting" | "roomrent" | "clean"
   ) => {
     // Immediately stop any playing audio when switching presets or re-analyzing
     VernacularTTS.stop();
@@ -48,10 +55,19 @@ export default function Home() {
       let extracted: ExtractedClaim;
 
       if (preset === "flawed") {
-        await sleep(500); // Visual rhythm for judge comprehension
+        await sleep(350);
         extracted = FLAWED_DEMO_CLAIM;
+      } else if (preset === "overbilled") {
+        await sleep(350);
+        extracted = OVERBILLED_PMJAY_CLAIM;
+      } else if (preset === "waiting") {
+        await sleep(350);
+        extracted = WAITING_PERIOD_CLAIM;
+      } else if (preset === "roomrent") {
+        await sleep(350);
+        extracted = ROOM_RENT_CAPPING_CLAIM;
       } else if (preset === "clean") {
-        await sleep(500);
+        await sleep(350);
         extracted = CLEAN_DEMO_CLAIM;
       } else {
         const res = await fetch("/api/extract", {
