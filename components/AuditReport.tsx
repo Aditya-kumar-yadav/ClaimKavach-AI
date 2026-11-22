@@ -88,6 +88,12 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                 <span className="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
                 NHCX FHIR R4 Ready
               </span>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
+                Tenure: {claim.policyTenureMonths || 24} Months
+              </span>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-semibold">
+                Sum Insured: ₹{(claim.policySumInsured || 500000).toLocaleString("en-IN")}
+              </span>
             </div>
             <h2 className="text-2xl font-black text-slate-900 tracking-tight">
               {claim.patientName} {claim.patientAge ? `(${claim.patientAge} Yrs)` : ""}
@@ -158,6 +164,39 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
           </div>
         </div>
       </div>
+
+      {/* IRDAI 2024 Statutory Legal Protections (The SecureShield Engine Flex) */}
+      {result.statutoryProtections && result.statutoryProtections.length > 0 && (
+        <div className="glass-card rounded-2xl p-5 sm:p-6 border border-emerald-300 bg-emerald-50/50 shadow-md">
+          <div className="flex items-center gap-2 mb-2 text-emerald-800">
+            <ShieldCheck className="h-5 w-5 text-emerald-600" />
+            <h3 className="font-extrabold text-sm sm:text-base">
+              {language === "hi"
+                ? "आईआरडीएआई 2024 मास्टर सर्कुलर: कानूनी अधिकार एवं सुरक्षा लागू"
+                : "IRDAI 2024 Master Circular: Statutory Legal Protections Active"}
+            </h3>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 ml-auto">
+              Clause 8.1 Active
+            </span>
+          </div>
+
+          <div className="space-y-2 mt-3">
+            {result.statutoryProtections.map((prot, idx) => (
+              <div key={idx} className="p-3.5 rounded-xl bg-white border border-emerald-200 text-xs">
+                <div className="flex items-center justify-between font-bold text-slate-900 mb-1">
+                  <span>{language === "hi" ? prot.titleHi : prot.titleEn}</span>
+                  <span className="font-mono text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    {prot.ruleRef}
+                  </span>
+                </div>
+                <p className="text-slate-700 leading-relaxed">
+                  {language === "hi" ? prot.descriptionHi : prot.descriptionEn}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Audit Issues Section */}
       <div className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-md">

@@ -48,6 +48,23 @@
       "penalty": 8
     }
   },
+  "irdai_2024_master_circular": {
+    "moratorium_period_months": 60,
+    "moratorium_clause_summary": "Claims cannot be denied for non-disclosure or pre-existing diseases after 60 continuous months of active policy tenure (Clause 8.1)",
+    "specific_waiting_periods": {
+      "hernia": 24,
+      "cataract": 24,
+      "cholecystectomy": 24,
+      "joint replacement": 48,
+      "knee replacement": 48,
+      "hysterectomy": 24
+    },
+    "room_rent_capping": {
+      "standard_percent_of_si": 1.0,
+      "icu_percent_of_si": 2.0,
+      "proportional_deduction_clause": "Associated medical expenses are deducted in the ratio of eligible room rent to actual room rent incurred."
+    }
+  },
   "packageCaps": {
     "appendectomy": 22000,
     "cholecystectomy": 28000,

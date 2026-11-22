@@ -12,13 +12,21 @@ export const FLAWED_DEMO_CLAIM: ExtractedClaim = {
   billDischargeDate: "2026-11-15",
   summaryAdmitDate: "2026-11-13", // Mismatched Date! (12 vs 13) -> Critical Red Flag
   summaryDischargeDate: "2026-11-15",
-  diagnosis: "Acute Appendicitis with Localized Peritonitis",
-  procedureName: "Laparoscopic Appendectomy",
-  claimedTotal: 34850,
+  diagnosis: "Acute Appendicitis with Complicated Inguinal Hernia",
+  procedureName: "Laparoscopic Appendectomy & Inguinal Hernia Repair",
+  claimedTotal: 38850,
   extractionConfidence: 98,
+
+  // IRDAI 2024 Statutory Policy Parameters
+  policyTenureMonths: 14, // < 24 months -> Triggers Statutory Hernia Waiting Period Violation!
+  policySumInsured: 300000,
+  roomRentPerDay: 5000, // Actual ₹5,000 vs Eligible 1% Cap ₹3,000 -> Triggers Room Rent Deduction!
+  roomRentCapPerDay: 3000,
+  pedQueryRaised: true, // Triggers PED query warning (< 60 months)
+
   lineItems: [
-    { name: "Hospital Bed & Nursing Charges (3 Days)", category: "ROOM", amount: 9000, isNonPayable: false },
-    { name: "Laparoscopic Appendectomy Surgical Package", category: "SURGERY", amount: 16500, isNonPayable: false },
+    { name: "Hospital Bed & Nursing Charges (3 Days @ ₹5,000/day)", category: "ROOM", amount: 15000, isNonPayable: false },
+    { name: "Laparoscopic Appendectomy & Hernia OT Package", category: "SURGERY", amount: 14500, isNonPayable: false },
     { name: "IV Fluids, Antibiotics & Post-Op Medications", category: "MEDICINE", amount: 4800, isNonPayable: false },
     { name: "Surgical Gloves & Latex Exam Gloves (8 Pairs)", category: "CONSUMABLE", amount: 1200, isNonPayable: true, nonPayableReason: "Prohibited under IRDAI List I (Consumables)" },
     { name: "N95 Surgical Masks & PPE Care Kit", category: "CONSUMABLE", amount: 850, isNonPayable: true, nonPayableReason: "Prohibited under IRDAI List I" },
@@ -40,13 +48,21 @@ export const CLEAN_DEMO_CLAIM: ExtractedClaim = {
   billDischargeDate: "2026-11-12",
   summaryAdmitDate: "2026-11-10",
   summaryDischargeDate: "2026-11-12",
-  diagnosis: "Unilateral Inguinal Hernia",
-  procedureName: "Open Hernioplasty with Mesh",
+  diagnosis: "Acute Calculus Cholecystitis",
+  procedureName: "Laparoscopic Cholecystectomy",
   claimedTotal: 23500,
   extractionConfidence: 99,
+
+  // IRDAI 2024 Statutory Policy Parameters
+  policyTenureMonths: 68, // > 60 months -> Activates 5-Year Moratorium Legal Protection!
+  policySumInsured: 500000,
+  roomRentPerDay: 3000, // Within 1% Cap (₹5,000) -> 0 Deductions!
+  roomRentCapPerDay: 5000,
+  pedQueryRaised: false,
+
   lineItems: [
-    { name: "Inpatient Room Rent (Semi-Private 2 Days)", category: "ROOM", amount: 6000, isNonPayable: false },
-    { name: "Hernioplasty Procedure & OT Charges", category: "SURGERY", amount: 13500, isNonPayable: false },
+    { name: "Inpatient Room Rent (Semi-Private 2 Days @ ₹3,000/day)", category: "ROOM", amount: 6000, isNonPayable: false },
+    { name: "Laparoscopic Cholecystectomy OT & Surgeon Charges", category: "SURGERY", amount: 13500, isNonPayable: false },
     { name: "Anesthesia & Inpatient Medicines", category: "MEDICINE", amount: 4000, isNonPayable: false }
   ]
 };

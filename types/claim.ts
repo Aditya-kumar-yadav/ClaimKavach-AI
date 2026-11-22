@@ -26,15 +26,31 @@ export const ExtractedClaimSchema = z.object({
   procedureName: z.string().optional(),
   lineItems: z.array(LineItemSchema),
   claimedTotal: z.number().positive(),
-  extractionConfidence: z.number().min(0).max(100).default(96)
+  extractionConfidence: z.number().min(0).max(100).default(96),
+  
+  // IRDAI 2024 Master Circular Statutory Policy Fields
+  policyTenureMonths: z.number().default(24),
+  policySumInsured: z.number().default(500000),
+  roomRentPerDay: z.number().optional(),
+  roomRentCapPerDay: z.number().optional(),
+  pedQueryRaised: z.boolean().default(false)
 });
 
 export type ExtractedClaim = z.infer<typeof ExtractedClaimSchema>;
 
+export interface StatutoryProtection {
+  ruleRef: string;
+  titleEn: string;
+  titleHi: string;
+  descriptionEn: string;
+  descriptionHi: string;
+  status: "PROTECTED" | "VIOLATION" | "DEDUCTION";
+}
+
 export interface AuditIssue {
   id: string;
   severity: "RED" | "YELLOW";
-  ruleRef: string; // e.g., "DATE_MISMATCH", "IRDAI_LIST_1", "DOC_SEAL_MISSING"
+  ruleRef: string; // e.g., "DATE_MISMATCH", "IRDAI-LIST-I", "IRDAI-2024-MORATORIUM"
   titleEn: string;
   titleHi: string;
   descriptionEn: string;
@@ -51,6 +67,7 @@ export interface AuditResult {
   payableAmount: number;
   nonPayableAmount: number;
   issues: AuditIssue[];
+  statutoryProtections: StatutoryProtection[];
   passedChecksCount: number;
   totalChecksCount: number;
   packetHash: string; // SHA-256 Digest

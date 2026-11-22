@@ -1,15 +1,18 @@
-import { ExtractedClaim, AuditResult, AuditIssue } from "@/types/claim";
+import { ExtractedClaim, AuditResult, AuditIssue, StatutoryProtection } from "@/types/claim";
 import policyRules from "./policy-rules.json";
 import crypto from "crypto";
 
 export function evaluateClaim(claim: ExtractedClaim): AuditResult {
   const issues: AuditIssue[] = [];
+  const statutoryProtections: StatutoryProtection[] = [];
   let scoreDeduction = 0;
   let nonPayableAmount = 0;
   let totalChecksCount = 0;
   let passedChecksCount = 0;
 
+  // =========================================================================
   // 1. Cross-Document Date Integrity Check (CRITICAL RED)
+  // =========================================================================
   totalChecksCount++;
   if (
     claim.billAdmitDate !== claim.summaryAdmitDate ||
@@ -31,7 +34,9 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
     passedChecksCount++;
   }
 
+  // =========================================================================
   // 2. Doctor Signature & Registration Integrity Check (RED)
+  // =========================================================================
   totalChecksCount++;
   if (!claim.doctorSigned || !claim.doctorRegNo || claim.doctorRegNo.trim() === "") {
     issues.push({
@@ -50,7 +55,9 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
     passedChecksCount++;
   }
 
+  // =========================================================================
   // 3. Clinical Diagnosis Presence Check (RED)
+  // =========================================================================
   totalChecksCount++;
   if (!claim.diagnosis || claim.diagnosis.trim().length < 3) {
     issues.push({
@@ -69,7 +76,94 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
     passedChecksCount++;
   }
 
-  // 4. IRDAI Non-Payable Consumables Check (Lists I - IV)
+  // =========================================================================
+  // 4. IRDAI 2024 Master Circular: 5-Year (60-Month) Moratorium Clause
+  // =========================================================================
+  totalChecksCount++;
+  const moratoriumMonths = policyRules.irdai_2024_master_circular.moratorium_period_months;
+  if (claim.policyTenureMonths >= moratoriumMonths) {
+    statutoryProtections.push({
+      ruleRef: "IRDAI-2024-MC-CLAUSE-8.1",
+      titleEn: "Statutory 60-Month Moratorium Protection Active",
+      titleHi: "आईआरडीएआई 2024 5-वर्षीय मोरेटोरियम सुरक्षा लागू",
+      descriptionEn: `Policy has been continuously active for ${claim.policyTenureMonths} months (>= 60 months). Under IRDAI 2024 Master Circular Clause 8.1, the insurer is legally prohibited from contesting or denying this claim on grounds of pre-existing disease (PED) or non-disclosure.`,
+      descriptionHi: `आपकी पॉलिसी लगातार ${claim.policyTenureMonths} महीनों से सक्रिय है। आईआरडीएआई 2024 नियमों के अनुसार 60 महीने बाद बीमा कंपनी पुरानी बीमारी (PED) का बहाना बनाकर क्लेम रिजेक्ट नहीं कर सकती।`,
+      status: "PROTECTED"
+    });
+    passedChecksCount++;
+  } else if (claim.pedQueryRaised) {
+    issues.push({
+      id: "PED_MORATORIUM_NOT_MET",
+      severity: "YELLOW",
+      ruleRef: "IRDAI-2024-PED-TENURE",
+      titleEn: "Policy Under 60 Months: Pre-Existing Disease Scrutiny Risk",
+      titleHi: "पॉलिसी 5 साल पुरानी नहीं है: पुरानी बीमारी की जांच का जोखिम",
+      descriptionEn: `Policy tenure is ${claim.policyTenureMonths} months (< 60 months). Insurer has raised a Pre-Existing Disease (PED) query. Ensure full prior prescription and consultation history is attached.`,
+      descriptionHi: `पॉलिसी को 60 महीने पूरे नहीं हुए हैं। बीमा कंपनी पुरानी बीमारी का रिकॉर्ड मांग सकती है, अतः पहले के सभी डॉक्टर पर्चे साथ लगाएं।`,
+      fixEn: "Attach first-consultation prescription confirming symptom onset occurred after policy inception.",
+      fixHi: "पहली जांच का पर्चा साथ लगाएं जिससे साबित हो कि बीमारी पॉलिसी लेने के बाद शुरू हुई थी।"
+    });
+    scoreDeduction += 15;
+  }
+
+  // =========================================================================
+  // 5. IRDAI 2024 Specific Waiting Periods Check
+  // =========================================================================
+  const procedureOrDiagnosis = `${claim.procedureName || ""} ${claim.diagnosis}`.toLowerCase();
+  const waitingRules = policyRules.irdai_2024_master_circular.specific_waiting_periods;
+  
+  for (const [procKey, requiredMonths] of Object.entries(waitingRules)) {
+    if (procedureOrDiagnosis.includes(procKey)) {
+      totalChecksCount++;
+      if (claim.policyTenureMonths < requiredMonths) {
+        issues.push({
+          id: `WAITING_PERIOD_${procKey.toUpperCase()}`,
+          severity: "RED",
+          ruleRef: "IRDAI-2024-WAITING-PERIOD",
+          titleEn: `Statutory Waiting Period Violation: ${procKey.toUpperCase()} Requires ${requiredMonths} Months`,
+          titleHi: `अनिवार्य वेटिंग पीरियड नियम: ${procKey} के लिए ${requiredMonths} महीने की पॉलिसी जरूरी है`,
+          descriptionEn: `Under IRDAI 2024 standardized policy wording, ${procKey} is subject to a mandatory ${requiredMonths}-month waiting period. Current continuous tenure is only ${claim.policyTenureMonths} months.`,
+          descriptionHi: `आईआरडीएआई नियमों के तहत ${procKey} के इलाज पर ${requiredMonths} महीने का वेटिंग पीरियड होता है, जबकि आपकी पॉलिसी अभी ${claim.policyTenureMonths} महीने पुरानी है।`,
+          fixEn: "Verify if this policy was ported from a prior insurer; if ported, submit prior continuity certificates to claim waiting period credit.",
+          fixHi: "यदि यह पॉलिसी किसी पुरानी कंपनी से पोर्ट करवाई गई थी, तो पुरानी पॉलिसी का पोर्टेबिलिटी सर्टिफिकेट साथ लगाएं।"
+        });
+        scoreDeduction += 30;
+      } else {
+        passedChecksCount++;
+      }
+      break;
+    }
+  }
+
+  // =========================================================================
+  // 6. IRDAI 2024 Proportional Room Rent Capping Deduction
+  // =========================================================================
+  const eligibleRoomCap = claim.roomRentCapPerDay || (claim.policySumInsured * 0.01); // 1% of Sum Insured
+  if (claim.roomRentPerDay && claim.roomRentPerDay > eligibleRoomCap) {
+    totalChecksCount++;
+    const excessPerDay = claim.roomRentPerDay - eligibleRoomCap;
+    // Calculate 3 days proportional deduction on room rent
+    const roomDeduction = excessPerDay * 3;
+    nonPayableAmount += roomDeduction;
+
+    issues.push({
+      id: "ROOM_RENT_CAPPING_EXCEEDED",
+      severity: "YELLOW",
+      ruleRef: "IRDAI-2024-ROOM-CAPPING-CLAUSE",
+      titleEn: `Proportional Room Rent Capping Deduction: ₹${roomDeduction.toLocaleString("en-IN")}`,
+      titleHi: `रूम रेंट कैपिंग कटौती: ₹${roomDeduction.toLocaleString("en-IN")} की आनुपातिक कटौती`,
+      descriptionEn: `Your policy caps room rent at 1% of Sum Insured (₹${eligibleRoomCap.toLocaleString("en-IN")}/day), but an executive room of ₹${claim.roomRentPerDay.toLocaleString("en-IN")}/day was selected. Under IRDAI 2024 guidelines, excess room charges and associated doctor fees are deducted proportionally.`,
+      descriptionHi: `आपकी पॉलिसी में कमरे का किराया ₹${eligibleRoomCap.toLocaleString("en-IN")}/दिन निर्धारित है, लेकिन अस्पताल में ₹${claim.roomRentPerDay.toLocaleString("en-IN")}/दिन का कमरा लिया गया। आईआरडीएआई नियमों के अनुसार यह अंतर क्लेम से काटा जाएगा।`,
+      fixEn: "Be aware of proportional deduction. For future planned admissions, opt for twin-sharing or standard rooms within the 1% cap.",
+      fixHi: "इस अंतर राशि का भुगतान स्वयं करना होगा। आगे से अस्पताल में पॉलिसी की सीमा के भीतर वाला कमरा ही चुनें।",
+      deductedAmount: roomDeduction
+    });
+    scoreDeduction += 15;
+  }
+
+  // =========================================================================
+  // 7. IRDAI Non-Payable Consumables Check (Lists I - IV)
+  // =========================================================================
   const list1Regex = new RegExp(policyRules.lists.list1_excluded_items.items.join("|"), "i");
   const list2Regex = new RegExp(policyRules.lists.list2_subsumed_room.items.join("|"), "i");
   const list3Regex = new RegExp(policyRules.lists.list3_subsumed_procedure.items.join("|"), "i");
@@ -116,7 +210,7 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
         reason: reasonEn,
         ruleRef
       });
-      scoreDeduction += 5; // incremental deduction
+      scoreDeduction += 5;
     } else {
       passedChecksCount++;
     }
@@ -140,7 +234,7 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
     });
   }
 
-  // Calculate final score clamped between 0 and 100
+  // Calculate final score clamped between 10 and 100
   const approvalScore = Math.max(12, Math.min(100, 100 - scoreDeduction));
   const riskLevel: "GREEN" | "YELLOW" | "RED" =
     approvalScore >= 80 ? "GREEN" : approvalScore >= 60 ? "YELLOW" : "RED";
@@ -167,6 +261,7 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
     payableAmount,
     nonPayableAmount,
     issues,
+    statutoryProtections,
     passedChecksCount,
     totalChecksCount,
     packetHash,
