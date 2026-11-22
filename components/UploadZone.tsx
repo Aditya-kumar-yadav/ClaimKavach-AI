@@ -1,22 +1,41 @@
 "use client";
 
 import React, { useState } from "react";
-import { Upload, FileText, Image as ImageIcon, Sparkles, Check, AlertCircle, Zap } from "lucide-react";
+import { Upload, FileText, Image as ImageIcon, Sparkles, Check, AlertCircle, Zap, ChevronUp } from "lucide-react";
 import { compressImageFile, CompressionResult } from "@/lib/image-compressor";
+import { ExtractedClaim } from "@/types/claim";
 
 interface UploadZoneProps {
   onAnalyze: (billBase64?: string, summaryBase64?: string, preset?: "flawed" | "clean") => void;
   isLoading: boolean;
   language: "en" | "hi";
+  activeClaim?: ExtractedClaim | null;
+  onReset?: () => void;
 }
 
-export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalyze, isLoading, language }) => {
+export const UploadZone: React.FC<UploadZoneProps> = ({ 
+  onAnalyze, 
+  isLoading, 
+  language,
+  activeClaim,
+  onReset
+}) => {
   const [billImage, setBillImage] = useState<string | null>(null);
   const [summaryImage, setSummaryImage] = useState<string | null>(null);
   const [billStats, setBillStats] = useState<CompressionResult | null>(null);
   const [summaryStats, setSummaryStats] = useState<CompressionResult | null>(null);
   const [isCompressing, setIsCompressing] = useState<"bill" | "summary" | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
+
+  // Auto-collapse when an audit is active
+  React.useEffect(() => {
+    if (activeClaim) {
+      setIsCollapsed(true);
+    } else {
+      setIsCollapsed(false);
+    }
+  }, [activeClaim]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "bill" | "summary") => {
     const file = e.target.files?.[0];
@@ -43,6 +62,66 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalyze, isLoading, la
     }
   };
 
+  // Requirement 1: Once an audit is active, collapse into a slim 1-line bar
+  if (activeClaim && isCollapsed) {
+    return (
+      <div className="glass-card rounded-2xl px-4 sm:px-6 py-3 mb-6 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/95 backdrop-blur-sm transition-all duration-300">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="h-8 w-8 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center shrink-0">
+            <FileText className="h-4 w-4" />
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-sm min-w-0">
+            <span className="font-semibold text-slate-400 text-[11px] uppercase tracking-wider">
+              {language === "hi" ? "ऑडिट दस्तावेज़:" : "Auditing:"}
+            </span>
+            <span className="font-black text-slate-900 truncate">
+              {activeClaim.patientName}
+            </span>
+            <span className="text-slate-300">•</span>
+            <span className="font-mono text-xs font-bold text-slate-700">
+              ₹{activeClaim.claimedTotal.toLocaleString("en-IN")}
+            </span>
+            <span className="text-slate-300 hidden sm:inline">•</span>
+            <span className="text-slate-500 text-xs truncate max-w-[200px] hidden sm:inline">
+              🏥 {activeClaim.hospitalName}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+          {/* Quick presets for stage flex */}
+          <div className="flex items-center gap-1.5 mr-1">
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => onAnalyze(undefined, undefined, "flawed")}
+              className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 text-[11px] font-semibold transition-all cursor-pointer"
+            >
+              {language === "hi" ? "खारिज (28%)" : "Flawed (28%)"}
+            </button>
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => onAnalyze(undefined, undefined, "clean")}
+              className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-[11px] font-semibold transition-all cursor-pointer"
+            >
+              {language === "hi" ? "मान्य (100%)" : "Clean (100%)"}
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(false)}
+            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+          >
+            <Upload className="h-3.5 w-3.5 text-slate-500" />
+            <span>{language === "hi" ? "दस्तावेज़ बदलें" : "Change Document"}</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card rounded-2xl p-6 sm:p-8 mb-8 border border-slate-200/80 shadow-md">
       {/* Header */}
@@ -61,8 +140,18 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAnalyze, isLoading, la
           </p>
         </div>
 
-        {/* 1-Click Demo Presets */}
+        {/* 1-Click Demo Presets & Optional Collapse Button */}
         <div className="flex flex-wrap items-center gap-2">
+          {activeClaim && (
+            <button
+              type="button"
+              onClick={() => setIsCollapsed(true)}
+              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer mr-1"
+            >
+              <ChevronUp className="h-3.5 w-3.5 text-slate-500" />
+              <span>{language === "hi" ? "समेटें (Collapse)" : "Collapse"}</span>
+            </button>
+          )}
           <button
             type="button"
             disabled={isLoading || isCompressing !== null}

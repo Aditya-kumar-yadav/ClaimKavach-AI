@@ -185,35 +185,39 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
       {/* Top Banner: Decision & Approval Probability with Interactive Fix-It Simulator */}
       <div className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-md transition-all duration-500">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
-          {/* Patient & Hospital Info */}
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">
-                {language === "hi" ? "मरीज विवरण" : "Patient Dossier"}
+          {/* Patient & Hospital Info (Requirement 2: Clean Muted Inline Text Row + Single Top-Right Badge) */}
+          <div className="flex-1">
+            {/* Clean muted inline text row */}
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500 font-medium mb-2">
+              <span>
+                {language === "hi" ? "भर्ती" : "Admit"}: <strong className="text-slate-700">{claim.billAdmitDate} → {claim.billDischargeDate}</strong>
               </span>
-              <span className="text-xs text-slate-500 font-mono">
-                {language === "hi" ? "भर्ती" : "Admit"}: {claim.billAdmitDate} → {language === "hi" ? "छुट्टी" : "Discharge"}: {claim.billDischargeDate}
+              <span className="text-slate-300">•</span>
+              <span>
+                {language === "hi" ? "पॉलिसी" : "Tenure"}: <strong className="text-slate-700">{claim.policyTenureMonths || 36} {language === "hi" ? "माह" : "Mo"}</strong>
               </span>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 font-semibold flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
-                {language === "hi" ? "NHCX FHIR R4 मानक तैयार" : "NHCX FHIR R4 Ready"}
-              </span>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
-                {language === "hi" ? `पॉलिसी: ${claim.policyTenureMonths || 24} माह` : `Tenure: ${claim.policyTenureMonths || 24} Months`}
-              </span>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-semibold">
-                {language === "hi" ? `बीमा राशि: ₹${(claim.policySumInsured || 500000).toLocaleString("en-IN")}` : `Sum Insured: ₹${(claim.policySumInsured || 500000).toLocaleString("en-IN")}`}
+              <span className="text-slate-300">•</span>
+              <span>
+                {language === "hi" ? "बीमा राशि" : "Sum Insured"}: <strong className="text-slate-700">₹{(claim.policySumInsured || 500000).toLocaleString("en-IN")}</strong>
               </span>
             </div>
 
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-              {claim.patientName} {claim.patientAge ? `(${claim.patientAge} Yrs)` : ""}
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-0.5 font-medium">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                {claim.patientName} {claim.patientAge ? `(${claim.patientAge} Yrs)` : ""}
+              </h2>
+              {/* Only ONE badge kept on top right/inline as requested */}
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 font-semibold flex items-center gap-1.5 shadow-2xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse"></span>
+                {language === "hi" ? "NHCX FHIR R4 मानक तैयार" : "NHCX FHIR R4 Ready"}
+              </span>
+            </div>
+
+            <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
               🏥 {claim.hospitalName}
             </p>
 
-            <div className="flex flex-wrap items-center gap-2 mt-1">
+            <div className="flex flex-wrap items-center gap-2 mt-1.5">
               <p className="text-xs text-slate-500">
                 🩺 <strong className="text-slate-700">{language === "hi" ? "बीमारी:" : "Diagnosis:"}</strong> {claim.diagnosis}
               </p>
@@ -304,6 +308,49 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             <span className="text-[11px] text-rose-600 font-medium">
               {language === "hi" ? "आईआरडीएआई सूचियां I-IV के तहत गैर-मान्य" : "IRDAI Lists I-IV non-payable items"}
             </span>
+          </div>
+        </div>
+
+        {/* Surface Export & Appeal Action Bar (Requirement 3: Right under 3 Financial Cards - Above the Fold) */}
+        <div className="mt-5 pt-5 border-t border-slate-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
+          <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
+            <Hash className="h-3.5 w-3.5 text-sky-600 shrink-0" />
+            <span className="text-slate-400">{language === "hi" ? "डिजिटल सील:" : "Seal:"}</span>
+            <span className="text-slate-800 font-semibold truncate max-w-[140px] sm:max-w-[200px]" title={result.packetHash}>
+              {result.packetHash}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Feature 1: 1-Click "Fight Back" Appeal Generator */}
+            <button
+              type="button"
+              onClick={() => setShowAppealModal(true)}
+              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+            >
+              <Gavel className="h-3.5 w-3.5 text-amber-200" />
+              <span>{language === "hi" ? "अपील दर्ज करें: IRDAI पत्र" : "Fight Back: IRDAI Appeal"}</span>
+            </button>
+
+            {/* Export NHCX JSON Button */}
+            <button
+              type="button"
+              onClick={() => setShowNHCXModal(true)}
+              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs shadow-emerald-600/20 flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+            >
+              <Code2 className="h-3.5 w-3.5 text-emerald-200" />
+              <span>{language === "hi" ? "NHCX FHIR JSON देखें" : "Export NHCX FHIR JSON"}</span>
+            </button>
+
+            {/* Print Dossier Button */}
+            <button
+              type="button"
+              onClick={onPrint}
+              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+            >
+              <Printer className="h-3.5 w-3.5 text-sky-400" />
+              <span>{language === "hi" ? "डोजियर प्रिंट करें (A4)" : "Print Dossier (A4)"}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -515,15 +562,15 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                         </p>
                       </div>
 
-                      {/* Feature 3: 1-Click WhatsApp / Hospital Billing Desk Correction Request */}
-                      <div className="mt-3 p-3.5 rounded-xl bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+                      {/* Feature 3: 1-Click WhatsApp / Hospital Billing Desk Correction Request (Requirement 4: Lightened Slate/Emerald tint) */}
+                      <div className="mt-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
                         <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                          <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                            <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />
+                          <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                          <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
                             {language === "hi"
                               ? "अस्पताल बिलिंग काउंटर सुधार पत्र (Ready-to-Send)"
-                              : "Hospital Billing Desk Fix Message"}
+                              : "Hospital Billing Desk Correction Request"}
                           </span>
                         </div>
 
@@ -537,7 +584,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                            className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer hover:shadow-emerald-600/20"
                           >
                             <span>{language === "hi" ? "व्हाट्सएप भेजें" : "WhatsApp to Hospital"}</span>
                           </a>
@@ -554,16 +601,16 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                               setCopiedIssueId(issue.id);
                               setTimeout(() => setCopiedIssueId(null), 2000);
                             }}
-                            className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all border border-slate-700 cursor-pointer"
+                            className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all border border-slate-300 shadow-2xs cursor-pointer"
                           >
                             {copiedIssueId === issue.id ? (
                               <>
-                                <Check className="h-3.5 w-3.5 text-emerald-400" />
-                                <span>{language === "hi" ? "कॉपी हो गया!" : "Copied Letter!"}</span>
+                                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                <span className="text-emerald-700">{language === "hi" ? "कॉपी हो गया!" : "Copied!"}</span>
                               </>
                             ) : (
                               <>
-                                <Copy className="h-3.5 w-3.5" />
+                                <Copy className="h-3.5 w-3.5 text-slate-500" />
                                 <span>{language === "hi" ? "पत्र कॉपी करें" : "Copy Letter"}</span>
                               </>
                             )}
@@ -645,55 +692,47 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
         )}
       </div>
 
-      {/* Triple Action Master Bar (NHCX JSON + IRDAI Appeal Generator + Print Dossier) */}
-      <div className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-md flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
-            <Hash className="h-4 w-4 text-sky-600" />
-            <span>{language === "hi" ? "क्रिप्टोग्राफिक हैश (SHA-256):" : "SHA-256 Digest:"}</span>
-            <span className="text-slate-800 font-semibold truncate max-w-[200px] sm:max-w-xs">
+      {/* Compact Cryptographic Audit & Compliance Seal (Requirement 3: Tight, zero white gap before footer) */}
+      <div className="rounded-2xl px-5 py-3.5 bg-white border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 font-mono">
+          <div className="flex items-center gap-1.5">
+            <Hash className="h-3.5 w-3.5 text-sky-600 shrink-0" />
+            <span className="text-slate-400">{language === "hi" ? "क्रिप्टोग्राफिक हैश (SHA-256):" : "SHA-256 Digest:"}</span>
+            <span className="text-slate-800 font-semibold truncate max-w-[180px] sm:max-w-xs" title={result.packetHash}>
               {result.packetHash}
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-            <span>
-              {language === "hi"
-                ? "राष्ट्रीय स्वास्थ्य दावा एक्सचेंज (NHCX/ABDM) एवं बीमा भरोसा पोर्टल से संबद्ध"
-                : "Interoperable with NHA NHCX, ABDM HCX FHIR R4 & IRDAI Bima Bharosa"}
-            </span>
-          </p>
+          <span className="text-slate-300 hidden sm:inline">•</span>
+          <span className="text-emerald-700 font-medium flex items-center gap-1 font-sans">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+            {language === "hi" ? "NHA NHCX / ABDM / बीमा भरोसा अनुरूप" : "Compliant with NHA NHCX & IRDAI Bima Bharosa"}
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-          {/* Feature 1: 1-Click "Fight Back" Appeal Generator */}
+        <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
           <button
             type="button"
             onClick={() => setShowAppealModal(true)}
-            className="flex-1 sm:flex-initial px-4 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition-all cursor-pointer flex items-center gap-1"
           >
-            <Gavel className="h-4 w-4 text-amber-200" />
-            <span>{language === "hi" ? "अपील दर्ज करें: IRDAI अपील पत्र बनाएं" : "Fight Back: Generate IRDAI Appeal"}</span>
+            <Gavel className="h-3.5 w-3.5 text-amber-600" />
+            <span>{language === "hi" ? "अपील" : "Appeal"}</span>
           </button>
-
-          {/* Export NHCX JSON Button */}
           <button
             type="button"
             onClick={() => setShowNHCXModal(true)}
-            className="flex-1 sm:flex-initial px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition-all cursor-pointer flex items-center gap-1"
           >
-            <Code2 className="h-4 w-4 text-emerald-200" />
-            <span>{language === "hi" ? "NHCX FHIR JSON देखें" : "Export NHCX FHIR JSON"}</span>
+            <Code2 className="h-3.5 w-3.5 text-emerald-600" />
+            <span>FHIR JSON</span>
           </button>
-
-          {/* Print Dossier Button */}
           <button
             type="button"
             onClick={onPrint}
-            className="flex-1 sm:flex-initial px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition-all cursor-pointer flex items-center gap-1"
           >
-            <Printer className="h-4 w-4 text-sky-400" />
-            <span>{language === "hi" ? "क्लेम डोजियर प्रिंट करें" : "Print Claim Dossier"}</span>
+            <Printer className="h-3.5 w-3.5 text-slate-600" />
+            <span>{language === "hi" ? "प्रिंट" : "Print"}</span>
           </button>
         </div>
       </div>

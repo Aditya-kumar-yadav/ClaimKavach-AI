@@ -124,9 +124,9 @@ export default function Home() {
       <div className="no-print flex-1 flex flex-col">
         <Header language={language} setLanguage={setLanguage} />
 
-        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
           {/* Hero Banner */}
-          <div className="text-center max-w-3xl mx-auto mb-10">
+          <div className={`text-center max-w-3xl mx-auto transition-all duration-300 ${claim ? "mb-4" : "mb-10"}`}>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-bold mb-3 border border-sky-200">
               <Sparkles className="h-3.5 w-3.5 text-sky-600" />
               <span>
@@ -156,11 +156,13 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Document Ingestion Zone */}
+          {/* Document Ingestion Zone - Auto-Collapses to 1-line bar when audit is active */}
           <UploadZone
             onAnalyze={handleAnalyze}
             isLoading={isLoading}
             language={language}
+            activeClaim={claim}
+            onReset={handleReset}
           />
 
           {/* Stepped 3-Stage Deterministic Pipeline Visualizer */}
