@@ -27,7 +27,7 @@ import {
   MessageSquare,
   ShieldAlert
 } from "lucide-react";
-import { ExtractedClaim, AuditResult } from "@/types/claim";
+import { ExtractedClaim, AuditResult, AuditIssue } from "@/types/claim";
 import { generateNHCXClaimBundle } from "@/lib/nhcx-fhir";
 import { generateIRDAIAppealLetter } from "@/lib/appeal-generator";
 
@@ -53,6 +53,26 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
   // Interactive Fix-It Simulator State (Cause-and-Effect on stage)
   const [fixedIssueIds, setFixedIssueIds] = useState<Set<string>>(new Set());
   const [issueFilter, setIssueFilter] = useState<"ALL" | "RED" | "YELLOW">("ALL");
+
+  // Defensive sanitization of patient & hospital identifiers to avoid "NOT_FOUND" leaking into UI/letters
+  const displayPatientName = (!claim.patientName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.patientName.trim()))
+    ? (language === "hi" ? "मरीज (पहचान रिकॉर्ड लंबित)" : "Admitted Patient (Record Pending)")
+    : claim.patientName;
+
+  const displayHospitalName = (!claim.hospitalName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.hospitalName.trim()))
+    ? (language === "hi" ? "अस्पताल बिलिंग एवं TPA विभाग" : "Hospital Billing & Inpatient Care")
+    : claim.hospitalName;
+
+  // Professional fallback letter generator for WhatsApp and Copy Letter buttons
+  const getBillingDeskMessage = (issue: AuditIssue, lang: "hi" | "en"): string => {
+    if (lang === "hi") {
+      if (issue.billingDeskMsgHi) return issue.billingDeskMsgHi;
+      return `सेवा में: बिलिंग एवं TPA विभाग, ${displayHospitalName}।\nमरीज का नाम: ${displayPatientName}।\nविषय: इंश्योरेंस क्लेम हेतु दस्तावेज सुधार / सत्यापन अनुरोध।\n\nमहोदय,\nहमारे स्वास्थ्य बीमा क्लेम की पूर्व-जांच में '${issue.titleHi}' के संबंध में आवश्यक सुधार पाया गया है। कृपया संबंधित दस्तावेज पर आवश्यक संशोधन कर अस्पताल की आधिकारिक मुहर लगा संशोधित प्रति प्रदान करने की कृपा करें ताकि क्लेम निर्बाध रूप से पास हो सके।\n\nधन्यवाद,\n${displayPatientName} एवं परिजन।`;
+    } else {
+      if (issue.billingDeskMsgEn) return issue.billingDeskMsgEn;
+      return `To: Billing & TPA Desk, ${displayHospitalName}\nPatient: ${displayPatientName}\nSubject: Request for Documentation Review / Rectification for Insurance Approval\n\nRespected Sir/Madam,\nDuring pre-submission audit of our health insurance claim, an issue regarding '${issue.titleEn}' was identified in our hospital paperwork.\nKindly issue a corrected, stamped revision of the bill/records or an official hospital clarification certificate to ensure seamless TPA approval.\n\nThank you,\n${displayPatientName} & Family`;
+    }
+  };
 
   const nhcxBundle = generateNHCXClaimBundle(claim, result);
   const jsonString = JSON.stringify(nhcxBundle, null, 2);
@@ -174,7 +194,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `IRDAI-APPEAL-LETTER-${claim.patientName.replace(/\s+/g, "_")}.txt`;
+    a.download = `IRDAI-APPEAL-LETTER-${displayPatientName.replace(/[^a-zA-Z0-9]/g, "_")}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -211,7 +231,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
 
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                {claim.patientName} {claim.patientAge ? `(${claim.patientAge} Yrs)` : ""}
+                {displayPatientName} {claim.patientAge ? `(${claim.patientAge} Yrs)` : ""}
               </h2>
               {/* Only ONE badge kept on top right/inline as requested */}
               <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 font-semibold flex items-center gap-1.5 shadow-2xs">
@@ -221,7 +241,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             </div>
 
             <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
-              🏥 {claim.hospitalName}
+              🏥 {displayHospitalName}
             </p>
 
             <div className="flex flex-wrap items-center gap-2 mt-1.5">
@@ -600,13 +620,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                          {/* Exact WhatsApp Message from DhananjayBhosale template */}
+                          {/* Exact WhatsApp Message from professional Indian hospital letter template */}
                           <a
-                            href={`https://wa.me/?text=${encodeURIComponent(
-                              language === "hi"
-                                ? (issue.billingDeskMsgHi || `नमस्ते, हमारे अस्पताल बिल एवं डिस्चार्ज समरी में '${issue.titleHi}' को कृपया ठीक करके अस्पताल की मुहर लगा नया बिल दें ताकि इंश्योरेंस क्लेम पास हो सके। मरीज: ${claim.patientName}।`)
-                                : (issue.billingDeskMsgEn || `Hello, please rectify '${issue.titleEn}' in our hospital bill/records and provide an updated stamped copy to ensure insurance claim approval. Patient: ${claim.patientName}.`)
-                            )}`}
+                            href={`https://wa.me/?text=${encodeURIComponent(getBillingDeskMessage(issue, language))}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer hover:shadow-emerald-600/20"
@@ -618,10 +634,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                           <button
                             type="button"
                             onClick={() => {
-                              const msg =
-                                language === "hi"
-                                  ? (issue.billingDeskMsgHi || issue.billingDeskMsgEn || "")
-                                  : (issue.billingDeskMsgEn || issue.billingDeskMsgHi || "");
+                              const msg = getBillingDeskMessage(issue, language);
                               navigator.clipboard.writeText(msg);
                               setCopiedIssueId(issue.id);
                               setTimeout(() => setCopiedIssueId(null), 2000);

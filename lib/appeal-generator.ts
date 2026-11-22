@@ -30,8 +30,15 @@ export function generateIRDAIAppealLetter(claim: ExtractedClaim, result: AuditRe
     year: "numeric"
   });
 
+  const cleanPatient = (!claim.patientName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.patientName.trim()))
+    ? "Admitted Patient"
+    : claim.patientName.trim();
+  const cleanHospital = (!claim.hospitalName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.hospitalName.trim()))
+    ? "Hospital Healthcare Facility"
+    : claim.hospitalName.trim();
+
   const claimRef = `CLM-${result.packetHash.substring(0, 10).toUpperCase()}`;
-  const policyRef = `POL-${claim.patientName.replace(/[^a-zA-Z]/g, "").substring(0, 4).toUpperCase()}-2024-X`;
+  const policyRef = `POL-${cleanPatient.replace(/[^a-zA-Z]/g, "").substring(0, 4).toUpperCase() || "CARE"}-2024-X`;
 
   const letterText = `
 DATE: ${dateStr}
@@ -39,13 +46,13 @@ DATE: ${dateStr}
 TO:
 The Principal Grievance Redressal Officer (GRO)
 Claims Adjudication & Appeals Division
-${claim.hospitalName ? `Network / Non-Network Claims Department` : "Health Insurance TPA Department"}
+${cleanHospital ? `${cleanHospital} - Network / Non-Network Claims Department` : "Health Insurance TPA Department"}
 
 SUBJECT: FORMAL WRITTEN APPEAL AGAINST UNFAIR REPUDIATION / PARTIAL DEDUCTION OF INPATIENT CLAIM
 CLAIM REFERENCE ID: ${claimRef}
 POLICY NUMBER: ${policyRef}
-PATIENT NAME: ${claim.patientName} (${claim.patientAge || "Adult"} Yrs)
-HOSPITAL: ${claim.hospitalName}
+PATIENT NAME: ${cleanPatient} (${claim.patientAge || "Adult"} Yrs)
+HOSPITAL: ${cleanHospital}
 PERIOD OF HOSPITALIZATION: ${claim.billAdmitDate} to ${claim.billDischargeDate}
 CLAIMED TOTAL: ₹${claim.claimedTotal.toLocaleString("en-IN")}
 CONTESTED AMOUNT: ₹${(result.nonPayableAmount > 0 ? result.nonPayableAmount : claim.claimedTotal).toLocaleString("en-IN")}
@@ -65,7 +72,7 @@ ${claim.policyTenureMonths >= 60
 
 2. PROCEDURAL & CLERICAL RECTIFICATION SUBMITTED:
 The initial claim rejection/query cited clerical discrepancies (such as date formatting or hospital consumable classifications). We hereby provide the verified clinical dossier:
-- Formal Discharge Summary and Itemized Final Inpatient Invoices from ${claim.hospitalName}.
+- Formal Discharge Summary and Itemized Final Inpatient Invoices from ${cleanHospital}.
 - Treating Consultant: ${claim.doctorName || "Treating Physician"} (Statutory Medical Council Reg: ${claim.doctorRegNo || "Affixed on Record"}).
 - Standardized WHO ICD-10 Diagnosis: ${claim.diagnosis}.
 
@@ -86,7 +93,7 @@ Please acknowledge receipt with a formal Grievance Registration Number.
 
 Yours sincerely,
 
-${claim.patientName} & Authorized Family Representative
+${cleanPatient} & Authorized Family Representative
 Contact: Claimant Contact on Record
 Cryptographic Verification Digest: ${result.packetHash}
 `;

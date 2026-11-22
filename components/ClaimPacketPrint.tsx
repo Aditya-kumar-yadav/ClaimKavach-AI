@@ -9,6 +9,13 @@ interface ClaimPacketPrintProps {
 }
 
 export const ClaimPacketPrint: React.FC<ClaimPacketPrintProps> = ({ claim, result }) => {
+  const displayPatient = (!claim.patientName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.patientName.trim()))
+    ? "Admitted Patient (Record on File)"
+    : claim.patientName.trim();
+  const displayHospital = (!claim.hospitalName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.hospitalName.trim()))
+    ? "Inpatient Healthcare Facility"
+    : claim.hospitalName.trim();
+
   return (
     <div className="print-only p-4 sm:p-6 bg-white text-black font-sans leading-tight text-[11px] max-w-[210mm] mx-auto">
       {/* Dossier Header */}
@@ -33,7 +40,7 @@ export const ClaimPacketPrint: React.FC<ClaimPacketPrintProps> = ({ claim, resul
       <div className="grid grid-cols-2 gap-3 border border-slate-300 rounded-lg p-3 mb-3 text-[10.5px]">
         <div>
           <p className="text-slate-500 text-[10px]">Patient Name & Age:</p>
-          <p className="font-bold text-xs text-slate-900">{claim.patientName} ({claim.patientAge || "N/A"} Yrs)</p>
+          <p className="font-bold text-xs text-slate-900">{displayPatient} ({claim.patientAge || "Adult"} Yrs)</p>
           <p className="text-slate-500 text-[10px] mt-1.5">Clinical Diagnosis:</p>
           <p className="font-bold text-slate-900">{claim.diagnosis}</p>
           <p className="text-slate-500 text-[10px] mt-1.5">Procedure / Surgery:</p>
@@ -41,7 +48,7 @@ export const ClaimPacketPrint: React.FC<ClaimPacketPrintProps> = ({ claim, resul
         </div>
         <div>
           <p className="text-slate-500 text-[10px]">Treating Healthcare Facility:</p>
-          <p className="font-bold text-xs text-slate-900">{claim.hospitalName}</p>
+          <p className="font-bold text-xs text-slate-900">{displayHospital}</p>
           <p className="text-slate-500 text-[10px] mt-1.5">Hospital Bill Dates:</p>
           <p className="font-bold text-slate-900">{claim.billAdmitDate} to {claim.billDischargeDate}</p>
           <p className="text-slate-500 text-[10px] mt-1.5">Discharge Summary Dates:</p>

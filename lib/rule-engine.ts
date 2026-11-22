@@ -11,6 +11,23 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
   let totalChecksCount = 0;
   let passedChecksCount = 0;
 
+  // Defensive sanitization of patient & hospital identifiers to avoid "NOT_FOUND" leaking into letters
+  const cleanPatient = (!claim.patientName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.patientName.trim()))
+    ? "Patient / Inpatient Record"
+    : claim.patientName.trim();
+
+  const cleanPatientHi = (!claim.patientName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.patientName.trim()))
+    ? "मरीज / इनपेशेंट रिकॉर्ड"
+    : claim.patientName.trim();
+
+  const cleanHospital = (!claim.hospitalName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.hospitalName.trim()))
+    ? "Hospital Billing & TPA Desk"
+    : claim.hospitalName.trim();
+
+  const cleanHospitalHi = (!claim.hospitalName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.hospitalName.trim()))
+    ? "अस्पताल बिलिंग एवं TPA विभाग"
+    : claim.hospitalName.trim();
+
   // =========================================================================
   // 1. Cross-Document Date Integrity Check (CRITICAL RED)
   // =========================================================================
@@ -29,8 +46,28 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
       descriptionHi: `अस्पताल के बिल में भर्ती की तारीख ${claim.billAdmitDate} है, जबकि डिस्चार्ज समरी में ${claim.summaryAdmitDate} दर्ज है। बीमा कंपनी इसे डेटा विसंगति मानकर क्लेम तुरंत निरस्त कर देती है।`,
       fixEn: "Request the hospital billing desk to issue an updated, stamped bill or revised discharge summary matching the exact registered dates before submission.",
       fixHi: "अस्पताल के बिलिंग काउंटर से कहें कि वे दोनों कागजों पर एक ही सही तारीख दर्ज करके अस्पताल की मुहर लगाकर दें।",
-      billingDeskMsgEn: `To: Billing & TPA Desk, ${claim.hospitalName}.\nPatient: ${claim.patientName}.\nSubject: Urgent Rectification Request - Date Mismatch on Inpatient Bill.\n\nRespected Sir/Madam,\nOur final itemized bill lists admission date as ${claim.billAdmitDate} and discharge as ${claim.billDischargeDate}, whereas the discharge summary records admission on ${claim.summaryAdmitDate} and discharge on ${claim.summaryDischargeDate}.\n\nUnder IRDAI claim settlement guidelines, this clerical conflict causes automatic rejection. We kindly request you to issue a revised stamped bill or an official hospital correction certificate (शुद्धि-पत्र) matching the exact dates.\n\nThank you,\n${claim.patientName} & Family.`,
-      billingDeskMsgHi: `सेवा में: बिलिंग एवं TPA विभाग, ${claim.hospitalName}।\nमरीज का नाम: ${claim.patientName}।\nविषय: अस्पताल बिल में भर्ती/डिस्चार्ज तारीख सुधार हेतु प्रार्थना पत्र।\n\nमहोदय,\nहमारे अस्पताल बिल में भर्ती की तारीख ${claim.billAdmitDate} है, जबकि डिस्चार्ज समरी में ${claim.summaryAdmitDate} दर्ज है।\n\nबीमा नियमों के तहत तारीख में अंतर होने से हमारा क्लेम निरस्त हो जाएगा। कृपया दोनों कागजों पर सही तारीख दर्ज करके अस्पताल की आधिकारिक मुहर लगा संशोधित बिल या शुद्धि-पत्र (Correction Letter) जारी करने की कृपा करें।\n\nधन्यवाद,\n${claim.patientName} एवं परिजन।`
+      billingDeskMsgEn: `To: Billing & TPA Desk, ${cleanHospital}
+Patient: ${cleanPatient}
+Subject: Urgent Rectification Request - Admission / Discharge Date Mismatch on Inpatient Records
+
+Respected Sir/Madam,
+Our final itemized bill records admission as ${claim.billAdmitDate} and discharge as ${claim.billDischargeDate}, whereas the discharge summary records admission on ${claim.summaryAdmitDate} and discharge on ${claim.summaryDischargeDate}.
+
+Under IRDAI claim adjudication guidelines, this clerical discrepancy results in immediate claim rejection or audit queries by the insurance TPA. We kindly request your office to issue an updated, stamped final bill or an official hospital correction letter (शुद्धि-पत्र) matching the exact dates across both documents.
+
+Thank you,
+${cleanPatient} & Family`,
+      billingDeskMsgHi: `सेवा में: बिलिंग एवं TPA विभाग, ${cleanHospitalHi}।
+मरीज का नाम: ${cleanPatientHi}।
+विषय: अस्पताल बिल एवं डिस्चार्ज समरी में भर्ती/डिस्चार्ज तारीख सुधार हेतु प्रार्थना पत्र।
+
+महोदय,
+हमारे अस्पताल बिल में भर्ती की तारीख ${claim.billAdmitDate} है, जबकि डिस्चार्ज समरी में ${claim.summaryAdmitDate} दर्ज है।
+
+आईआरडीएआई बीमा नियमों के तहत कागजों में तारीखों में अंतर होने से क्लेम तुरंत निरस्त हो जाता है। कृपया दोनों दस्तावेजों पर एक समान सही तारीख दर्ज करके अस्पताल की आधिकारिक मुहर लगा संशोधित बिल या शुद्धि-पत्र (Correction Certificate) जारी करने की कृपा करें।
+
+धन्यवाद,
+${cleanPatientHi} एवं परिजन।`
     });
     scoreDeduction += 35;
   } else {
@@ -52,8 +89,28 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
       descriptionHi: `डिस्चार्ज पेपर पर इलाज करने वाले डॉक्टर का मेडिकल काउंसिल रजिस्ट्रेशन नंबर या आधिकारिक हस्ताक्षर नहीं है। सरकारी और निजी बीमा नियमों के तहत यह अनिवार्य है।`,
       fixEn: "Ensure treating physician signs the discharge summary and affixes their official seal containing their State Medical Council registration number.",
       fixHi: "इलाज करने वाले डॉक्टर से डिस्चार्ज समरी पर हस्ताक्षर और रजिस्ट्रेशन नंबर वाली आधिकारिक मुहर लगवाएं।",
-      billingDeskMsgEn: `To: Medical Records / Billing Desk, ${claim.hospitalName}.\nPatient: ${claim.patientName}.\nSubject: Treating Doctor Stamp & MCI Registration Number Endorsement.\n\nRespected Sir/Madam,\nThe discharge summary lacks the treating consultant ${claim.doctorName || ""}'s State Medical Council registration number seal and physical signature. The insurance TPA requires verifiable statutory registration for reimbursement approval.\n\nKindly have the treating doctor affix their official seal and signature.\n\nThank you,\n${claim.patientName}.`,
-      billingDeskMsgHi: `सेवा में: बिलिंग एवं मेडिकल रिकॉर्ड्स विभाग, ${claim.hospitalName}।\nमरीज का नाम: ${claim.patientName}।\nविषय: डिस्चार्ज पेपर पर डॉक्टर के हस्ताक्षर एवं रजिस्ट्रेशन मुहर लगवाने हेतु।\n\nमहोदय,\nहमारे डिस्चार्ज पेपर पर इलाज करने वाले डॉक्टर ${claim.doctorName || ""} का मेडिकल काउंसिल रजिस्ट्रेशन नंबर और मुहर दर्ज नहीं है। बीमा कंपनी द्वारा क्लेम पास करने के लिए यह अनिवार्य नियम है। कृपया डॉक्टर साहब से मुहर और हस्ताक्षर करवा कर देने की कृपा करें।\n\nधन्यवाद,\n${claim.patientName}।`
+      billingDeskMsgEn: `To: Medical Records & Inpatient Billing Desk, ${cleanHospital}
+Patient: ${cleanPatient}
+Subject: Request for Treating Consultant Registration Seal and Physical Signature
+
+Respected Sir/Madam,
+Regarding patient ${cleanPatient}'s inpatient discharge documentation, the treating consultant ${claim.doctorName ? `(${claim.doctorName})` : ""}'s State Medical Council / NMC registration number and physical signature seal are missing.
+
+Under IRDAI claim settlement norms, health insurance TPAs mandate verifiable statutory physician credentials before reimbursing hospitalization costs. Kindly have the treating consultant affix their official registration seal and signature on the discharge summary.
+
+Thank you,
+${cleanPatient} & Family`,
+      billingDeskMsgHi: `सेवा में: मेडिकल रिकॉर्ड्स एवं बिलिंग विभाग, ${cleanHospitalHi}।
+मरीज का नाम: ${cleanPatientHi}।
+विषय: डिस्चार्ज पेपर पर डॉक्टर के हस्ताक्षर एवं NMC रजिस्ट्रेशन मुहर लगवाने हेतु।
+
+महोदय,
+मरीज ${cleanPatientHi} के डिस्चार्ज पेपर पर इलाज करने वाले डॉक्टर ${claim.doctorName ? `(${claim.doctorName})` : ""} का मेडिकल काउंसिल रजिस्ट्रेशन नंबर और आधिकारिक मुहर दर्ज नहीं है।
+
+बीमा कंपनी (TPA) द्वारा क्लेम स्वीकृत करने के लिए डॉक्टर का रजिस्ट्रेशन नंबर अनिवार्य है। कृपया डॉक्टर साहब से डिस्चार्ज समरी पर आधिकारिक मुहर और हस्ताक्षर करवा कर प्रमाणित प्रति प्रदान करने की कृपा करें।
+
+धन्यवाद,
+${cleanPatientHi} एवं परिजन।`
     });
     scoreDeduction += 25;
   } else {
@@ -75,7 +132,27 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
       descriptionEn: "Discharge paperwork lacks a definitive clinical diagnosis or standard diagnostic mapping, preventing claims triage teams from approving medical necessity.",
       descriptionHi: "कागजों में बीमारी का स्पष्ट चिकित्सकीय नाम नहीं लिखा है, जिससे बीमा कंपनी मेडिकल आवश्यकता को खारिज कर सकती है।",
       fixEn: "Ask the hospital to explicitly state primary diagnosis and ICD-10 code in the final summary.",
-      fixHi: "अस्पताल से कहें कि वह अंतिम समरी में बीमारी का पूरा चिकित्सकीय नाम स्पष्ट रूप से लिखे।"
+      fixHi: "अस्पताल से कहें कि वह अंतिम समरी में बीमारी का पूरा चिकित्सकीय नाम स्पष्ट रूप से लिखे।",
+      billingDeskMsgEn: `To: Medical Records & Billing Desk, ${cleanHospital}
+Patient: ${cleanPatient}
+Subject: Urgent Request: Clinical Diagnosis & ICD-10 Endorsement on Discharge Summary
+
+Respected Sir/Madam,
+The discharge summary issued for patient ${cleanPatient} lacks an explicit clinical diagnosis and standard WHO ICD-10 diagnostic coding. Under IRDAI claims adjudication guidelines, health insurance TPAs require a definitive clinical diagnosis to establish medical necessity.
+
+Kindly arrange for the treating consultant to record the primary clinical diagnosis on the discharge summary with their official seal and signature.
+
+Thank you,
+${cleanPatient} & Family`,
+      billingDeskMsgHi: `सेवा में: मेडिकल रिकॉर्ड्स एवं बिलिंग विभाग, ${cleanHospitalHi}।
+मरीज का नाम: ${cleanPatientHi}।
+विषय: डिस्चार्ज समरी में प्राथमिक बीमारी (Diagnosis) एवं ICD-10 कोड दर्ज करने हेतु।
+
+महोदय,
+मरीज ${cleanPatientHi} की डिस्चार्ज समरी में बीमारी का स्पष्ट चिकित्सकीय नाम (Clinical Diagnosis) दर्ज नहीं है। बीमा नियमों के अनुसार क्लेम पास होने के लिए बीमारी का स्पष्ट नाम होना अनिवार्य है। कृपया इलाज करने वाले डॉक्टर साहब से डिस्चार्ज समरी पर प्राथमिक बीमारी का नाम दर्ज करवा कर अस्पताल की मुहर लगवा दें।
+
+धन्यवाद,
+${cleanPatientHi} एवं परिजन।`
     });
     scoreDeduction += 30;
   } else if (icdMatch && icdMatch.confidence === "FALLBACK") {
@@ -88,7 +165,27 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
       descriptionEn: `Extracted diagnosis "${claim.diagnosis}" does not match standard WHO/NHA hospitalization categories. Insurer may pend the claim for query.`,
       descriptionHi: `दर्ज बीमारी "${claim.diagnosis}" मानक ICD-10 सूची में स्पष्ट नहीं है। बीमा कंपनी स्पष्टीकरण के लिए क्लेम रोक सकती है।`,
       fixEn: "Ensure the treating physician uses standardized clinical nomenclature (e.g. Acute Appendicitis K35.8 instead of general abdominal pain).",
-      fixHi: "डॉक्टर से कहें कि सामान्य लक्षण के बजाय बीमारी का मानक चिकित्सकीय नाम दर्ज करें।"
+      fixHi: "डॉक्टर से कहें कि सामान्य लक्षण के बजाय बीमारी का मानक चिकित्सकीय नाम दर्ज करें।",
+      billingDeskMsgEn: `To: Medical Records Department & TPA Desk, ${cleanHospital}
+Patient: ${cleanPatient}
+Subject: Request for Specific Clinical Diagnosis Clarification Letter (ICD-10 Standard)
+
+Respected Sir/Madam,
+Regarding patient ${cleanPatient}'s discharge paperwork, the noted diagnosis '${claim.diagnosis}' reflects generalized symptom terminology. Insurance claims assessors require specific diagnostic etiology aligned with WHO/NHA ICD-10 guidelines.
+
+Kindly provide a brief doctor's clarification letter (शुद्धि-पत्र) or diagnostic addendum on hospital letterhead specifying the exact clinical condition.
+
+Thank you,
+${cleanPatient} & Family`,
+      billingDeskMsgHi: `सेवा में: मेडिकल रिकॉर्ड्स विभाग एवं TPA डेस्क, ${cleanHospitalHi}।
+मरीज का नाम: ${cleanPatientHi}।
+विषय: डिस्चार्ज समरी में सटीक बीमारी (ICD-10) का स्पष्टीकरण पत्र जारी करने हेतु।
+
+महोदय,
+मरीज ${cleanPatientHi} के कागजों में बीमारी का नाम सामान्य लक्षणों ('${claim.diagnosis}') के रूप में दर्ज है। बीमा कंपनी के क्लेम विभाग द्वारा इस पर आपत्ति आ सकती है। कृपया डॉक्टर साहब से सटीक चिकित्सकीय बीमारी स्पष्ट करते हुए एक शुद्धि-पत्र (Clarification Letter) प्रदान करने की कृपा करें।
+
+धन्यवाद,
+${cleanPatientHi} एवं परिजन।`
     });
     scoreDeduction += 10;
   } else {
@@ -120,7 +217,27 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
       descriptionEn: `Policy tenure is ${claim.policyTenureMonths} months (< 60 months). Insurer has raised a Pre-Existing Disease (PED) query. Ensure full prior prescription and consultation history is attached.`,
       descriptionHi: `पॉलिसी को 60 महीने पूरे नहीं हुए हैं। बीमा कंपनी पुरानी बीमारी का रिकॉर्ड मांग सकती है, अतः पहले के सभी डॉक्टर पर्चे साथ लगाएं।`,
       fixEn: "Attach first-consultation prescription confirming symptom onset occurred after policy inception.",
-      fixHi: "पहली जांच का पर्चा साथ लगाएं जिससे साबित हो कि बीमारी पॉलिसी लेने के बाद शुरू हुई थी।"
+      fixHi: "पहली जांच का पर्चा साथ लगाएं जिससे साबित हो कि बीमारी पॉलिसी लेने के बाद शुरू हुई थी।",
+      billingDeskMsgEn: `To: Medical Records & TPA Desk, ${cleanHospital}
+Patient: ${cleanPatient}
+Subject: Request for Indoor Case History & Symptom Onset Certificate
+
+Respected Sir/Madam,
+For patient ${cleanPatient}'s insurance claim, the TPA has raised a query regarding Pre-Existing Disease (PED) duration.
+
+Kindly provide a certified copy of the indoor admission case sheet and the treating consultant's notes confirming that symptom onset was acute and occurred immediately prior to hospitalization.
+
+Thank you,
+${cleanPatient} & Family`,
+      billingDeskMsgHi: `सेवा में: TPA एवं बिलिंग विभाग, ${cleanHospitalHi}।
+मरीज का नाम: ${cleanPatientHi}।
+विषय: बीमारी की शुरुआत (Symptom Onset) संबंधी डॉक्टर प्रमाण पत्र प्रदान करने हेतु।
+
+महोदय,
+मरीज ${cleanPatientHi} के क्लेम के संबंध में बीमा कंपनी ने बीमारी के पुराने होने (PED) पर सवाल उठाया है। कृपया भर्ती के समय की केस हिस्ट्री शीट और डॉक्टर का नोट प्रदान करें जिसमें यह स्पष्ट हो कि बीमारी के लक्षण हाल ही में शुरू हुए थे।
+
+धन्यवाद,
+${cleanPatientHi} एवं परिजन।`
     });
     scoreDeduction += 15;
   }
@@ -154,7 +271,27 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
           descriptionEn: `Under IRDAI 2024 standardized policy wording, ${procKey} is subject to a mandatory ${requiredMonths}-month waiting period. Current continuous tenure is only ${claim.policyTenureMonths} months.`,
           descriptionHi: `आईआरडीएआई नियमों के तहत ${procKey} के इलाज पर ${requiredMonths} महीने का वेटिंग पीरियड होता है, जबकि आपकी पॉलिसी अभी ${claim.policyTenureMonths} महीने पुरानी है।`,
           fixEn: "Verify if this policy was ported from a prior insurer; if ported, submit prior continuity certificates to claim waiting period credit.",
-          fixHi: "यदि यह पॉलिसी किसी पुरानी कंपनी से पोर्ट करवाई गई थी, तो पुरानी पॉलिसी का पोर्टेबिलिटी सर्टिफिकेट साथ लगाएं।"
+          fixHi: "यदि यह पॉलिसी किसी पुरानी कंपनी से पोर्ट करवाई गई थी, तो पुरानी पॉलिसी का पोर्टेबिलिटी सर्टिफिकेट साथ लगाएं।",
+          billingDeskMsgEn: `To: Medical Records / Inpatient Billing Desk, ${cleanHospital}
+Patient: ${cleanPatient}
+Subject: Emergency Medical Necessity Certificate Request for ${procKey.toUpperCase()}
+
+Respected Sir/Madam,
+Regarding inpatient admission for ${cleanPatient}, our insurance TPA is reviewing specific waiting period guidelines for ${procKey}.
+
+Kindly issue a treating doctor certificate on hospital letterhead certifying whether this admission was necessitated by an acute emergency complication, along with the first consultation notes.
+
+Thank you,
+${cleanPatient} & Family`,
+          billingDeskMsgHi: `सेवा में: TPA एवं मेडिकल रिकॉर्ड्स विभाग, ${cleanHospitalHi}।
+मरीज का नाम: ${cleanPatientHi}।
+विषय: आपातकालीन भर्ती (Emergency Medical Necessity) प्रमाण पत्र जारी करने हेतु।
+
+महोदय,
+मरीज ${cleanPatientHi} के इलाज के संबंध में बीमा कंपनी ${procKey} के वेटिंग पीरियड नियमों की समीक्षा कर रही है। कृपया इलाज करने वाले डॉक्टर साहब से अस्पताल के लेटरहेड पर यह प्रमाणित करने वाला पत्र जारी करवाएं कि यह भर्ती आकस्मिक एवं तत्काल आवश्यक (Acute Emergency) थी।
+
+धन्यवाद,
+${cleanPatientHi} एवं परिजन।`
         });
         scoreDeduction += 30;
       } else {
@@ -184,7 +321,29 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
       descriptionHi: `आपकी पॉलिसी में कमरे का किराया ₹${eligibleRoomCap.toLocaleString("en-IN")}/दिन निर्धारित है, लेकिन अस्पताल में ₹${claim.roomRentPerDay.toLocaleString("en-IN")}/दिन का कमरा लिया गया। आईआरडीएआई नियमों के अनुसार यह अंतर क्लेम से काटा जाएगा।`,
       fixEn: "Be aware of proportional deduction. For future planned admissions, opt for twin-sharing or standard rooms within the 1% cap.",
       fixHi: "इस अंतर राशि का भुगतान स्वयं करना होगा। आगे से अस्पताल में पॉलिसी की सीमा के भीतर वाला कमरा ही चुनें।",
-      deductedAmount: roomDeduction
+      deductedAmount: roomDeduction,
+      billingDeskMsgEn: `To: Billing & TPA Desk, ${cleanHospital}
+Patient: ${cleanPatient}
+Subject: Request for Itemized Room & Nursing Charge Breakdown for TPA Review
+
+Respected Sir/Madam,
+Our health insurance policy contains a room rent capping clause (1% of Sum Insured: ₹${eligibleRoomCap.toLocaleString("en-IN")}/day). To prevent the TPA from applying disproportionate deductions across all associated doctor, nursing, and surgical charges:
+
+Kindly issue an itemized billing breakdown clearly separating pure room/bed accommodation rent from specialized nursing, RMO, and consultant visitation charges with the hospital's official seal.
+
+Thank you,
+${cleanPatient} & Family`,
+      billingDeskMsgHi: `सेवा में: बिलिंग एवं TPA विभाग, ${cleanHospitalHi}।
+मरीज का नाम: ${cleanPatientHi}।
+विषय: रूम रेंट एवं नर्सिंग शुल्क का अलग-अलग विवरण (Itemized Breakdown) प्रदान करने हेतु।
+
+महोदय,
+हमारी बीमा पॉलिसी में रूम रेंट कैपिंग नियम (₹${eligibleRoomCap.toLocaleString("en-IN")}/दिन) लागू है। बीमा कंपनी द्वारा पूरे क्लेम और डॉक्टर फीस पर आनुपातिक कटौती से बचने के लिए:
+
+कृपया कमरे का वास्तविक किराया और नर्सिंग/आरएमओ विजिट शुल्क अलग-अलग स्पष्ट रूप से दर्शाते हुए अस्पताल की आधिकारिक मुहर लगा संशोधित बिल प्रदान करने की कृपा करें।
+
+धन्यवाद,
+${cleanPatientHi} एवं परिजन।`
     });
     scoreDeduction += 15;
   }
@@ -258,7 +417,33 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
       descriptionHi: `अस्पताल के बिल में ऐसी चीजें शामिल हैं जिनका पैसा बीमा कंपनी नहीं देती: ${itemNamesList}। यह राशि आपके क्लेम से काट ली जाएगी।`,
       fixEn: "Deduct non-payable items from the primary claim request and submit as out-of-pocket, or request an itemized billing revision to avoid adjudicator delay.",
       fixHi: "इन गैर-मान्य खर्चों को अलग करके क्लेम सबमिट करें ताकि बीमा कंपनी इसे लेकर आपत्ति दर्ज न करे।",
-      deductedAmount: totalDeducted
+      deductedAmount: totalDeducted,
+      billingDeskMsgEn: `To: Billing & TPA Desk, ${cleanHospital}
+Patient: ${cleanPatient}
+Subject: Request for Itemized Split Bill / Consumables Breakdown for Insurance Submission
+
+Respected Sir/Madam,
+During pre-submission audit of our health insurance claim for patient ${cleanPatient}, non-payable consumable items (IRDAI Master Circular Lists I-IV) totaling ₹${totalDeducted.toLocaleString("en-IN")} were identified on the inpatient bill (${itemNamesList}).
+
+To ensure our TPA does not pend or deduct the primary hospitalization claim, we kindly request your office to:
+1. Issue an itemized split bill or a separate out-of-pocket payment receipt for non-medical consumables.
+2. Provide an updated, stamped final hospital bill reflecting only admissible inpatient medical services.
+
+Thank you for your prompt assistance,
+${cleanPatient} & Family`,
+      billingDeskMsgHi: `सेवा में: बिलिंग एवं TPA विभाग, ${cleanHospitalHi}।
+मरीज का नाम: ${cleanPatientHi}।
+विषय: इंश्योरेंस क्लेम हेतु नॉन-पेयेबल कंज्यूमेबल्स का अलग बिल (Split Bill) प्रदान करने हेतु।
+
+महोदय,
+मरीज ${cleanPatientHi} के इनपेशेंट बिल में आईआरडीएआई नियमों के तहत गैर-मान्य कंज्यूमेबल्स (${itemNamesList} - कुल राशि ₹${totalDeducted.toLocaleString("en-IN")}) शामिल हैं।
+
+बीमा कंपनी (TPA) द्वारा मुख्य क्लेम रोकने या कटौती करने से बचने के लिए, आपसे सविनय अनुरोध है कि:
+1. इन गैर-मान्य कंज्यूमेबल्स की अलग से रसीद (Split Receipt) बना दें।
+2. बीमा कंपनी में क्लेम जमा करने हेतु अस्पताल की आधिकारिक मुहर लगा मुख्य मेडिकल बिल प्रदान करें।
+
+सहयोग के लिए धन्यवाद,
+${cleanPatientHi} एवं परिजन।`
     });
   }
 

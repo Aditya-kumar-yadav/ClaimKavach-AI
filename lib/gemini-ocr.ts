@@ -145,6 +145,12 @@ Rules:
         isNonPayable: Boolean(item?.isNonPayable),
         nonPayableReason: item?.nonPayableReason || ""
       }));
+      if (!parsedJson.patientName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(String(parsedJson.patientName).trim())) {
+        parsedJson.patientName = "Admitted Patient";
+      }
+      if (!parsedJson.hospitalName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(String(parsedJson.hospitalName).trim())) {
+        parsedJson.hospitalName = "Hospital Billing & Inpatient Care";
+      }
       if (!parsedJson.summaryAdmitDate && parsedJson.billAdmitDate) {
         parsedJson.summaryAdmitDate = parsedJson.billAdmitDate;
       }

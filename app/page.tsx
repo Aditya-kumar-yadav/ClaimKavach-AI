@@ -130,8 +130,11 @@ export default function Home() {
       return "बधाई हो। आपके अस्पताल बिल और डिस्चार्ज समरी में कोई भी गलती नहीं मिली है। आपका क्लेम बीमा कंपनी से पास होने के लिए पूरी तरह तैयार है।";
     }
 
+    const patient = (!claim?.patientName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.patientName.trim()))
+      ? "मरीज"
+      : claim.patientName;
     const topIssues = result.issues.slice(0, 2).map(i => i.titleHi).join(", और ");
-    return `सावधान! मरीज ${claim?.patientName || "मरीज"} के अस्पताल रिकॉर्ड में ${topIssues} पाया गया है। कृपया इसे अस्पताल बिलिंग काउंटर से ठीक करवाएं ताकि क्लेम रिजेक्ट न हो।`;
+    return `सावधान! ${patient} के अस्पताल रिकॉर्ड में ${topIssues} पाया गया है। कृपया इसे अस्पताल बिलिंग काउंटर से ठीक करवाएं ताकि क्लेम रिजेक्ट न हो।`;
   };
 
   // Build audio summary in English from issues
@@ -140,8 +143,11 @@ export default function Home() {
       return "Congratulations. No compliance issues were detected in your hospital bill and discharge summary. Your claim is 100% ready for insurance approval.";
     }
 
+    const patient = (!claim?.patientName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.patientName.trim()))
+      ? "the patient"
+      : claim.patientName;
     const topIssues = result.issues.slice(0, 2).map(i => i.titleEn).join(", and ");
-    return `Attention! In hospital records for ${claim?.patientName || "patient"}, ${topIssues} were detected. Please have these rectified at the hospital billing desk to prevent claim rejection.`;
+    return `Attention! In hospital records for ${patient}, ${topIssues} were detected. Please have these rectified at the hospital billing desk to prevent claim rejection.`;
   };
 
   return (
