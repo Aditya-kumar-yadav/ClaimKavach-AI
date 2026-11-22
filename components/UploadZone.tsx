@@ -1,10 +1,34 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Upload, FileText, Sparkles, Check, AlertCircle, Zap, ChevronUp, ChevronDown, Trash2, X } from "lucide-react";
-import { compressImageFile, CompressionResult } from "@/lib/image-compressor";
+import { 
+  FileText, 
+  Sparkles, 
+  AlertCircle, 
+  Trash2, 
+  X, 
+  Plus, 
+  Eye, 
+  RefreshCw, 
+  Info, 
+  CheckCircle2, 
+  FileCheck2, 
+  ChevronUp, 
+  Zap 
+} from "lucide-react";
+import { compressImageFile } from "@/lib/image-compressor";
 import { ExtractedClaim } from "@/types/claim";
 import { DEMO_SCENARIO_LIST } from "@/lib/mock-data";
+
+interface UploadedDoc {
+  name: string;
+  sizeKB: number;
+  compressedSizeKB: number;
+  reductionPercentage: number;
+  ext: string;
+  isPdf: boolean;
+  base64: string;
+}
 
 interface UploadZoneProps {
   onAnalyze: (
@@ -29,13 +53,13 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
   externalError,
   onClearError
 }) => {
-  const [billImage, setBillImage] = useState<string | null>(null);
-  const [summaryImage, setSummaryImage] = useState<string | null>(null);
-  const [billStats, setBillStats] = useState<CompressionResult | null>(null);
-  const [summaryStats, setSummaryStats] = useState<CompressionResult | null>(null);
+  const [billDoc, setBillDoc] = useState<UploadedDoc | null>(null);
+  const [summaryDoc, setSummaryDoc] = useState<UploadedDoc | null>(null);
   const [isCompressing, setIsCompressing] = useState<"bill" | "summary" | null>(null);
+  const [dragOverBox, setDragOverBox] = useState<"bill" | "summary" | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
+  const [previewDoc, setPreviewDoc] = useState<UploadedDoc | null>(null);
 
   const billInputRef = useRef<HTMLInputElement | null>(null);
   const summaryInputRef = useRef<HTMLInputElement | null>(null);
@@ -46,10 +70,8 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
       setIsCollapsed(true);
     } else {
       setIsCollapsed(false);
-      setBillImage(null);
-      setSummaryImage(null);
-      setBillStats(null);
-      setSummaryStats(null);
+      setBillDoc(null);
+      setSummaryDoc(null);
       if (billInputRef.current) billInputRef.current.value = "";
       if (summaryInputRef.current) summaryInputRef.current.value = "";
     }
@@ -57,38 +79,39 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
 
   const handleRemoveFile = (type: "bill" | "summary") => {
     if (type === "bill") {
-      setBillImage(null);
-      setBillStats(null);
-      if (billInputRef.current) {
-        billInputRef.current.value = "";
-      }
+      setBillDoc(null);
+      if (billInputRef.current) billInputRef.current.value = "";
     } else {
-      setSummaryImage(null);
-      setSummaryStats(null);
-      if (summaryInputRef.current) {
-        summaryInputRef.current.value = "";
-      }
+      setSummaryDoc(null);
+      if (summaryInputRef.current) summaryInputRef.current.value = "";
     }
     if (onClearError) onClearError();
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "bill" | "summary") => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File, type: "bill" | "summary") => {
     setUploadError(null);
     if (onClearError) onClearError();
     setIsCompressing(type);
 
     try {
-      // Client-side canvas compression ensures payload stays < 1 MB even for 8-12 MB phone photos
+      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
       const result = await compressImageFile(file);
+      const ext = file.name.split(".").pop()?.toLowerCase() || (isPdf ? "pdf" : "jpg");
+
+      const docData: UploadedDoc = {
+        name: file.name,
+        sizeKB: result.originalSizeKB,
+        compressedSizeKB: result.compressedSizeKB,
+        reductionPercentage: result.reductionPercentage,
+        ext,
+        isPdf,
+        base64: result.base64
+      };
+
       if (type === "bill") {
-        setBillImage(result.base64);
-        setBillStats(result);
+        setBillDoc(docData);
       } else {
-        setSummaryImage(result.base64);
-        setSummaryStats(result);
+        setSummaryDoc(docData);
       }
     } catch (err: any) {
       console.error("Compression error:", err);
@@ -96,6 +119,37 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
     } finally {
       setIsCompressing(null);
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, type: "bill" | "summary") => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file, type);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetType: "bill" | "summary") => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverBox(null);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+
+    if (files.length >= 2) {
+      // Intelligently assign 2 dropped files to both boxes
+      processFile(files[0], "bill");
+      processFile(files[1], "summary");
+    } else {
+      processFile(files[0], targetType);
+    }
+  };
+
+  const formatFileSize = (kb: number) => {
+    if (kb >= 1024) {
+      return `${(kb / 1024).toFixed(2)} MB`;
+    }
+    return `${kb} KB`;
   };
 
   const activeError = externalError || uploadError;
@@ -107,7 +161,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
     activeError.includes("API key")
   );
 
-  // Once an audit is active, collapse into a slim 1-line bar
+  // Requirement 1: Once an audit is active, collapse into a slim 1-line bar
   if (activeClaim && isCollapsed) {
     return (
       <div className="glass-card rounded-2xl px-4 sm:px-6 py-3 mb-6 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/95 backdrop-blur-sm transition-all duration-300">
@@ -134,7 +188,6 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto shrink-0">
-          {/* Quick Scenario Dropdown Selector */}
           <div className="relative">
             <select
               disabled={isLoading}
@@ -163,7 +216,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
             onClick={() => setIsCollapsed(false)}
             className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
           >
-            <Upload className="h-3.5 w-3.5 text-slate-500" />
+            <RefreshCw className="h-3.5 w-3.5 text-slate-500" />
             <span>{language === "hi" ? "दस्तावेज़ बदलें" : "Change Document"}</span>
           </button>
         </div>
@@ -172,20 +225,20 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
   }
 
   return (
-    <div className="glass-card rounded-2xl p-6 sm:p-8 mb-8 border border-slate-200/80 shadow-md">
+    <div className="bg-white rounded-3xl p-6 sm:p-8 mb-8 border border-slate-200/90 shadow-sm relative">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-100">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-sky-600" />
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <FileCheck2 className="h-6 w-6 text-sky-600" />
             {language === "hi"
-              ? "दस्तावेज़ अपलोड करें या टेस्ट सैंपल चुनें"
-              : "Upload Documents or Select Sample Claim"}
+              ? "दस्तावेज़ अपलोड करें"
+              : "Upload Claim Documents"}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             {language === "hi"
-              ? "अस्पताल का पक्का बिल एवं डिस्चार्ज समरी जोड़ें। एआई तुरंत आईआरडीएआई नियमों से मिलान करेगा।"
-              : "Ingest hospital itemized bill & discharge summary for instantaneous compliance audit."}
+              ? "अस्पताल का पक्का बिल एवं डिस्चार्ज समरी जोड़ें (PDF, PNG, JPG समर्थित)"
+              : "Drag & drop or browse itemized hospital bill & clinical discharge summary (PDF, PNG, JPG)."}
           </p>
         </div>
 
@@ -204,7 +257,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
                   e.target.value = "";
                 }
               }}
-              className="text-xs font-bold px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-950 border border-sky-300 shadow-xs focus:ring-2 focus:ring-sky-500/30 cursor-pointer transition-all"
+              className="text-xs font-bold px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-900 border border-slate-300 shadow-2xs focus:ring-2 focus:ring-sky-500/20 cursor-pointer transition-all"
             >
               <option value="" disabled>
                 {language === "hi" ? "5 आईआरडीएआई केस में से चुनें (Dropdown)..." : "Select from 5 IRDAI Cases (Dropdown)..."}
@@ -232,9 +285,9 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
 
       {/* Prominent API Key / Extraction Error Notice */}
       {activeError && (
-        <div className={`mb-5 p-4 rounded-2xl border text-xs font-medium flex items-start gap-2.5 animate-in fade-in duration-200 ${
+        <div className={`mb-6 p-4 rounded-2xl border text-xs font-medium flex items-start gap-2.5 animate-in fade-in duration-200 ${
           isKeyError 
-            ? "bg-amber-50 border-amber-300 text-amber-950 shadow-xs" 
+            ? "bg-amber-50 border-amber-300 text-amber-950 shadow-2xs" 
             : "bg-rose-50 border-rose-200 text-rose-800"
         }`}>
           <AlertCircle className={`h-4 w-4 shrink-0 mt-0.5 ${isKeyError ? "text-amber-600" : "text-rose-600"}`} />
@@ -247,228 +300,289 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
             <p className="text-xs leading-relaxed opacity-90">
               {isKeyError
                 ? (language === "hi"
-                    ? "कस्टम अस्पताल बिल का लाइव एआई विश्लेषण करने के लिए, कृपया स्क्रीन के शीर्ष (Header) पर दिए गए 'Gemini API Key' बटन पर क्लिक करके अपनी Google AI Studio की जोड़ें (या ऊपर दिए गए 5 प्री-लोडेड केस में से चुनें)।"
-                    : "To audit your custom hospital document with live Google Gemini OCR, please configure your free Gemini API key using the button at the top header (or test with 5 pre-loaded scenarios above).")
+                    ? "कस्टम अस्पताल बिल का लाइव एआई विश्लेषण करने के लिए, कृपया स्क्रीन के शीर्ष (Header) पर दिए गए 'Gemini Key' बटन पर क्लिक करके अपनी Google AI Studio की जोड़ें।"
+                    : "To audit your custom hospital document with live Google Gemini OCR, please configure your free Gemini API key using the button at the top header.")
                 : activeError}
             </p>
           </div>
         </div>
       )}
 
-      {/* Dual Upload Boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-        {/* Box 1: Hospital Bill */}
-        <div className={`relative border-2 ${billImage ? "border-solid border-slate-300 bg-white shadow-2xs" : "border-dashed border-slate-300 hover:border-sky-500 bg-slate-50/50 hover:bg-sky-50/30"} rounded-2xl p-4 sm:p-5 text-center transition-all group`}>
+      {/* Dual Upload Columns Styled Like Modern SaaS Wireframe */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-7">
+        
+        {/* ======================================================== */}
+        {/* Box 1: Hospital Itemized Bill */}
+        {/* ======================================================== */}
+        <div className="flex flex-col">
+          {/* Box Header */}
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+              {language === "hi" ? "1. अस्पताल का पक्का बिल" : "1. Hospital Itemized Bill"}
+            </span>
+            {billDoc && (
+              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                {language === "hi" ? "दस्तावेज़ तैयार है" : "Ready for Audit"}
+              </span>
+            )}
+          </div>
+
           <input
             ref={billInputRef}
             type="file"
             accept="image/*,application/pdf"
             disabled={isCompressing !== null || isLoading}
-            onChange={(e) => handleFileUpload(e, "bill")}
-            className={billImage ? "hidden" : "absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"}
+            onChange={(e) => handleInputChange(e, "bill")}
+            className="hidden"
           />
-          <div className="flex flex-col items-center">
-            {isCompressing === "bill" ? (
-              <div className="h-32 flex flex-col items-center justify-center">
-                <div className="h-7 w-7 border-2 border-sky-600 border-t-transparent rounded-full animate-spin mb-2"></div>
-                <span className="text-xs font-bold text-sky-700">
-                  {language === "hi" ? "फोटो को कंप्रेस किया जा रहा है..." : "Compressing High-Res Photo for OCR..."}
-                </span>
-                <span className="text-[11px] text-slate-400 mt-0.5">
-                  {language === "hi" ? "Vercel 4.5 MB सीमा के भीतर" : "Under Vercel 4.5 MB Limit"}
-                </span>
-              </div>
-            ) : billImage ? (
-              <div className="w-full">
-                <div className="w-full h-36 rounded-xl overflow-hidden relative border border-slate-200 bg-slate-100 flex items-center justify-center">
-                  <img src={billImage} alt="Bill Preview" className="object-contain h-full w-full" />
-                  
-                  {/* Top-Right 1-Click Remove Cross */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveFile("bill");
-                    }}
-                    disabled={isCompressing !== null || isLoading}
-                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition-all shadow-md z-30 cursor-pointer hover:scale-105 active:scale-95"
-                    title={language === "hi" ? "दस्तावेज़ हटाएं (Remove)" : "Remove document"}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
 
-                  {/* Top-Left Uploaded Chip */}
-                  <span className="absolute top-2 left-2 bg-emerald-600/95 backdrop-blur-xs text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold shadow-xs">
-                    {language === "hi" ? "✓ अपलोड हो गया" : "✓ Uploaded"}
-                  </span>
-
-                  {billStats && billStats.reductionPercentage > 0 && (
-                    <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-xs text-emerald-300 text-[10px] px-2 py-0.5 rounded-md font-mono flex items-center gap-1 shadow-xs">
-                      <Zap className="h-2.5 w-2.5 text-amber-400" />
-                      <span>{billStats.originalSizeKB}KB → {billStats.compressedSizeKB}KB (-{billStats.reductionPercentage}%)</span>
-                    </span>
+          {isCompressing === "bill" ? (
+            <div className="h-44 rounded-2xl border-2 border-dashed border-sky-400 bg-sky-50/50 flex flex-col items-center justify-center p-6 transition-all">
+              <div className="h-8 w-8 border-2 border-sky-600 border-t-transparent rounded-full animate-spin mb-2.5"></div>
+              <span className="text-xs font-bold text-sky-800">
+                {language === "hi" ? "दस्तावेज़ तैयार किया जा रहा है..." : "Processing & Optimizing Document..."}
+              </span>
+              <span className="text-[11px] text-slate-400 mt-1 font-mono">
+                {language === "hi" ? "क्लाइंट-साइड कम्प्रेशन चालू है" : "Auto-optimizing for AI OCR"}
+              </span>
+            </div>
+          ) : billDoc ? (
+            /* Uploaded State - Reference Wireframe Card */
+            <div className="space-y-2.5">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center justify-between gap-3.5 transition-all hover:border-slate-300">
+                {/* File Thumbnail / Icon */}
+                <div 
+                  onClick={() => setPreviewDoc(billDoc)}
+                  className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                  title="Click to preview"
+                >
+                  {billDoc.isPdf ? (
+                    <FileText className="h-5 w-5 text-rose-500" />
+                  ) : (
+                    <img src={billDoc.base64} alt={billDoc.name} className="h-full w-full object-cover" />
                   )}
                 </div>
 
-                {/* File Action Bar: Change & Remove Buttons */}
-                <div className="mt-3 flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
-                  <span className="text-[11px] font-bold text-slate-700 truncate text-left">
-                    📄 {language === "hi" ? "1. अस्पताल बिल" : "1. Hospital Bill"}
-                  </span>
+                {/* File Metadata */}
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="font-bold text-xs sm:text-sm text-slate-900 truncate" title={billDoc.name}>
+                    {billDoc.name}
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-0.5 font-medium flex items-center gap-1.5">
+                    <span className="font-mono uppercase font-semibold text-slate-500">.{billDoc.ext}</span>
+                    <span>•</span>
+                    <span>{formatFileSize(billDoc.sizeKB)}</span>
+                    {billDoc.reductionPercentage > 0 && (
+                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded font-mono">
+                        -{billDoc.reductionPercentage}%
+                      </span>
+                    )}
+                  </p>
+                </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => billInputRef.current?.click()}
-                      disabled={isCompressing !== null || isLoading}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-1 transition-all border border-slate-200 cursor-pointer shadow-2xs"
-                      title={language === "hi" ? "दूसरा बिल चुनें" : "Change document"}
-                    >
-                      <Upload className="h-3 w-3 text-slate-500" />
-                      <span>{language === "hi" ? "बदलें" : "Change"}</span>
-                    </button>
+                {/* Action Buttons */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDoc(billDoc)}
+                    className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                    title={language === "hi" ? "देखें (Preview)" : "Preview Document"}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
 
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFile("bill")}
-                      disabled={isCompressing !== null || isLoading}
-                      className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 text-[11px] font-bold flex items-center gap-1 transition-all border border-rose-200 cursor-pointer shadow-2xs"
-                      title={language === "hi" ? "दस्तावेज़ हटाएं" : "Remove document"}
-                    >
-                      <Trash2 className="h-3 w-3 text-rose-600" />
-                      <span>{language === "hi" ? "हटाएं" : "Remove"}</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFile("bill")}
+                    className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                    title={language === "hi" ? "हटाएं (Delete)" : "Remove Document"}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-            ) : (
-              <>
-                <div className="h-12 w-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <Upload className="h-6 w-6" />
-                </div>
-                <h3 className="font-semibold text-sm text-slate-800">
-                  {language === "hi" ? "1. हॉस्पिटल का पक्का बिल" : "1. Hospital Itemized Bill"}
-                </h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-xs">
-                  {language === "hi"
-                    ? "फोटो या पीडीएफ अपलोड करें (ऑटो-कंप्रेशन चालू है)"
-                    : "Upload printed or handwritten bill with itemized medicine/OT charges"}
-                </p>
-              </>
-            )}
-          </div>
+
+              {/* Full-Width Secondary Action Button matching Image 2 */}
+              <button
+                type="button"
+                onClick={() => billInputRef.current?.click()}
+                className="w-full py-2 px-3 rounded-xl bg-slate-100/80 hover:bg-slate-200/80 text-slate-600 hover:text-slate-900 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200/60"
+              >
+                <RefreshCw className="h-3 w-3 text-slate-400" />
+                <span>{language === "hi" ? "दूसरा बिल चुनें (Replace file)" : "Replace or choose another file"}</span>
+              </button>
+            </div>
+          ) : (
+            /* Empty Drop Zone matching Reference Image 2 */
+            <div
+              onClick={() => billInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOverBox("bill");
+              }}
+              onDragLeave={() => setDragOverBox(null)}
+              onDrop={(e) => handleDrop(e, "bill")}
+              className={`h-44 border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center group ${
+                dragOverBox === "bill"
+                  ? "border-sky-500 bg-sky-50/70 ring-4 ring-sky-500/15 scale-[1.01]"
+                  : "border-slate-300 hover:border-slate-400 bg-slate-50/50 hover:bg-slate-50/80"
+              }`}
+            >
+              <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full border-2 border-slate-700 text-slate-800 flex items-center justify-center mb-2.5 group-hover:scale-110 group-hover:border-sky-600 group-hover:text-sky-600 transition-all bg-white shadow-2xs">
+                <Plus className="h-5 w-5 stroke-[2.5]" />
+              </div>
+              <p className="font-bold text-xs sm:text-sm text-slate-800 group-hover:text-sky-950 transition-colors">
+                {language === "hi" ? "फ़ाइल ड्रैग करें या चुनने के लिए क्लिक करें" : "Drag & Drop or click to choose files"}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1 flex items-center justify-center gap-1 font-medium">
+                <Info className="h-3 w-3 text-slate-400" />
+                <span>{language === "hi" ? "PDF, PNG, JPG • अधिकतम 10 MB" : "PDF, PNG, JPG • Max file size: 10 MB"}</span>
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Box 2: Discharge Summary */}
-        <div className={`relative border-2 ${summaryImage ? "border-solid border-slate-300 bg-white shadow-2xs" : "border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/30"} rounded-2xl p-4 sm:p-5 text-center transition-all group`}>
+        {/* ======================================================== */}
+        {/* Box 2: Discharge Summary / Doctor Note */}
+        {/* ======================================================== */}
+        <div className="flex flex-col">
+          {/* Box Header */}
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+              {language === "hi" ? "2. डिस्चार्ज समरी / डॉक्टर पर्चा" : "2. Discharge Summary / Doctor Note"}
+            </span>
+            {summaryDoc && (
+              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                {language === "hi" ? "दस्तावेज़ तैयार है" : "Ready for Audit"}
+              </span>
+            )}
+          </div>
+
           <input
             ref={summaryInputRef}
             type="file"
             accept="image/*,application/pdf"
             disabled={isCompressing !== null || isLoading}
-            onChange={(e) => handleFileUpload(e, "summary")}
-            className={summaryImage ? "hidden" : "absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"}
+            onChange={(e) => handleInputChange(e, "summary")}
+            className="hidden"
           />
-          <div className="flex flex-col items-center">
-            {isCompressing === "summary" ? (
-              <div className="h-32 flex flex-col items-center justify-center">
-                <div className="h-7 w-7 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mb-2"></div>
-                <span className="text-xs font-bold text-indigo-700">
-                  {language === "hi" ? "फोटो को कंप्रेस किया जा रहा है..." : "Compressing High-Res Photo for OCR..."}
-                </span>
-                <span className="text-[11px] text-slate-400 mt-0.5">
-                  {language === "hi" ? "Vercel 4.5 MB सीमा के भीतर" : "Under Vercel 4.5 MB Limit"}
-                </span>
-              </div>
-            ) : summaryImage ? (
-              <div className="w-full">
-                <div className="w-full h-36 rounded-xl overflow-hidden relative border border-slate-200 bg-slate-100 flex items-center justify-center">
-                  <img src={summaryImage} alt="Summary Preview" className="object-contain h-full w-full" />
-                  
-                  {/* Top-Right 1-Click Remove Cross */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveFile("summary");
-                    }}
-                    disabled={isCompressing !== null || isLoading}
-                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition-all shadow-md z-30 cursor-pointer hover:scale-105 active:scale-95"
-                    title={language === "hi" ? "दस्तावेज़ हटाएं (Remove)" : "Remove document"}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
 
-                  {/* Top-Left Uploaded Chip */}
-                  <span className="absolute top-2 left-2 bg-emerald-600/95 backdrop-blur-xs text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold shadow-xs">
-                    {language === "hi" ? "✓ अपलोड हो गया" : "✓ Uploaded"}
-                  </span>
-
-                  {summaryStats && summaryStats.reductionPercentage > 0 && (
-                    <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-xs text-emerald-300 text-[10px] px-2 py-0.5 rounded-md font-mono flex items-center gap-1 shadow-xs">
-                      <Zap className="h-2.5 w-2.5 text-amber-400" />
-                      <span>{summaryStats.originalSizeKB}KB → {summaryStats.compressedSizeKB}KB (-{summaryStats.reductionPercentage}%)</span>
-                    </span>
+          {isCompressing === "summary" ? (
+            <div className="h-44 rounded-2xl border-2 border-dashed border-indigo-400 bg-indigo-50/50 flex flex-col items-center justify-center p-6 transition-all">
+              <div className="h-8 w-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mb-2.5"></div>
+              <span className="text-xs font-bold text-indigo-800">
+                {language === "hi" ? "दस्तावेज़ तैयार किया जा रहा है..." : "Processing & Optimizing Document..."}
+              </span>
+              <span className="text-[11px] text-slate-400 mt-1 font-mono">
+                {language === "hi" ? "क्लाइंट-साइड कम्प्रेशन चालू है" : "Auto-optimizing for AI OCR"}
+              </span>
+            </div>
+          ) : summaryDoc ? (
+            /* Uploaded State - Reference Wireframe Card */
+            <div className="space-y-2.5">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center justify-between gap-3.5 transition-all hover:border-slate-300">
+                {/* File Thumbnail / Icon */}
+                <div 
+                  onClick={() => setPreviewDoc(summaryDoc)}
+                  className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                  title="Click to preview"
+                >
+                  {summaryDoc.isPdf ? (
+                    <FileText className="h-5 w-5 text-rose-500" />
+                  ) : (
+                    <img src={summaryDoc.base64} alt={summaryDoc.name} className="h-full w-full object-cover" />
                   )}
                 </div>
 
-                {/* File Action Bar: Change & Remove Buttons */}
-                <div className="mt-3 flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
-                  <span className="text-[11px] font-bold text-slate-700 truncate text-left">
-                    📋 {language === "hi" ? "2. डिस्चार्ज समरी" : "2. Discharge Summary"}
-                  </span>
+                {/* File Metadata */}
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="font-bold text-xs sm:text-sm text-slate-900 truncate" title={summaryDoc.name}>
+                    {summaryDoc.name}
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-0.5 font-medium flex items-center gap-1.5">
+                    <span className="font-mono uppercase font-semibold text-slate-500">.{summaryDoc.ext}</span>
+                    <span>•</span>
+                    <span>{formatFileSize(summaryDoc.sizeKB)}</span>
+                    {summaryDoc.reductionPercentage > 0 && (
+                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded font-mono">
+                        -{summaryDoc.reductionPercentage}%
+                      </span>
+                    )}
+                  </p>
+                </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => summaryInputRef.current?.click()}
-                      disabled={isCompressing !== null || isLoading}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-1 transition-all border border-slate-200 cursor-pointer shadow-2xs"
-                      title={language === "hi" ? "दूसरी समरी चुनें" : "Change document"}
-                    >
-                      <Upload className="h-3 w-3 text-slate-500" />
-                      <span>{language === "hi" ? "बदलें" : "Change"}</span>
-                    </button>
+                {/* Action Buttons */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDoc(summaryDoc)}
+                    className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                    title={language === "hi" ? "देखें (Preview)" : "Preview Document"}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
 
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFile("summary")}
-                      disabled={isCompressing !== null || isLoading}
-                      className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 text-[11px] font-bold flex items-center gap-1 transition-all border border-rose-200 cursor-pointer shadow-2xs"
-                      title={language === "hi" ? "दस्तावेज़ हटाएं" : "Remove document"}
-                    >
-                      <Trash2 className="h-3 w-3 text-rose-600" />
-                      <span>{language === "hi" ? "हटाएं" : "Remove"}</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFile("summary")}
+                    className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                    title={language === "hi" ? "हटाएं (Delete)" : "Remove Document"}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-            ) : (
-              <>
-                <div className="h-12 w-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <FileText className="h-6 w-6" />
-                </div>
-                <h3 className="font-semibold text-sm text-slate-800">
-                  {language === "hi" ? "2. डिस्चार्ज समरी / डॉक्टर पर्चा" : "2. Discharge Summary / Doctor Note"}
-                </h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-xs">
-                  {language === "hi"
-                    ? "भर्ती एवं छुट्टी की तारीख, डॉक्टर के हस्ताक्षर एवं बीमारी का विवरण"
-                    : "Admission & discharge dates, doctor sign/seal, diagnosis & clinical notes"}
-                </p>
-              </>
-            )}
-          </div>
+
+              {/* Full-Width Secondary Action Button matching Image 2 */}
+              <button
+                type="button"
+                onClick={() => summaryInputRef.current?.click()}
+                className="w-full py-2 px-3 rounded-xl bg-slate-100/80 hover:bg-slate-200/80 text-slate-600 hover:text-slate-900 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200/60"
+              >
+                <RefreshCw className="h-3 w-3 text-slate-400" />
+                <span>{language === "hi" ? "दूसरी समरी चुनें (Replace file)" : "Replace or choose another file"}</span>
+              </button>
+            </div>
+          ) : (
+            /* Empty Drop Zone matching Reference Image 2 */
+            <div
+              onClick={() => summaryInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOverBox("summary");
+              }}
+              onDragLeave={() => setDragOverBox(null)}
+              onDrop={(e) => handleDrop(e, "summary")}
+              className={`h-44 border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center group ${
+                dragOverBox === "summary"
+                  ? "border-indigo-500 bg-indigo-50/70 ring-4 ring-indigo-500/15 scale-[1.01]"
+                  : "border-slate-300 hover:border-slate-400 bg-slate-50/50 hover:bg-slate-50/80"
+              }`}
+            >
+              <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full border-2 border-slate-700 text-slate-800 flex items-center justify-center mb-2.5 group-hover:scale-110 group-hover:border-indigo-600 group-hover:text-indigo-600 transition-all bg-white shadow-2xs">
+                <Plus className="h-5 w-5 stroke-[2.5]" />
+              </div>
+              <p className="font-bold text-xs sm:text-sm text-slate-800 group-hover:text-indigo-950 transition-colors">
+                {language === "hi" ? "फ़ाइल ड्रैग करें या चुनने के लिए क्लिक करें" : "Drag & Drop or click to choose files"}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1 flex items-center justify-center gap-1 font-medium">
+                <Info className="h-3 w-3 text-slate-400" />
+                <span>{language === "hi" ? "PDF, PNG, JPG • अधिकतम 10 MB" : "PDF, PNG, JPG • Max file size: 10 MB"}</span>
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Action Button */}
+      {/* Main Audit Trigger Button */}
       <div className="flex justify-center">
         <button
           type="button"
           disabled={isLoading || isCompressing !== null}
-          onClick={() => onAnalyze(billImage || undefined, summaryImage || undefined)}
-          className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-sky-700 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-sky-600/25 flex items-center justify-center gap-2.5 transition-all active:scale-98 disabled:opacity-60 cursor-pointer"
+          onClick={() => onAnalyze(billDoc?.base64, summaryDoc?.base64)}
+          className="w-full sm:w-auto px-9 py-3.5 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-sky-700 hover:from-sky-500 hover:to-indigo-500 text-white font-black text-sm sm:text-base shadow-lg shadow-sky-600/25 flex items-center justify-center gap-2.5 transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
         >
           {isLoading ? (
             <>
@@ -482,13 +596,56 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
               <Sparkles className="h-5 w-5 text-amber-300" />
               <span>
                 {language === "hi"
-                  ? "क्लेम की जाँच करें (Pre-Adjudicate Claim)"
+                  ? "क्लेम की जाँच करें (Run Pre-Flight Audit)"
                   : "Run Pre-Flight Compliance Audit"}
               </span>
             </>
           )}
         </button>
       </div>
+
+      {/* Lightbox Document Preview Modal */}
+      {previewDoc && (
+        <div 
+          onClick={() => setPreviewDoc(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl p-5 max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center gap-2 truncate">
+                <FileText className="h-5 w-5 text-sky-600 shrink-0" />
+                <h3 className="font-bold text-sm text-slate-900 truncate">{previewDoc.name}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewDoc(null)}
+                className="h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-50 rounded-2xl mt-3 min-h-[300px]">
+              {previewDoc.isPdf ? (
+                <iframe 
+                  src={previewDoc.base64} 
+                  title={previewDoc.name} 
+                  className="w-full h-[60vh] rounded-xl border border-slate-200"
+                />
+              ) : (
+                <img 
+                  src={previewDoc.base64} 
+                  alt={previewDoc.name} 
+                  className="max-h-[65vh] max-w-full object-contain rounded-xl shadow-xs" 
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
