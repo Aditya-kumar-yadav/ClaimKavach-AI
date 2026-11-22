@@ -262,6 +262,28 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
     });
   }
 
+  // =========================================================================
+  // 8. Cashless Everywhere & PM-JAY Package Rate Benchmark Check
+  // =========================================================================
+  const hbpBenchmarks = (policyRules as any).pmjay_hbp_benchmarks || {};
+  let pmjayBenchmark: { procedure: string; benchmarkRate: number; hospitalBilled: number; ratio: number; isOverbilled: boolean } | undefined;
+
+  for (const [key, data] of Object.entries(hbpBenchmarks as Record<string, { benchmark: number; name: string }>)) {
+    if (procedureOrDiagnosis.includes(key)) {
+      const hospitalBilled = claim.claimedTotal;
+      const ratio = Number((hospitalBilled / data.benchmark).toFixed(1));
+      const isOverbilled = ratio >= 1.5;
+      pmjayBenchmark = {
+        procedure: data.name,
+        benchmarkRate: data.benchmark,
+        hospitalBilled,
+        ratio,
+        isOverbilled
+      };
+      break;
+    }
+  }
+
   const approvalScore = Math.max(12, Math.min(100, 100 - scoreDeduction));
   const riskLevel: "GREEN" | "YELLOW" | "RED" =
     approvalScore >= 80 ? "GREEN" : approvalScore >= 60 ? "YELLOW" : "RED";
@@ -289,6 +311,7 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
     issues,
     statutoryProtections,
     matchedICD10: icdMatch ? { code: icdMatch.code, name: icdMatch.name, category: icdMatch.category } : undefined,
+    pmjayBenchmark,
     passedChecksCount,
     totalChecksCount,
     packetHash,

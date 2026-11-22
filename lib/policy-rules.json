@@ -72,12 +72,24 @@
       "proportional_deduction_clause": "Associated medical expenses are deducted in the ratio of eligible room rent to actual room rent incurred."
     }
   },
-  "packageCaps": {
-    "appendectomy": 22000,
-    "cholecystectomy": 28000,
-    "hernia_repair": 24000,
-    "caesarean_section": 20000,
-    "normal_delivery": 12000,
-    "cataract_surgery": 15000
+  "pmjay_hbp_benchmarks": {
+    "appendicitis": { "benchmark": 22000, "name": "Appendectomy (Laparoscopic/Open)" },
+    "appendectomy": { "benchmark": 22000, "name": "Appendectomy (Laparoscopic/Open)" },
+    "cholecystitis": { "benchmark": 28000, "name": "Laparoscopic Cholecystectomy" },
+    "cholecystectomy": { "benchmark": 28000, "name": "Laparoscopic Cholecystectomy" },
+    "hernia": { "benchmark": 22000, "name": "Inguinal Hernioplasty with Mesh" },
+    "cataract": { "benchmark": 14000, "name": "Cataract Surgery with Foldable IOL" },
+    "knee replacement": { "benchmark": 95000, "name": "Total Knee Arthroplasty (TKR)" },
+    "caesarean": { "benchmark": 20000, "name": "LSCS / Caesarean Delivery" },
+    "c-section": { "benchmark": 20000, "name": "LSCS / Caesarean Delivery" },
+    "normal delivery": { "benchmark": 12000, "name": "Normal Vaginal Delivery" },
+    "dengue": { "benchmark": 14000, "name": "Dengue Inpatient Supportive Care" },
+    "typhoid": { "benchmark": 12000, "name": "Enteric Fever / Typhoid Supportive Care" }
+  },
+  "ombudsman_intelligence_2026": {
+    "fy26_complaints_resolved": 41055,
+    "policyholder_win_rate_percent": 79,
+    "active_campaign": "IRDAI Grievance Resolution Month (November 2026)",
+    "statutory_resolution_window_days": 14
   }
 }

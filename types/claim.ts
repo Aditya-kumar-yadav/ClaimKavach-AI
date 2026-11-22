@@ -77,6 +77,13 @@ export interface AuditResult {
     name: string;
     category: string;
   };
+  pmjayBenchmark?: {
+    procedure: string;
+    benchmarkRate: number;
+    hospitalBilled: number;
+    ratio: number;
+    isOverbilled: boolean;
+  };
   passedChecksCount: number;
   totalChecksCount: number;
   packetHash: string;

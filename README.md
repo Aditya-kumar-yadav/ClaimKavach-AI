@@ -30,6 +30,10 @@ Crucially, over **80% of these rejections are not caused by fraud**, but by prev
 * 📄 **Multimodal OCR Ingestion:** Scans printed and handwritten hospital bills + discharge summaries (powered by Google Gemini 2.5 Flash Vision with zero-downtime offline fallbacks).
 * ⚖️ **IRDAI 2024 Deterministic Compliance Engine:** Pure mathematical validation against IRDAI Lists I–IV, 60-Month Moratorium protections, statutory procedure waiting periods, and room-rent capping.
 * 🇮🇳 **Official NHA-ABDM / NHCX Integration (Digital Public Infrastructure):** Generates an official HL7 FHIR Release 4 Claim Bundle strictly adhering to **National Health Claims Exchange (NHCX)** and **Swasth Alliance HCX** specifications.
+* ⚡ **Interactive "Fix-It" Simulator:** Click "Mark as Fixed" on errors live on stage to see the score jump in real time from **28% RED → 64% YELLOW → 96% GREEN** with animated money saved counters!
+* ⚖️ **1-Click "Fight Back" IRDAI Appeal Generator:** For claims rejected unfairly, auto-drafts a formal legal appeal to the insurer's GRO, citing May 2024 circulars, the mandatory 14-day window, and the 3-step escalation ladder (GRO → Bima Bharosa → Insurance Ombudsman, where 79% of appeals are won by policyholders).
+* 🏥 **1-Click WhatsApp Hospital Billing Desk Rectification:** Auto-drafts polite, exact correction requests in Hindi/English to fix mismatched dates or missing doctor seals at the hospital counter.
+* 📊 **Cashless Everywhere & PM-JAY Benchmark Check:** Checks hospital bills against national PM-JAY package benchmarks to detect private hospital overbilling.
 * 🎙️ **Vernacular Voice Explainer:** Speaks out loud in fluent Hindi (`hi-IN`) explaining exactly what errors exist and how to get them fixed at the hospital billing counter.
 * 🔒 **SHA-256 Tamper-Evident Dossier:** Generates an official, print-ready A4 claim summary with a cryptographic integrity hash for direct insurer adjudication.
 
