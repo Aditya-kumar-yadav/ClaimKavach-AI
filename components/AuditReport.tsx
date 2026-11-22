@@ -177,7 +177,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                 : "IRDAI 2024 Master Circular: Statutory Legal Protections Active"}
             </h3>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 ml-auto">
-              Clause 8.1 Active
+              IRDAI Para 13 Active (except established fraud)
             </span>
           </div>
 

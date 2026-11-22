@@ -17,7 +17,7 @@ In India, low-income households, gig workers, and rural families under schemes l
 Crucially, over **80% of these rejections are not caused by fraud**, but by preventable paperwork errors and misunderstood statutory clauses:
 1. **Cross-Document Date Conflicts:** Admission or discharge dates on handwritten hospital bills do not match the discharge summary.
 2. **Prohibited Consumables:** Hospitals bill non-payable items (gloves, PPE kits, sanitizers, thermometer covers) prohibited under statutory IRDAI Non-Payable Lists (I–IV).
-3. **Statutory 2024 Rules (Moratorium & Waiting Periods):** Claimants are unaware of the **5-Year (60-Month) Moratorium Clause (Clause 8.1)** where insurers cannot contest pre-existing diseases, or fall into **Proportional Room Rent Capping** traps.
+3. **Statutory 2024 Rules (Moratorium & Waiting Periods):** Claimants are unaware of the **5-Year (60-Month) Moratorium Rule (IRDAI Master Circular May 2024, Chapter I, Para 13)** where insurers cannot contest pre-existing diseases (except in cases of established fraud), or fall into **Proportional Room Rent Capping** traps.
 4. **Missing Statutory Seals:** Missing treating-doctor registration numbers or signatures.
 5. **Linguistic Barriers:** Claimants receive rejection letters written in complex legal English and cannot understand what needs fixing.
 
@@ -39,8 +39,8 @@ Crucially, over **80% of these rejections are not caused by fraud**, but by prev
 
 | Statutory Rule | IRDAI Reference | How ClaimKavach Enforces It |
 | :--- | :--- | :--- |
-| **5-Year Moratorium Clause** | Master Circular Clause 8.1 | If policy tenure $\ge 60$ months, guarantees legal immunity against Pre-Existing Disease (PED) rejections. |
-| **Procedure Waiting Periods** | Standardized Health Terms | Flags mandatory waiting periods (e.g. Inguinal Hernia 24 mos, Cataract 24 mos, Joint Replacement 48 mos). |
+| **5-Year Moratorium Clause** | Master Circular (May 2024), Para 13 | If policy tenure $\ge 60$ months, guarantees legal immunity against PED rejections (except established fraud). |
+| **Procedure Waiting Periods** | Standardized Health Terms (2024) | Flags statutory waiting periods capped at 36 months (e.g. Inguinal Hernia 24 mos, Cataract 24 mos, Joint Replacement 36 mos). |
 | **Room Rent Proportional Capping** | Schedule of Benefits (1% SI) | Calculates proportional deductions when room rent exceeds 1% of Sum Insured and notifies user. |
 | **Non-Payable Consumables** | IRDAI Lists I–IV | Automatically audits and deducts non-payable items (gloves, masks, admission kits) from the payable total. |
 
@@ -52,7 +52,7 @@ Crucially, over **80% of these rejections are not caused by fraud**, but by prev
 [Client Layer: Next.js 14 App Router + Tailwind CSS + Framer Motion]
   ├── Dual Ingestion Zone (Hospital Bill + Discharge Summary)
   ├── 1-Click Sandbox Presets (Flawed Claim vs. Clean Claim)
-  ├── Statutory 2024 Protections Banner (Moratorium Clause 8.1)
+  ├── Statutory 2024 Protections Banner (Moratorium Para 13)
   ├── Vernacular Audio Controller (Web Speech API hi-IN)
   ├── Official NHCX FHIR Bundle Inspector & JSON Downloader
   └── Print Dossier (@media print with SHA-256 Digest)
@@ -91,5 +91,5 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 5. **Step 5 (The DPI Flex):** Click **"Export NHCX-Ready JSON (FHIR Bundle)"**:
    * Show the judges the live **HL7 FHIR Bundle** conforming to NHA-ABDM specs.
 6. **Step 6 (The Legal Protections Flex):** Click **"सैंपल: मान्य क्लेम (Clean Validated Claim)"**:
-   * Show the green statutory badge: **"🛡️ IRDAI 2024 Moratorium Protected (Clause 8.1)"**—policy active for 68 months, legally immune to PED rejections!
+   * Show the green statutory badge: **"🛡️ IRDAI 2024 Moratorium Protected (Para 13)"**—policy active for 68 months, legally immune to PED rejections (except in cases of established fraud)!
 7. **Step 7:** Click **"Print Insurer Claim Dossier"** to view the official A4 dossier with the SHA-256 cryptographic seal.

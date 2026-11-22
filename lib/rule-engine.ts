@@ -81,17 +81,17 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
   }
 
   // =========================================================================
-  // 4. IRDAI 2024 Master Circular: 5-Year (60-Month) Moratorium Clause
+  // 4. IRDAI 2024 Master Circular: 5-Year (60-Month) Moratorium Clause (Para 13)
   // =========================================================================
   totalChecksCount++;
   const moratoriumMonths = policyRules.irdai_2024_master_circular.moratorium_period_months;
   if (claim.policyTenureMonths >= moratoriumMonths) {
     statutoryProtections.push({
-      ruleRef: "IRDAI-2024-MC-CLAUSE-8.1",
-      titleEn: "Statutory 60-Month Moratorium Protection Active",
-      titleHi: "आईआरडीएआई 2024 5-वर्षीय मोरेटोरियम सुरक्षा लागू",
-      descriptionEn: `Policy has been continuously active for ${claim.policyTenureMonths} months (>= 60 months). Under IRDAI 2024 Master Circular Clause 8.1, the insurer is legally prohibited from contesting or denying this claim on grounds of pre-existing disease (PED) or non-disclosure.`,
-      descriptionHi: `आपकी पॉलिसी लगातार ${claim.policyTenureMonths} महीनों से सक्रिय है। आईआरडीएआई 2024 नियमों के अनुसार 60 महीने बाद बीमा कंपनी पुरानी बीमारी (PED) का बहाना बनाकर क्लेम रिजेक्ट नहीं कर सकती।`,
+      ruleRef: "IRDAI-2024-MC-PARA-13",
+      titleEn: "Statutory 60-Month Moratorium Protection Active (except established fraud)",
+      titleHi: "आईआरडीएआई 2024 5-वर्षीय मोरेटोरियम सुरक्षा लागू (सबूत धोखाधड़ी को छोड़कर)",
+      descriptionEn: `Policy has been continuously active for ${claim.policyTenureMonths} months (>= 60 months). Under IRDAI Master Circular on Health Insurance (May 29, 2024) Chapter I, Para 13, the insurer is statutorily prohibited from contesting or denying this claim on grounds of non-disclosure or pre-existing diseases (except in cases of established fraud).`,
+      descriptionHi: `आपकी पॉलिसी लगातार ${claim.policyTenureMonths} महीनों से सक्रिय है। आईआरडीएआई मास्टर सर्कुलर (मई 2024) पैरा 13 के अनुसार 60 महीने बाद बीमा कंपनी पुरानी बीमारी या गैर-खुलासे के आधार पर क्लेम खारिज नहीं कर सकती (सिवाय साबित धोखाधड़ी के मामले के)।`,
       status: "PROTECTED"
     });
     passedChecksCount++;
