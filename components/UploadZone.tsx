@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { compressImageFile } from "@/lib/image-compressor";
 import { ExtractedClaim } from "@/types/claim";
-import { DEMO_SCENARIO_LIST } from "@/lib/mock-data";
 
 interface UploadedDoc {
   name: string;
@@ -203,76 +202,33 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
   return (
     <div className="bg-white rounded-3xl p-6 sm:p-8 mb-8 border border-slate-200/90 shadow-sm relative">
       {/* ======================================================== */}
-      {/* Header & 1-Click Pre-Loaded Scenarios (Clean Pills, No Dropdown!) */}
+      {/* Upload Header (Zero Clutter, Pre-loaded dropdown is on Top Bar) */}
       {/* ======================================================== */}
-      <div className="mb-6 pb-6 border-b border-slate-100">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-              <FileCheck2 className="h-6 w-6 text-sky-600" />
-              {language === "hi"
-                ? "दस्तावेज़ अपलोड करें या टेस्ट केस चुनें"
-                : "Upload Documents or Select Sample Claim"}
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              {language === "hi"
-                ? "अस्पताल का पक्का बिल एवं डिस्चार्ज समरी जोड़ें, या नीचे 1-क्लिक में प्री-लोडेड केस टेस्ट करें।"
-                : "Drag & drop your hospital bill, or test instantly with 5 pre-loaded IRDAI scenarios below."}
-            </p>
-          </div>
-
-          {activeClaim && (
-            <button
-              type="button"
-              onClick={() => setIsCollapsed(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto shrink-0"
-            >
-              <ChevronUp className="h-3.5 w-3.5 text-slate-500" />
-              <span>{language === "hi" ? "समेटें (Collapse)" : "Collapse"}</span>
-            </button>
-          )}
+      <div className="mb-6 pb-4 border-b border-slate-100 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <FileCheck2 className="h-6 w-6 text-sky-600" />
+            {language === "hi"
+              ? "दस्तावेज़ अपलोड करें"
+              : "Upload Claim Documents"}
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            {language === "hi"
+              ? "अस्पताल का पक्का बिल एवं डिस्चार्ज समरी जोड़ें (PDF, PNG, JPG)।"
+              : "Drag & drop or browse itemized hospital bill & clinical discharge summary (PDF, PNG, JPG)."}
+          </p>
         </div>
 
-        {/* 5 One-Click Scenario Cards Strip (Hackathon-Ready) */}
-        <div className="bg-slate-50/80 rounded-2xl p-3 sm:p-4 border border-slate-200/80">
-          <div className="flex items-center gap-2 mb-2.5 px-1">
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-              {language === "hi" ? "त्वरित हैकाथॉन टेस्ट केस (1-Click Evaluation Demos):" : "1-Click Hackathon Scenarios (No Upload Required):"}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-            {DEMO_SCENARIO_LIST.map((sc) => (
-              <button
-                key={sc.id}
-                type="button"
-                disabled={isLoading}
-                onClick={() => onAnalyze(undefined, undefined, sc.id)}
-                className="px-3 py-2.5 rounded-xl bg-white hover:bg-sky-50/60 border border-slate-200 hover:border-sky-300 text-left transition-all group cursor-pointer shadow-2xs hover:shadow-xs active:scale-98 flex flex-col justify-between"
-              >
-                <div className="flex items-center justify-between gap-1 mb-1">
-                  <span className={`text-[9.5px] font-black px-1.5 py-0.5 rounded-md ${sc.badgeColor}`}>
-                    {sc.badge}
-                  </span>
-                  <span className="text-[10px] text-slate-400 group-hover:text-sky-600 font-bold transition-colors">
-                    Run ⚡
-                  </span>
-                </div>
-                <p className="font-extrabold text-xs text-slate-800 group-hover:text-sky-950 truncate">
-                  {sc.id === "flawed" && "🚨 Date Mismatch"}
-                  {sc.id === "overbilled" && "⚠️ PM-JAY Overbill"}
-                  {sc.id === "waiting" && "⏳ 36-Mo Waiting"}
-                  {sc.id === "roomrent" && "🏨 Room Rent Cap"}
-                  {sc.id === "clean" && "🛡️ Clean Pass"}
-                </p>
-                <span className="text-[10px] text-slate-400 truncate mt-0.5 font-medium">
-                  {sc.patientName.split("(")[0].trim()}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        {activeClaim && (
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(true)}
+            className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto shrink-0"
+          >
+            <ChevronUp className="h-3.5 w-3.5 text-slate-500" />
+            <span>{language === "hi" ? "समेटें (Collapse)" : "Collapse"}</span>
+          </button>
+        )}
       </div>
 
       {/* Prominent API Key / Extraction Error Notice */}
