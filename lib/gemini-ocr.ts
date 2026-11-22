@@ -1,12 +1,20 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ExtractedClaim, ExtractedClaimSchema } from "@/types/claim";
-import { FLAWED_DEMO_CLAIM, CLEAN_DEMO_CLAIM } from "./mock-data";
+import { 
+  FLAWED_DEMO_CLAIM, 
+  CLEAN_DEMO_CLAIM, 
+  OVERBILLED_PMJAY_CLAIM, 
+  WAITING_PERIOD_CLAIM, 
+  ROOM_RENT_CAPPING_CLAIM 
+} from "./mock-data";
 
-// Candidate models tested for Gemini Vision Multimodal Extraction
+// High-speed, high-quota models tested for Gemini Vision Multimodal Extraction
 const CANDIDATE_MODELS = [
+  "gemini-flash-lite-latest",
+  "gemini-3.5-flash",
+  "gemini-3.6-flash",
   "gemini-3.5-flash-lite",
-  "gemini-3.8-flash",
-  "gemini-2.5-flash"
+  "gemini-3.8-flash"
 ];
 
 function parseBase64File(dataUrl: string): { mimeType: string; data: string } {
@@ -27,22 +35,31 @@ function parseBase64File(dataUrl: string): { mimeType: string; data: string } {
 export async function extractWithGemini(
   billBase64?: string,
   summaryBase64?: string,
-  forcePreset?: "flawed" | "clean"
+  forcePreset?: string,
+  customApiKey?: string
 ): Promise<ExtractedClaim> {
   // If explicitly requested preset, return verified test dataset
-  if (forcePreset === "flawed") {
+  if (forcePreset === "flawed") return FLAWED_DEMO_CLAIM;
+  if (forcePreset === "clean") return CLEAN_DEMO_CLAIM;
+  if (forcePreset === "overbilled") return OVERBILLED_PMJAY_CLAIM;
+  if (forcePreset === "waiting") return WAITING_PERIOD_CLAIM;
+  if (forcePreset === "roomrent") return ROOM_RENT_CAPPING_CLAIM;
+
+  // Determine active API Key (custom key passed from user/judge in UI takes highest precedence)
+  const apiKey = (customApiKey && customApiKey.trim().length > 0)
+    ? customApiKey.trim()
+    : process.env.GEMINI_API_KEY;
+
+  // If no files uploaded at all, return default demo claim
+  if (!billBase64 && !summaryBase64) {
     return FLAWED_DEMO_CLAIM;
   }
-  if (forcePreset === "clean") {
-    return CLEAN_DEMO_CLAIM;
-  }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  // Fallback to realistic demo data if API key is not configured or in sandbox demo mode
-  if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY") {
-    console.warn("No GEMINI_API_KEY detected in environment, using verified demo preset");
-    return FLAWED_DEMO_CLAIM;
+  // If user uploaded custom documents but no valid API key is present:
+  if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY" || apiKey.length < 15) {
+    throw new Error(
+      "NO_API_KEY: Please provide a free Google AI Studio Gemini API key via the 'API Key' button in the header to audit custom hospital documents live."
+    );
   }
 
   const prompt = `
@@ -105,12 +122,8 @@ Rules:
     });
   }
 
-  // If no images provided at all, return the flawed demo claim
-  if (!billBase64 && !summaryBase64) {
-    return FLAWED_DEMO_CLAIM;
-  }
-
   const genAI = new GoogleGenerativeAI(apiKey);
+  let lastError: any = null;
 
   for (const modelName of CANDIDATE_MODELS) {
     try {
@@ -146,34 +159,20 @@ Rules:
       console.log(`[ClaimKavach AI] OCR extraction successful with ${modelName} for patient: ${validated.patientName}`);
       return validated;
     } catch (err: any) {
+      lastError = err;
       console.warn(`[ClaimKavach AI] Model ${modelName} failed or unavailable:`, err?.message || err);
-      // Continue to next candidate model
+      // If error is an invalid API key, no need to retry other models with the same broken key
+      if (err?.message?.includes("API_KEY_INVALID") || err?.message?.includes("API key not valid")) {
+        throw new Error("INVALID_API_KEY: The provided Google Gemini API key is invalid or unauthorized.");
+      }
     }
   }
 
-  // If live models failed and user provided an image, do NOT return Ramesh Kumar!
-  if (billBase64 || summaryBase64) {
-    console.warn("[ClaimKavach AI] Fallback: Generating extracted record for uploaded document");
-    return ExtractedClaimSchema.parse({
-      patientName: "Patient Record (Uploaded Document)",
-      hospitalName: "Hospital Billing & Inpatient Center",
-      diagnosis: "Inpatient Clinical Treatment & Care",
-      procedureName: "Medical Management",
-      claimedTotal: 35000,
-      billAdmitDate: "2026-11-12",
-      billDischargeDate: "2026-11-15",
-      summaryAdmitDate: "2026-11-12",
-      summaryDischargeDate: "2026-11-15",
-      lineItems: [
-        { name: "Inpatient Bed & Room Charges", category: "ROOM", amount: 14000 },
-        { name: "Clinical Investigations & Tests", category: "INVESTIGATION", amount: 8000 },
-        { name: "Medication & Inpatient Supplies", category: "MEDICINE", amount: 13000 }
-      ]
-    });
+  // If all live models failed and user provided an image, surface the error so user can input their free key
+  const errMsg = lastError?.message || "Failed to extract claim data from document";
+  if (errMsg.includes("Resource has been exhausted") || errMsg.includes("429") || errMsg.includes("Quota")) {
+    throw new Error("GEMINI_QUOTA_EXCEEDED: The shared Gemini API quota has been exhausted. Please enter your personal free key via the 'API Key' button in the header.");
   }
 
-  console.error(
-    "[ClaimKavach AI] All Gemini candidate models failed (rate limit/quota/network). Gracefully falling back to verified demo claim."
-  );
-  return FLAWED_DEMO_CLAIM;
+  throw new Error(`EXTRACTION_FAILED: ${errMsg}. Please check your API key or document quality.`);
 }

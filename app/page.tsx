@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { Header } from "@/components/Header";
 import { UploadZone } from "@/components/UploadZone";
@@ -8,6 +8,7 @@ import { AuditReport } from "@/components/AuditReport";
 import { AudioExplainer } from "@/components/AudioExplainer";
 import { ClaimPacketPrint } from "@/components/ClaimPacketPrint";
 import { ProcessingPipeline } from "@/components/ProcessingPipeline";
+import { ApiKeyModal } from "@/components/ApiKeyModal";
 import { ExtractedClaim, ExtractedClaimSchema, AuditResult } from "@/types/claim";
 import { 
   FLAWED_DEMO_CLAIM, 
@@ -30,6 +31,18 @@ export default function Home() {
   const [billDoc, setBillDoc] = useState<string | null>(null);
   const [summaryDoc, setSummaryDoc] = useState<string | null>(null);
 
+  // Custom Gemini API Key State for Hackathon Evaluators
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [hasCustomKey, setHasCustomKey] = useState(false);
+  const [extractionError, setExtractionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("claimkavach_gemini_api_key");
+      setHasCustomKey(!!(stored && stored.trim().length > 10));
+    }
+  }, []);
+
   const handleReset = () => {
     VernacularTTS.stop();
     setProcessingStep(null);
@@ -37,6 +50,7 @@ export default function Home() {
     setResult(null);
     setBillDoc(null);
     setSummaryDoc(null);
+    setExtractionError(null);
   };
 
   const handleAnalyze = async (
@@ -47,6 +61,7 @@ export default function Home() {
     // Immediately stop any playing audio when switching presets or re-analyzing
     VernacularTTS.stop();
     setIsLoading(true);
+    setExtractionError(null);
     setClaim(null);
     setResult(null);
     setBillDoc(billBase64 || null);
@@ -76,12 +91,28 @@ export default function Home() {
         await sleep(350);
         extracted = CLEAN_DEMO_CLAIM;
       } else {
+        const storedKey = typeof window !== "undefined" ? localStorage.getItem("claimkavach_gemini_api_key") : null;
+        
         const res = await fetch("/api/extract", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ billBase64, summaryBase64 })
+          headers: { 
+            "Content-Type": "application/json",
+            ...(storedKey ? { "x-gemini-key": storedKey } : {})
+          },
+          body: JSON.stringify({ 
+            billBase64, 
+            summaryBase64,
+            customApiKey: storedKey || undefined
+          })
         });
-        extracted = await res.json();
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || data.details || "Failed to process document with Gemini OCR");
+        }
+
+        extracted = ExtractedClaimSchema.parse(data);
       }
 
       // Step 2: Deterministic Adjudication against IRDAI 2024 Master Circular
@@ -113,36 +144,30 @@ export default function Home() {
           // safe ignore
         }
       }
-    } catch (err) {
-      console.error("Analysis failed, using fallback preset:", err);
-      const fallback: ExtractedClaim = (billBase64 || summaryBase64)
-        ? ExtractedClaimSchema.parse({
-            patientName: "Patient Record (Uploaded Document)",
-            patientAge: 42,
-            hospitalName: "Hospital & Medical Center",
-            hospitalRegNo: "",
-            doctorName: "Dr. Medical Officer",
-            doctorRegNo: "MCI-4921",
-            doctorSigned: true,
-            diagnosis: "Inpatient Clinical Treatment",
-            claimedTotal: 32000,
-            billAdmitDate: "2026-11-12",
-            billDischargeDate: "2026-11-15",
-            summaryAdmitDate: "2026-11-12",
-            summaryDischargeDate: "2026-11-15",
-            extractionConfidence: 94,
-            policyTenureMonths: 24,
-            policySumInsured: 500000,
-            pedQueryRaised: false,
-            lineItems: [
-              { name: "Inpatient Bed & Room Accommodation", category: "ROOM", amount: 12000, isNonPayable: false },
-              { name: "Clinical Investigations & Pathology", category: "INVESTIGATION", amount: 9000, isNonPayable: false },
-              { name: "Pharmacy & Medical Supplies", category: "MEDICINE", amount: 11000, isNonPayable: false }
-            ]
-          })
-        : FLAWED_DEMO_CLAIM;
-      setClaim(fallback);
-      setResult(evaluateClaim(fallback));
+    } catch (err: any) {
+      console.error("Analysis failed:", err);
+      const errMsg = err?.message || "Failed to analyze document";
+      
+      // If error is related to API Key or Quota, surface it directly to user with 1-click key modal
+      if (
+        errMsg.includes("NO_API_KEY") || 
+        errMsg.includes("INVALID_API_KEY") || 
+        errMsg.includes("GEMINI_QUOTA_EXCEEDED") ||
+        errMsg.includes("API key not valid") ||
+        errMsg.includes("API_KEY_INVALID")
+      ) {
+        setExtractionError(
+          language === "hi"
+            ? "कस्टम अस्पताल बिल का विश्लेषण करने के लिए Google Gemini API Key दर्ज करें (हेडर में 'API की जोड़ें' बटन पर क्लिक करें या नीचे बटन दबाएं)।"
+            : "To audit your custom hospital document with live Google Gemini OCR, please provide a free Gemini API key (click 'Add API Key' above)."
+        );
+        setIsLoading(false);
+        setProcessingStep(null);
+        return;
+      }
+
+      // If document was uploaded but general OCR error occurred
+      setExtractionError(errMsg);
     } finally {
       setIsLoading(false);
       setProcessingStep(null);
@@ -150,22 +175,20 @@ export default function Home() {
   };
 
   const handlePrint = () => {
-    if (typeof window !== "undefined") {
-      window.print();
-    }
+    window.print();
   };
 
-  // Build audio summary in Hindi from issues (crisp, natural for speech synthesis)
+  // Build audio summary in Hindi from issues
   const getHindiAudioSummary = (): string => {
     if (!result || result.issues.length === 0) {
-      return "बधाई हो। आपके अस्पताल बिल और डिस्चार्ज समरी में कोई भी गलती नहीं मिली है। आपका क्लेम बीमा कंपनी से पास होने के लिए पूरी तरह तैयार है।";
+      return "बधाई हो। आपके अस्पताल बिल और डिस्चार्ज समरी में कोई कागजी कमी नहीं पाई गई है। आपका क्लेम बीमा कंपनी से पास होने के लिए पूरी तरह तैयार है।";
     }
 
     const patient = (!claim?.patientName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.patientName.trim()))
       ? "मरीज"
       : claim.patientName;
     const topIssues = result.issues.slice(0, 2).map(i => i.titleHi).join(", और ");
-    return `सावधान! ${patient} के अस्पताल रिकॉर्ड में ${topIssues} पाया गया है। कृपया इसे अस्पताल बिलिंग काउंटर से ठीक करवाएं ताकि क्लेम रिजेक्ट न हो।`;
+    return `ध्यान दें! ${patient} के अस्पताल कागजों में ${topIssues} पाया गया है। बीमा क्लेम रिजेक्ट होने से बचाने के लिए इसे तुरंत अस्पताल के बिलिंग काउंटर से ठीक करवा लें।`;
   };
 
   // Build audio summary in English from issues
@@ -185,7 +208,12 @@ export default function Home() {
     <div className="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
       {/* Interactive Screen Layout */}
       <div className="no-print flex-1 flex flex-col">
-        <Header language={language} setLanguage={setLanguage} />
+        <Header 
+          language={language} 
+          setLanguage={setLanguage} 
+          onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
+          hasCustomKey={hasCustomKey}
+        />
 
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
           {/* Hero Banner */}
@@ -226,6 +254,10 @@ export default function Home() {
             language={language}
             activeClaim={claim}
             onReset={handleReset}
+            onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
+            hasCustomKey={hasCustomKey}
+            externalError={extractionError}
+            onClearError={() => setExtractionError(null)}
           />
 
           {/* Stepped 3-Stage Deterministic Pipeline Visualizer */}
@@ -248,14 +280,16 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Spoken Hindi & English Explainer Banner */}
-              <AudioExplainer
-                hindiSummary={getHindiAudioSummary()}
-                englishSummary={getEnglishAudioSummary()}
-                language={language}
-              />
+              {/* Vernacular Audio Explainer Card */}
+              <div className="mb-6">
+                <AudioExplainer
+                  hindiSummary={getHindiAudioSummary()}
+                  englishSummary={getEnglishAudioSummary()}
+                  language={language}
+                />
+              </div>
 
-              {/* Main Pre-Flight Compliance Audit Report */}
+              {/* Complete Audit Report View */}
               <AuditReport
                 claim={claim}
                 result={result}
@@ -267,24 +301,20 @@ export default function Home() {
             </div>
           )}
         </main>
-
-        {/* Footer */}
-        <footer className="border-t border-slate-200/80 bg-white/50 py-6 text-center text-xs text-slate-500">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p>
-              ClaimKavach AI • Built for <strong>Hack with Delhi 4.0</strong> (Track 1: FinTech & Financial Inclusion)
-            </p>
-            <p className="font-mono text-[11px] text-slate-400">
-              Aligned with IRDAI Master Circular & Ayushman Bharat (ABDM/PM-JAY)
-            </p>
-          </div>
-        </footer>
       </div>
 
-      {/* Official Print Dossier View */}
+      {/* Official A4 Dossier for Physical Printing (Hidden on screen) */}
       {claim && result && (
         <ClaimPacketPrint claim={claim} result={result} />
       )}
+
+      {/* Custom Gemini API Key Modal for Hackathon Judges */}
+      <ApiKeyModal
+        isOpen={isApiKeyModalOpen}
+        onClose={() => setIsApiKeyModalOpen(false)}
+        language={language}
+        onKeyUpdated={(k) => setHasCustomKey(!!(k && k.trim().length > 10))}
+      />
     </div>
   );
 }

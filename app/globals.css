@@ -38,6 +38,10 @@ body {
 
 /* Print Specific Rules for Official A4 Dossier */
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   body {
     background: white !important;
     color: black !important;
@@ -50,7 +54,7 @@ body {
   }
   @page {
     size: A4 portrait;
-    margin: 12mm;
+    margin: 10mm;
   }
 }
 

@@ -16,8 +16,16 @@ export const ClaimPacketPrint: React.FC<ClaimPacketPrintProps> = ({ claim, resul
     ? "Inpatient Healthcare Facility"
     : claim.hospitalName.trim();
 
+  // Ensure nonPayableAmount is strictly a valid formatted number, never blank
+  const safeClaimed = Number(result.claimedTotal || claim.claimedTotal || 0);
+  const safePayable = Number(result.payableAmount || 0);
+  const safeNonPayable = Number(result.nonPayableAmount || 0);
+
   return (
-    <div className="print-only p-4 sm:p-6 bg-white text-black font-sans leading-tight text-[11px] max-w-[210mm] mx-auto">
+    <div 
+      className="print-only p-4 sm:p-6 bg-white text-black font-sans leading-tight text-[11px] max-w-[210mm] mx-auto"
+      style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}
+    >
       {/* Dossier Header */}
       <div className="border-b-2 border-slate-900 pb-2.5 mb-3 flex justify-between items-start">
         <div>
@@ -69,15 +77,21 @@ export const ClaimPacketPrint: React.FC<ClaimPacketPrintProps> = ({ claim, resul
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="p-1.5 bg-slate-50 rounded border border-slate-200">
             <span className="text-[9px] text-slate-500 uppercase font-semibold block">Total Claimed</span>
-            <div className="text-base font-black text-slate-900">₹{result.claimedTotal.toLocaleString("en-IN")}</div>
+            <div className="text-base font-black text-slate-900">
+              ₹{safeClaimed.toLocaleString("en-IN")}
+            </div>
           </div>
           <div className="p-1.5 bg-slate-50 rounded border border-slate-200">
             <span className="text-[9px] text-emerald-700 uppercase font-semibold block">Payable Under Policy</span>
-            <div className="text-base font-black text-emerald-800">₹{result.payableAmount.toLocaleString("en-IN")}</div>
+            <div className="text-base font-black text-emerald-800" style={{ color: "#065f46" }}>
+              ₹{safePayable.toLocaleString("en-IN")}
+            </div>
           </div>
           <div className="p-1.5 bg-slate-50 rounded border border-slate-200">
             <span className="text-[9px] text-rose-700 uppercase font-semibold block">Non-Payable Deductions</span>
-            <div className="text-base font-black text-rose-800">₹{result.nonPayableAmount.toLocaleString("en-IN")}</div>
+            <div className="text-base font-black text-rose-800" style={{ color: "#991b1b" }}>
+              ₹{safeNonPayable.toLocaleString("en-IN")}
+            </div>
           </div>
         </div>
       </div>

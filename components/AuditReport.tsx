@@ -133,7 +133,7 @@ function createDossierCanvasImage(claim: ExtractedClaim, result: AuditResult): s
   ctx.fillStyle = "#475569";
   ctx.font = "11px sans-serif";
   ctx.fillText(`IRDAI Approval Score: ${result.approvalScore}% | Risk Category: ${result.riskLevel}`, 48, 826);
-  ctx.fillText(`Admissible Under Policy: ₹${result.payableAmount.toLocaleString("en-IN")} | Non-Payable: ₹${result.nonPayableAmount.toLocaleString("en-IN")}`, 48, 848);
+  ctx.fillText(`Admissible Under Policy: ₹${Number(result.payableAmount || 0).toLocaleString("en-IN")} | Non-Payable: ₹${Number(result.nonPayableAmount || 0).toLocaleString("en-IN")}`, 48, 848);
   ctx.fillText(`Digital Verification Hash: ${result.packetHash}`, 48, 870);
 
   // Hospital stamp box
@@ -539,7 +539,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
               {language === "hi" ? "गैर-मान्य कटौती (Deductions)" : "Non-Payable Deductions"}
             </span>
             <div className="text-xl sm:text-2xl font-black text-rose-700 mt-1">
-              ₹{result.nonPayableAmount.toLocaleString("en-IN")}
+              ₹{Number(result.nonPayableAmount || 0).toLocaleString("en-IN")}
             </div>
             <span className="text-[11px] text-rose-600 font-medium">
               {language === "hi" ? "आईआरडीएआई सूचियां I-IV के तहत गैर-मान्य" : "IRDAI Lists I-IV non-payable items"}

@@ -1,17 +1,24 @@
 "use client";
 
 import React from "react";
-import { Shield, Sparkles, Languages, CheckCircle2, HeartHandshake } from "lucide-react";
+import { Shield, Languages, HeartHandshake, Key } from "lucide-react";
 
 interface HeaderProps {
   language: "en" | "hi";
   setLanguage: (lang: "en" | "hi") => void;
+  onOpenApiKeyModal?: () => void;
+  hasCustomKey?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ language, setLanguage }) => {
+export const Header: React.FC<HeaderProps> = ({
+  language,
+  setLanguage,
+  onOpenApiKeyModal,
+  hasCustomKey = false
+}) => {
   return (
     <header className="sticky top-0 z-40 glass-panel border-b border-slate-200/80 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center space-x-3">
           <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20">
@@ -36,12 +43,32 @@ export const Header: React.FC<HeaderProps> = ({ language, setLanguage }) => {
         </div>
 
         {/* Right Controls */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
+          {/* Gemini API Key Configuration Button (For Hackathon Judges) */}
+          <button
+            type="button"
+            onClick={onOpenApiKeyModal}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-2xs ${
+              hasCustomKey
+                ? "bg-emerald-50/80 hover:bg-emerald-100/80 border-emerald-200 text-emerald-800"
+                : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 hover:border-sky-300"
+            }`}
+            title={language === "hi" ? "Google Gemini API की सेटिंग्स" : "Google Gemini API Key Settings"}
+          >
+            <Key className={`h-3.5 w-3.5 ${hasCustomKey ? "text-emerald-600" : "text-sky-600"}`} />
+            <span className="hidden xs:inline">
+              {hasCustomKey 
+                ? (language === "hi" ? "API की: सक्रिय" : "API Key: Active") 
+                : (language === "hi" ? "API की जोड़ें" : "Gemini API Key")}
+            </span>
+            <span className={`h-2 w-2 rounded-full shrink-0 ${hasCustomKey ? "bg-emerald-500 animate-pulse" : "bg-amber-400"}`}></span>
+          </button>
+
           {/* Language Switcher */}
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
               onClick={() => setLanguage("hi")}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 language === "hi"
                   ? "bg-white text-sky-700 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
@@ -52,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({ language, setLanguage }) => {
             </button>
             <button
               onClick={() => setLanguage("en")}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              className={`px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                 language === "en"
                   ? "bg-white text-sky-700 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
@@ -63,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({ language, setLanguage }) => {
           </div>
 
           {/* Hackathon Badge */}
-          <div className="hidden md:flex items-center space-x-1.5 text-xs font-medium text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+          <div className="hidden lg:flex items-center space-x-1.5 text-xs font-medium text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
             <HeartHandshake className="h-3.5 w-3.5 text-rose-500" />
             <span>Hack with Delhi 4.0</span>
           </div>
