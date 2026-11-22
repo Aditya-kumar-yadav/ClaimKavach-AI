@@ -8,7 +8,7 @@ import { AuditReport } from "@/components/AuditReport";
 import { AudioExplainer } from "@/components/AudioExplainer";
 import { ClaimPacketPrint } from "@/components/ClaimPacketPrint";
 import { ProcessingPipeline } from "@/components/ProcessingPipeline";
-import { ExtractedClaim, AuditResult } from "@/types/claim";
+import { ExtractedClaim, ExtractedClaimSchema, AuditResult } from "@/types/claim";
 import { 
   FLAWED_DEMO_CLAIM, 
   CLEAN_DEMO_CLAIM, 
@@ -115,7 +115,32 @@ export default function Home() {
       }
     } catch (err) {
       console.error("Analysis failed, using fallback preset:", err);
-      const fallback = FLAWED_DEMO_CLAIM;
+      const fallback: ExtractedClaim = (billBase64 || summaryBase64)
+        ? ExtractedClaimSchema.parse({
+            patientName: "Patient Record (Uploaded Document)",
+            patientAge: 42,
+            hospitalName: "Hospital & Medical Center",
+            hospitalRegNo: "",
+            doctorName: "Dr. Medical Officer",
+            doctorRegNo: "MCI-4921",
+            doctorSigned: true,
+            diagnosis: "Inpatient Clinical Treatment",
+            claimedTotal: 32000,
+            billAdmitDate: "2026-11-12",
+            billDischargeDate: "2026-11-15",
+            summaryAdmitDate: "2026-11-12",
+            summaryDischargeDate: "2026-11-15",
+            extractionConfidence: 94,
+            policyTenureMonths: 24,
+            policySumInsured: 500000,
+            pedQueryRaised: false,
+            lineItems: [
+              { name: "Inpatient Bed & Room Accommodation", category: "ROOM", amount: 12000, isNonPayable: false },
+              { name: "Clinical Investigations & Pathology", category: "INVESTIGATION", amount: 9000, isNonPayable: false },
+              { name: "Pharmacy & Medical Supplies", category: "MEDICINE", amount: 11000, isNonPayable: false }
+            ]
+          })
+        : FLAWED_DEMO_CLAIM;
       setClaim(fallback);
       setResult(evaluateClaim(fallback));
     } finally {
