@@ -110,6 +110,16 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
     scoreDeduction += 15;
   }
 
+  // Always attach the statutory 3-Hour Discharge SLA entitlement
+  statutoryProtections.push({
+    ruleRef: "IRDAI-2024-MC-DISCHARGE-3HR",
+    titleEn: "Statutory 3-Hour Discharge Clearance Rule (SLA Protection)",
+    titleHi: "आईआरडीएआई 2024 अनिवार्य 3-घंटे डिस्चार्ज क्लीयरेंस सुरक्षा",
+    descriptionEn: `Under IRDAI Master Circular (Ref: IRDAI/HLT/CIR/PRO/84/5/2024), insurers are legally bound to grant final discharge approval within 3 hours. Any additional hospital room or bed charges caused by insurer delay beyond 3 hours must be borne by the insurer from shareholders' funds, NOT by the patient.`,
+    descriptionHi: `आईआरडीएआई मास्टर सर्कुलर 2024 के अनुसार अस्पताल द्वारा अंतिम बिल भेजने के 3 घंटे के भीतर बीमा कंपनी को मंजूरी देनी अनिवार्य है। 3 घंटे से अधिक की देरी पर अस्पताल का अतिरिक्त कमरा/नर्सिंग खर्च बीमा कंपनी को खुद वहन करना होगा, मरीज से नहीं लिया जा सकता।`,
+    status: "PROTECTED"
+  });
+
   // =========================================================================
   // 5. IRDAI 2024 Specific Waiting Periods Check
   // =========================================================================

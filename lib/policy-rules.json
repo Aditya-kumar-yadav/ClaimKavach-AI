@@ -49,8 +49,15 @@
     }
   },
   "irdai_2024_master_circular": {
+    "circular_ref": "IRDAI/HLT/CIR/PRO/84/5/2024 (May 29, 2024)",
     "moratorium_period_months": 60,
     "moratorium_clause_summary": "Claims cannot be denied for non-disclosure or pre-existing diseases after 60 continuous months of active policy tenure under IRDAI Master Circular (May 2024), Chapter I, Para 13 (except in cases of established fraud)",
+    "cashless_slas": {
+      "preauth_decision_sla_hours": 1,
+      "final_discharge_sla_hours": 3,
+      "discharge_delay_penalty": "Final discharge clearance must be granted within 3 hours. Any additional hospital/bed charges for delays beyond 3 hours must be borne directly by the insurer from shareholders' funds, not by the patient."
+    },
+    "free_look_period_days": 30,
     "specific_waiting_periods": {
       "hernia": 24,
       "cataract": 24,
