@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Upload, FileText, Image as ImageIcon, Sparkles, Check, AlertCircle, Zap, ChevronUp, ChevronDown } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Upload, FileText, Image as ImageIcon, Sparkles, Check, AlertCircle, Zap, ChevronUp, ChevronDown, Trash2, X } from "lucide-react";
 import { compressImageFile, CompressionResult } from "@/lib/image-compressor";
 import { ExtractedClaim } from "@/types/claim";
 import { DEMO_SCENARIO_LIST } from "@/lib/mock-data";
@@ -33,14 +33,39 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
 
-  // Auto-collapse when an audit is active
+  const billInputRef = useRef<HTMLInputElement | null>(null);
+  const summaryInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Auto-collapse when an audit is active, reset if cleared
   React.useEffect(() => {
     if (activeClaim) {
       setIsCollapsed(true);
     } else {
       setIsCollapsed(false);
+      setBillImage(null);
+      setSummaryImage(null);
+      setBillStats(null);
+      setSummaryStats(null);
+      if (billInputRef.current) billInputRef.current.value = "";
+      if (summaryInputRef.current) summaryInputRef.current.value = "";
     }
   }, [activeClaim]);
+
+  const handleRemoveFile = (type: "bill" | "summary") => {
+    if (type === "bill") {
+      setBillImage(null);
+      setBillStats(null);
+      if (billInputRef.current) {
+        billInputRef.current.value = "";
+      }
+    } else {
+      setSummaryImage(null);
+      setSummaryStats(null);
+      if (summaryInputRef.current) {
+        summaryInputRef.current.value = "";
+      }
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "bill" | "summary") => {
     const file = e.target.files?.[0];
@@ -200,13 +225,14 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
       {/* Dual Upload Boxes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
         {/* Box 1: Hospital Bill */}
-        <div className="relative border-2 border-dashed border-slate-300 hover:border-sky-500 rounded-2xl p-5 text-center transition-all bg-slate-50/50 hover:bg-sky-50/30 group">
+        <div className={`relative border-2 ${billImage ? "border-solid border-slate-300 bg-white shadow-2xs" : "border-dashed border-slate-300 hover:border-sky-500 bg-slate-50/50 hover:bg-sky-50/30"} rounded-2xl p-4 sm:p-5 text-center transition-all group`}>
           <input
+            ref={billInputRef}
             type="file"
             accept="image/*,application/pdf"
             disabled={isCompressing !== null || isLoading}
             onChange={(e) => handleFileUpload(e, "bill")}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+            className={billImage ? "hidden" : "absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"}
           />
           <div className="flex flex-col items-center">
             {isCompressing === "bill" ? (
@@ -220,17 +246,67 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
                 </span>
               </div>
             ) : billImage ? (
-              <div className="w-full h-32 rounded-xl overflow-hidden relative border border-slate-200 bg-white flex items-center justify-center">
-                <img src={billImage} alt="Bill Preview" className="object-contain h-full w-full" />
-                <span className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                  {language === "hi" ? "✓ अपलोड हो गया" : "✓ Uploaded"}
-                </span>
-                {billStats && billStats.reductionPercentage > 0 && (
-                  <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-xs text-emerald-300 text-[10px] px-2 py-0.5 rounded-md font-mono flex items-center gap-1">
-                    <Zap className="h-2.5 w-2.5 text-amber-400" />
-                    <span>{billStats.originalSizeKB}KB → {billStats.compressedSizeKB}KB (-{billStats.reductionPercentage}%)</span>
+              <div className="w-full">
+                <div className="w-full h-36 rounded-xl overflow-hidden relative border border-slate-200 bg-slate-100 flex items-center justify-center">
+                  <img src={billImage} alt="Bill Preview" className="object-contain h-full w-full" />
+                  
+                  {/* Top-Right 1-Click Remove Cross */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFile("bill");
+                    }}
+                    disabled={isCompressing !== null || isLoading}
+                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition-all shadow-md z-30 cursor-pointer hover:scale-105 active:scale-95"
+                    title={language === "hi" ? "दस्तावेज़ हटाएं (Remove)" : "Remove document"}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+
+                  {/* Top-Left Uploaded Chip */}
+                  <span className="absolute top-2 left-2 bg-emerald-600/95 backdrop-blur-xs text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold shadow-xs">
+                    {language === "hi" ? "✓ अपलोड हो गया" : "✓ Uploaded"}
                   </span>
-                )}
+
+                  {billStats && billStats.reductionPercentage > 0 && (
+                    <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-xs text-emerald-300 text-[10px] px-2 py-0.5 rounded-md font-mono flex items-center gap-1 shadow-xs">
+                      <Zap className="h-2.5 w-2.5 text-amber-400" />
+                      <span>{billStats.originalSizeKB}KB → {billStats.compressedSizeKB}KB (-{billStats.reductionPercentage}%)</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* File Action Bar: Change & Remove Buttons */}
+                <div className="mt-3 flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                  <span className="text-[11px] font-bold text-slate-700 truncate text-left">
+                    📄 {language === "hi" ? "1. अस्पताल बिल" : "1. Hospital Bill"}
+                  </span>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => billInputRef.current?.click()}
+                      disabled={isCompressing !== null || isLoading}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-1 transition-all border border-slate-200 cursor-pointer shadow-2xs"
+                      title={language === "hi" ? "दूसरा बिल चुनें" : "Change document"}
+                    >
+                      <Upload className="h-3 w-3 text-slate-500" />
+                      <span>{language === "hi" ? "बदलें" : "Change"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFile("bill")}
+                      disabled={isCompressing !== null || isLoading}
+                      className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 text-[11px] font-bold flex items-center gap-1 transition-all border border-rose-200 cursor-pointer shadow-2xs"
+                      title={language === "hi" ? "दस्तावेज़ हटाएं" : "Remove document"}
+                    >
+                      <Trash2 className="h-3 w-3 text-rose-600" />
+                      <span>{language === "hi" ? "हटाएं" : "Remove"}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
               <>
@@ -251,13 +327,14 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
         </div>
 
         {/* Box 2: Discharge Summary */}
-        <div className="relative border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-2xl p-5 text-center transition-all bg-slate-50/50 hover:bg-indigo-50/30 group">
+        <div className={`relative border-2 ${summaryImage ? "border-solid border-slate-300 bg-white shadow-2xs" : "border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/30"} rounded-2xl p-4 sm:p-5 text-center transition-all group`}>
           <input
+            ref={summaryInputRef}
             type="file"
             accept="image/*,application/pdf"
             disabled={isCompressing !== null || isLoading}
             onChange={(e) => handleFileUpload(e, "summary")}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+            className={summaryImage ? "hidden" : "absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"}
           />
           <div className="flex flex-col items-center">
             {isCompressing === "summary" ? (
@@ -271,17 +348,67 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
                 </span>
               </div>
             ) : summaryImage ? (
-              <div className="w-full h-32 rounded-xl overflow-hidden relative border border-slate-200 bg-white flex items-center justify-center">
-                <img src={summaryImage} alt="Summary Preview" className="object-contain h-full w-full" />
-                <span className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                  {language === "hi" ? "✓ अपलोड हो गया" : "✓ Uploaded"}
-                </span>
-                {summaryStats && summaryStats.reductionPercentage > 0 && (
-                  <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-xs text-emerald-300 text-[10px] px-2 py-0.5 rounded-md font-mono flex items-center gap-1">
-                    <Zap className="h-2.5 w-2.5 text-amber-400" />
-                    <span>{summaryStats.originalSizeKB}KB → {summaryStats.compressedSizeKB}KB (-{summaryStats.reductionPercentage}%)</span>
+              <div className="w-full">
+                <div className="w-full h-36 rounded-xl overflow-hidden relative border border-slate-200 bg-slate-100 flex items-center justify-center">
+                  <img src={summaryImage} alt="Summary Preview" className="object-contain h-full w-full" />
+                  
+                  {/* Top-Right 1-Click Remove Cross */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFile("summary");
+                    }}
+                    disabled={isCompressing !== null || isLoading}
+                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition-all shadow-md z-30 cursor-pointer hover:scale-105 active:scale-95"
+                    title={language === "hi" ? "दस्तावेज़ हटाएं (Remove)" : "Remove document"}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+
+                  {/* Top-Left Uploaded Chip */}
+                  <span className="absolute top-2 left-2 bg-emerald-600/95 backdrop-blur-xs text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold shadow-xs">
+                    {language === "hi" ? "✓ अपलोड हो गया" : "✓ Uploaded"}
                   </span>
-                )}
+
+                  {summaryStats && summaryStats.reductionPercentage > 0 && (
+                    <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-xs text-emerald-300 text-[10px] px-2 py-0.5 rounded-md font-mono flex items-center gap-1 shadow-xs">
+                      <Zap className="h-2.5 w-2.5 text-amber-400" />
+                      <span>{summaryStats.originalSizeKB}KB → {summaryStats.compressedSizeKB}KB (-{summaryStats.reductionPercentage}%)</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* File Action Bar: Change & Remove Buttons */}
+                <div className="mt-3 flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                  <span className="text-[11px] font-bold text-slate-700 truncate text-left">
+                    📋 {language === "hi" ? "2. डिस्चार्ज समरी" : "2. Discharge Summary"}
+                  </span>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => summaryInputRef.current?.click()}
+                      disabled={isCompressing !== null || isLoading}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-1 transition-all border border-slate-200 cursor-pointer shadow-2xs"
+                      title={language === "hi" ? "दूसरी समरी चुनें" : "Change document"}
+                    >
+                      <Upload className="h-3 w-3 text-slate-500" />
+                      <span>{language === "hi" ? "बदलें" : "Change"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFile("summary")}
+                      disabled={isCompressing !== null || isLoading}
+                      className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 text-[11px] font-bold flex items-center gap-1 transition-all border border-rose-200 cursor-pointer shadow-2xs"
+                      title={language === "hi" ? "दस्तावेज़ हटाएं" : "Remove document"}
+                    >
+                      <Trash2 className="h-3 w-3 text-rose-600" />
+                      <span>{language === "hi" ? "हटाएं" : "Remove"}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
               <>
