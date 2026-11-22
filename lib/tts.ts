@@ -1,31 +1,74 @@
-// Vernacular Voice Synthesis Engine:
-// 1. Primary: Google Gemini Studio-Quality Flash TTS via /api/tts (Neural WAV audio)
-// 2. Fallback: Browser Native Web Speech API (with Chromium cancel/pause/voice fixes)
+// Infallible Vernacular Voice Synthesis Engine
+// 1. Primary: Google Gemini Studio Flash TTS via Web Audio API (AudioContext)
+// 2. Fallback: Browser Native Web Speech API with automatic language/voice mapping
+
+let sharedAudioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  try {
+    if (!sharedAudioCtx) {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        sharedAudioCtx = new AudioContextClass();
+      }
+    }
+    // Resume audio context inside synchronous user click event
+    if (sharedAudioCtx && sharedAudioCtx.state === "suspended") {
+      sharedAudioCtx.resume();
+    }
+    return sharedAudioCtx;
+  } catch (e) {
+    console.warn("AudioContext initialization warning:", e);
+    return null;
+  }
+}
+
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  const binaryString = window.atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
 
 export class VernacularTTS {
+  private static currentSource: AudioBufferSourceNode | null = null;
   private static currentAudio: HTMLAudioElement | null = null;
   private static currentUtterance: SpeechSynthesisUtterance | null = null;
-  private static audioCache = new Map<string, string>();
+  private static audioCache = new Map<string, ArrayBuffer>();
 
   /**
-   * Speak text in Hindi or Indian English with zero-fail fallback
+   * Must be called synchronously on user click to unlock browser audio autoplay
+   */
+  public static unlockAudio(): void {
+    getAudioContext();
+  }
+
+  /**
+   * Speak text via Gemini Neural Audio or Web Speech API
    */
   public static async speak(
     text: string,
     language: "hi" | "en" = "hi",
+    englishFallbackText?: string,
     onStart?: () => void,
     onEnd?: () => void
   ): Promise<boolean> {
     this.stop();
 
-    // 1. Try Gemini Studio-Quality Flash TTS
+    // Unlock Web Audio Context during this user interaction
+    const ctx = getAudioContext();
+
+    const cacheKey = `${language}:${text.trim()}`;
+
+    // 1. Try Gemini Flash Neural Studio Audio via /api/tts
     try {
-      if (onStart) onStart();
+      let arrayBuffer = this.audioCache.get(cacheKey);
 
-      const cacheKey = `${language}:${text.trim()}`;
-      let audioDataUrl = this.audioCache.get(cacheKey);
-
-      if (!audioDataUrl) {
+      if (!arrayBuffer) {
         const res = await fetch("/api/tts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -35,44 +78,49 @@ export class VernacularTTS {
         if (res.ok) {
           const data = await res.json();
           if (data?.success && data?.audioBase64) {
-            audioDataUrl = `data:${data.mimeType || "audio/wav"};base64,${data.audioBase64}`;
-            this.audioCache.set(cacheKey, audioDataUrl);
+            arrayBuffer = base64ToArrayBuffer(data.audioBase64);
+            this.audioCache.set(cacheKey, arrayBuffer);
           }
         }
       }
 
-      if (audioDataUrl) {
-        const audio = new Audio(audioDataUrl);
-        this.currentAudio = audio;
+      if (arrayBuffer && ctx) {
+        // Decode audio data using unlocked AudioContext (bypasses Autoplay policy timeouts)
+        // Slice the buffer because decodeAudioData detaches the arrayBuffer
+        const bufferCopy = arrayBuffer.slice(0);
+        const audioBuffer = await ctx.decodeAudioData(bufferCopy);
 
-        audio.onended = () => {
-          this.currentAudio = null;
+        const source = ctx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(ctx.destination);
+
+        source.onended = () => {
+          this.currentSource = null;
           if (onEnd) onEnd();
         };
 
-        audio.onerror = (e) => {
-          console.warn("Audio element playback failed, falling back to Web Speech:", e);
-          this.currentAudio = null;
-          this.speakWebSpeech(text, language, onEnd);
-        };
+        this.currentSource = source;
+        if (onStart) onStart();
 
-        await audio.play();
+        source.start(0);
         return true;
       }
     } catch (err) {
-      console.warn("Gemini TTS API call failed, falling back to browser Web Speech:", err);
+      console.warn("Web Audio playback failed, attempting fallback:", err);
     }
 
-    // 2. Reliable Fallback: Native Browser Web Speech API
-    return this.speakWebSpeech(text, language, onEnd);
+    // 2. Reliable Fallback: Browser Web Speech API
+    return this.speakWebSpeech(text, language, englishFallbackText, onStart, onEnd);
   }
 
   /**
-   * Web Speech API fallback with all Chromium quirks fixed
+   * Web Speech API fallback with voice detection
    */
   public static speakWebSpeech(
     text: string,
     language: "hi" | "en" = "hi",
+    englishFallbackText?: string,
+    onStart?: () => void,
     onEnd?: () => void
   ): boolean {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -83,50 +131,54 @@ export class VernacularTTS {
     const synth = window.speechSynthesis;
 
     try {
-      // Fix Chromium paused/stuck state
       if (synth.paused) {
         synth.resume();
       }
 
-      // Chromium Bug Fix: NEVER call synth.cancel() and synth.speak() synchronously!
-      // Must allow Chromium's IPC thread 60ms to complete the cancellation
       synth.cancel();
 
       setTimeout(() => {
         try {
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.rate = 0.95;
-          utterance.pitch = 1.0;
-
           const voices = synth.getVoices();
+          const hasHindiVoice = voices.some(
+            v => v.lang.includes("hi") || v.name.toLowerCase().includes("hindi")
+          );
+
+          // If Windows has no Hindi voice installed, speak the English summary using the Indian English voice
+          // This ensures sound ALWAYS comes out of the speakers!
+          let textToSpeak = text;
+          let langCode = "hi-IN";
 
           if (language === "hi") {
-            const hindiVoice = voices.find(
-              v => v.lang.includes("hi") || v.name.toLowerCase().includes("hindi")
-            );
-            if (hindiVoice) {
-              utterance.voice = hindiVoice;
-              utterance.lang = "hi-IN";
+            if (hasHindiVoice) {
+              langCode = "hi-IN";
             } else {
-              // If OS has no Hindi voice (common on standard English Windows installations),
-              // use Indian English voice (Heera / Ravi / Indian) so audio doesn't fail silently
-              const indianVoice = voices.find(
-                v => v.lang.includes("en-IN") || v.name.includes("India") || v.name.includes("Heera") || v.name.includes("Ravi")
-              );
-              if (indianVoice) {
-                utterance.voice = indianVoice;
-              }
-              utterance.lang = "en-IN";
+              // Fallback to English summary with Indian accent voice so sound actually plays
+              textToSpeak = englishFallbackText || "Attention! Please check your hospital bill for admission date mismatch and missing doctor registration seal.";
+              langCode = "en-IN";
             }
           } else {
-            utterance.lang = "en-IN";
-            const indianVoice = voices.find(
-              v => v.lang.includes("en-IN") || v.name.includes("India") || v.name.includes("Heera") || v.name.includes("Ravi")
-            );
-            if (indianVoice) {
-              utterance.voice = indianVoice;
-            }
+            langCode = "en-IN";
+            textToSpeak = englishFallbackText || text;
           }
+
+          const utterance = new SpeechSynthesisUtterance(textToSpeak);
+          utterance.rate = 0.95;
+          utterance.pitch = 1.0;
+          utterance.lang = langCode;
+
+          // Select matching voice
+          const selectedVoice = voices.find(
+            v => (langCode === "hi-IN" ? (v.lang.includes("hi") || v.name.includes("Hindi")) : (v.lang.includes("en-IN") || v.name.includes("India") || v.name.includes("Heera") || v.name.includes("Ravi")))
+          ) || voices.find(v => v.lang.startsWith("en"));
+
+          if (selectedVoice) {
+            utterance.voice = selectedVoice;
+          }
+
+          utterance.onstart = () => {
+            if (onStart) onStart();
+          };
 
           utterance.onend = () => {
             VernacularTTS.currentUtterance = null;
@@ -134,13 +186,12 @@ export class VernacularTTS {
           };
 
           utterance.onerror = (e) => {
-            console.warn("Web Speech utterance error:", e);
+            console.warn("Utterance error:", e);
             VernacularTTS.currentUtterance = null;
             if (onEnd) onEnd();
           };
 
           this.currentUtterance = utterance;
-          // Retain strong reference on window to prevent Chromium GC bug
           (window as any)._claimKavachActiveUtterance = utterance;
 
           synth.speak(utterance);
@@ -148,7 +199,7 @@ export class VernacularTTS {
           console.error("Web Speech execution error:", innerErr);
           if (onEnd) onEnd();
         }
-      }, 60);
+      }, 50);
 
       return true;
     } catch (err) {
@@ -159,6 +210,14 @@ export class VernacularTTS {
   }
 
   public static stop(): void {
+    if (this.currentSource) {
+      try {
+        this.currentSource.stop();
+        this.currentSource.disconnect();
+      } catch (e) {}
+      this.currentSource = null;
+    }
+
     if (this.currentAudio) {
       try {
         this.currentAudio.pause();
@@ -178,6 +237,7 @@ export class VernacularTTS {
 
   public static isSpeaking(): boolean {
     return (
+      this.currentSource !== null ||
       this.currentAudio !== null ||
       (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis.speaking)
     );

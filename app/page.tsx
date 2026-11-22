@@ -108,14 +108,14 @@ export default function Home() {
     }
   };
 
-  // Build audio summary in Hindi from issues
+  // Build audio summary in Hindi from issues (crisp, natural for speech synthesis)
   const getHindiAudioSummary = (): string => {
     if (!result || result.issues.length === 0) {
       return "बधाई हो। आपके अस्पताल बिल और डिस्चार्ज समरी में कोई भी गलती नहीं मिली है। आपका क्लेम बीमा कंपनी से पास होने के लिए पूरी तरह तैयार है।";
     }
 
-    const fixes = result.issues.map(i => i.fixHi).join("। इसके अलावा, ");
-    return `सावधान! आपके क्लेम में कुल ${result.issues.length} जरूरी गलतियां पाई गई हैं, जिनकी वजह से क्लेम रिजेक्ट हो सकता है। कृपया ध्यान दें: ${fixes}। इसे ठीक करने के बाद ही क्लेम सबमिट करें।`;
+    const topIssues = result.issues.slice(0, 2).map(i => i.titleHi).join(", और ");
+    return `सावधान! मरीज ${claim?.patientName || "मरीज"} के अस्पताल रिकॉर्ड में ${topIssues} पाया गया है। कृपया इसे अस्पताल बिलिंग काउंटर से ठीक करवाएं ताकि क्लेम रिजेक्ट न हो।`;
   };
 
   // Build audio summary in English from issues
@@ -124,8 +124,8 @@ export default function Home() {
       return "Congratulations. No compliance issues were detected in your hospital bill and discharge summary. Your claim is 100% ready for insurance approval.";
     }
 
-    const fixes = result.issues.map(i => i.fixEn).join(". In addition, ");
-    return `Attention! In your claim, ${result.issues.length} critical issues were identified that will lead to claim rejection. Please note: ${fixes}. Please correct these at the hospital billing desk before submission.`;
+    const topIssues = result.issues.slice(0, 2).map(i => i.titleEn).join(", and ");
+    return `Attention! In hospital records for ${claim?.patientName || "patient"}, ${topIssues} were detected. Please have these rectified at the hospital billing desk to prevent claim rejection.`;
   };
 
   return (

@@ -36,6 +36,9 @@ export const AudioExplainer: React.FC<AudioExplainerProps> = ({
   }, [hindiSummary, englishSummary]);
 
   const handleTogglePlay = async () => {
+    // Synchronously unlock browser audio context on user gesture
+    VernacularTTS.unlockAudio();
+
     if (isPlaying || isLoading) {
       VernacularTTS.stop();
       setIsPlaying(false);
@@ -52,6 +55,7 @@ export const AudioExplainer: React.FC<AudioExplainerProps> = ({
     const success = await VernacularTTS.speak(
       textToSpeak,
       activeVoiceLang,
+      englishSummary,
       () => {
         setIsLoading(false);
         setIsPlaying(true);
