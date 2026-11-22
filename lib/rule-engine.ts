@@ -1,5 +1,6 @@
 import { ExtractedClaim, AuditResult, AuditIssue, StatutoryProtection } from "@/types/claim";
 import policyRules from "./policy-rules.json";
+import { lookupICD10 } from "./icd10";
 import crypto from "crypto";
 
 export function evaluateClaim(claim: ExtractedClaim): AuditResult {
@@ -60,9 +61,10 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
   }
 
   // =========================================================================
-  // 3. Clinical Diagnosis Presence Check (RED)
+  // 3. Clinical Diagnosis Presence Check & ICD-10 Mapping (RED/YELLOW)
   // =========================================================================
   totalChecksCount++;
+  const icdMatch = lookupICD10(claim.diagnosis);
   if (!claim.diagnosis || claim.diagnosis.trim().length < 3) {
     issues.push({
       id: "DIAGNOSIS_MISSING",
@@ -76,6 +78,19 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
       fixHi: "अस्पताल से कहें कि वह अंतिम समरी में बीमारी का पूरा चिकित्सकीय नाम स्पष्ट रूप से लिखे।"
     });
     scoreDeduction += 30;
+  } else if (icdMatch && icdMatch.confidence === "FALLBACK") {
+    issues.push({
+      id: "ICD10_VAGUE_DIAGNOSIS",
+      severity: "YELLOW",
+      ruleRef: "IRDAI-ICD10-NON-STANDARD",
+      titleEn: "Non-Standard Clinical Terminology: Clarify Specific ICD-10 Code",
+      titleHi: "गैर-मानक चिकित्सीय विवरण: सटीक ICD-10 बीमारी का नाम दर्ज कराएं",
+      descriptionEn: `Extracted diagnosis "${claim.diagnosis}" does not match standard WHO/NHA hospitalization categories. Insurer may pend the claim for query.`,
+      descriptionHi: `दर्ज बीमारी "${claim.diagnosis}" मानक ICD-10 सूची में स्पष्ट नहीं है। बीमा कंपनी स्पष्टीकरण के लिए क्लेम रोक सकती है।`,
+      fixEn: "Ensure the treating physician uses standardized clinical nomenclature (e.g. Acute Appendicitis K35.8 instead of general abdominal pain).",
+      fixHi: "डॉक्टर से कहें कि सामान्य लक्षण के बजाय बीमारी का मानक चिकित्सकीय नाम दर्ज करें।"
+    });
+    scoreDeduction += 10;
   } else {
     passedChecksCount++;
   }
@@ -273,6 +288,7 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
     nonPayableAmount,
     issues,
     statutoryProtections,
+    matchedICD10: icdMatch ? { code: icdMatch.code, name: icdMatch.name, category: icdMatch.category } : undefined,
     passedChecksCount,
     totalChecksCount,
     packetHash,

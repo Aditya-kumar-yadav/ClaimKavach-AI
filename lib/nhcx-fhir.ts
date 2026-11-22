@@ -1,4 +1,5 @@
 import { ExtractedClaim, AuditResult } from "@/types/claim";
+import { lookupICD10 } from "./icd10";
 
 /**
  * Generates an official HL7 FHIR R4 Claim Bundle conforming to
@@ -11,6 +12,10 @@ export function generateNHCXClaimBundle(claim: ExtractedClaim, result: AuditResu
   const hospitalId = `hosp-${(claim.hospitalRegNo || "rohinidel").toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
   const practitionerId = `dr-${(claim.doctorRegNo || "reg-pending").toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
   const claimId = `claim-nhcx-${Date.now()}`;
+
+  const icdMatch = lookupICD10(claim.diagnosis);
+  const icdCode = icdMatch?.code || "Z03.89";
+  const icdDisplay = icdMatch?.name || claim.diagnosis;
 
   return {
     resourceType: "Bundle",
@@ -199,8 +204,8 @@ export function generateNHCXClaimBundle(claim: ExtractedClaim, result: AuditResu
                 coding: [
                   {
                     system: "http://hl7.org/fhir/sid/icd-10",
-                    code: "K35.8",
-                    display: claim.diagnosis
+                    code: icdCode,
+                    display: icdDisplay
                   }
                 ],
                 text: claim.diagnosis

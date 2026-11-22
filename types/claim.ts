@@ -23,6 +23,8 @@ export const ExtractedClaimSchema = z.object({
   summaryAdmitDate: z.string(),      // YYYY-MM-DD
   summaryDischargeDate: z.string(),  // YYYY-MM-DD
   diagnosis: z.string(),
+  icd10Code: z.string().optional(),
+  icd10Name: z.string().optional(),
   procedureName: z.string().optional(),
   lineItems: z.array(LineItemSchema),
   claimedTotal: z.number().positive(),
@@ -58,8 +60,8 @@ export interface AuditIssue {
   fixEn: string;
   fixHi: string;
   deductedAmount?: number;
-  billingDeskMsgEn?: string; // Ready-to-send hospital billing desk correction letter (English)
-  billingDeskMsgHi?: string; // Ready-to-send hospital billing desk correction letter (Hindi)
+  billingDeskMsgEn?: string;
+  billingDeskMsgHi?: string;
 }
 
 export interface AuditResult {
@@ -70,6 +72,11 @@ export interface AuditResult {
   nonPayableAmount: number;
   issues: AuditIssue[];
   statutoryProtections: StatutoryProtection[];
+  matchedICD10?: {
+    code: string;
+    name: string;
+    category: string;
+  };
   passedChecksCount: number;
   totalChecksCount: number;
   packetHash: string;

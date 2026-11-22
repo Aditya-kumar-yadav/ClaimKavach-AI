@@ -1,0 +1,49 @@
+[
+  { "code": "A90", "name": "Dengue fever", "category": "Infectious", "keywords": ["dengue", "dengue fever", "breakbone"] },
+  { "code": "A91", "name": "Dengue hemorrhagic fever", "category": "Infectious", "keywords": ["dengue hemorrhagic", "severe dengue"] },
+  { "code": "A01.0", "name": "Typhoid fever", "category": "Infectious", "keywords": ["typhoid", "enteric fever", "salmonella"] },
+  { "code": "B50.9", "name": "Plasmodium falciparum malaria", "category": "Infectious", "keywords": ["falciparum", "cerebral malaria", "malaria pf"] },
+  { "code": "B54", "name": "Malaria, unspecified", "category": "Infectious", "keywords": ["malaria", "vivax", "pv malaria"] },
+  { "code": "A09", "name": "Infectious gastroenteritis and colitis", "category": "Infectious", "keywords": ["gastroenteritis", "acute gastroenteritis", "age", "food poisoning", "diarrhea"] },
+  { "code": "A15.0", "name": "Tuberculosis of lung", "category": "Infectious", "keywords": ["tuberculosis", "pulmonary tb", "koch"] },
+
+  { "code": "K35.8", "name": "Acute appendicitis, other and unspecified", "category": "Gastrointestinal", "keywords": ["appendicitis", "acute appendicitis", "inflamed appendix", "appendix"] },
+  { "code": "K40.9", "name": "Unilateral inguinal hernia, without obstruction or gangrene", "category": "Gastrointestinal", "keywords": ["inguinal hernia", "hernia", "groin hernia"] },
+  { "code": "K42.9", "name": "Umbilical hernia without obstruction or gangrene", "category": "Gastrointestinal", "keywords": ["umbilical hernia", "navel hernia"] },
+  { "code": "K80.0", "name": "Calculus of gallbladder with acute cholecystitis", "category": "Gastrointestinal", "keywords": ["cholecystitis", "calculus cholecystitis", "gallbladder stones with infection"] },
+  { "code": "K80.2", "name": "Calculus of gallbladder without cholecystitis", "category": "Gastrointestinal", "keywords": ["cholelithiasis", "gallstone", "gallbladder stones", "gb stones"] },
+  { "code": "K85.9", "name": "Acute pancreatitis, unspecified", "category": "Gastrointestinal", "keywords": ["pancreatitis", "acute pancreatitis"] },
+  { "code": "K56.6", "name": "Other and unspecified intestinal obstruction", "category": "Gastrointestinal", "keywords": ["intestinal obstruction", "bowel obstruction"] },
+
+  { "code": "I21.9", "name": "Acute myocardial infarction, unspecified", "category": "Cardiovascular", "keywords": ["myocardial infarction", "heart attack", "stemi", "nstemi", "coronary artery disease"] },
+  { "code": "I20.0", "name": "Unstable angina", "category": "Cardiovascular", "keywords": ["angina", "unstable angina", "cardiac chest pain"] },
+  { "code": "I50.9", "name": "Heart failure, unspecified", "category": "Cardiovascular", "keywords": ["heart failure", "congestive cardiac failure", "ccf"] },
+  { "code": "I10", "name": "Essential (primary) hypertension", "category": "Cardiovascular", "keywords": ["hypertension", "high blood pressure", "htn"] },
+
+  { "code": "J18.9", "name": "Pneumonia, unspecified organism", "category": "Respiratory", "keywords": ["pneumonia", "lung infection", "bronchopneumonia"] },
+  { "code": "J44.1", "name": "Chronic obstructive pulmonary disease with acute exacerbation", "category": "Respiratory", "keywords": ["copd", "chronic bronchitis", "emphysema"] },
+  { "code": "J45.9", "name": "Asthma, unspecified", "category": "Respiratory", "keywords": ["asthma", "bronchial asthma", "acute asthma"] },
+
+  { "code": "H25.9", "name": "Senile cataract, unspecified", "category": "Ophthalmology", "keywords": ["cataract", "senile cataract", "mature cataract", "motiyabind"] },
+  { "code": "H40.9", "name": "Glaucoma, unspecified", "category": "Ophthalmology", "keywords": ["glaucoma", "ocular hypertension"] },
+
+  { "code": "N20.0", "name": "Calculus of kidney", "category": "Urology", "keywords": ["kidney stone", "renal calculus", "nephrolithiasis", "renal stone"] },
+  { "code": "N20.1", "name": "Calculus of ureter", "category": "Urology", "keywords": ["ureteric stone", "ureteral calculus"] },
+  { "code": "N39.0", "name": "Urinary tract infection, site not specified", "category": "Urology", "keywords": ["urinary tract infection", "uti"] },
+  { "code": "N18.9", "name": "Chronic kidney disease, unspecified", "category": "Urology", "keywords": ["chronic kidney disease", "ckd", "renal failure"] },
+
+  { "code": "S72.0", "name": "Fracture of head and neck of femur", "category": "Orthopedics", "keywords": ["neck of femur", "hip fracture", "nof fracture", "femur fracture"] },
+  { "code": "S82.9", "name": "Fracture of lower leg, part unspecified", "category": "Orthopedics", "keywords": ["tibia fracture", "fibula fracture", "leg fracture"] },
+  { "code": "S52.9", "name": "Fracture of forearm, part unspecified", "category": "Orthopedics", "keywords": ["radius fracture", "ulna fracture", "forearm fracture", "colles"] },
+  { "code": "M16.9", "name": "Osteoarthritis of hip, unspecified", "category": "Orthopedics", "keywords": ["hip osteoarthritis", "hip replacement", "total hip"] },
+  { "code": "M17.9", "name": "Osteoarthritis of knee, unspecified", "category": "Orthopedics", "keywords": ["knee osteoarthritis", "knee replacement", "total knee", "oa knee"] },
+  { "code": "M54.5", "name": "Low back pain", "category": "Orthopedics", "keywords": ["back pain", "lumbago", "lumbar disc", "sciatica"] },
+
+  { "code": "O82.0", "name": "Delivery by elective caesarean section", "category": "Obstetrics", "keywords": ["elective caesarean", "c-section", "lscs", "elective lscs"] },
+  { "code": "O82.1", "name": "Delivery by emergency caesarean section", "category": "Obstetrics", "keywords": ["emergency caesarean", "emergency lscs"] },
+  { "code": "O80", "name": "Encounter for full-term uncomplicated delivery", "category": "Obstetrics", "keywords": ["normal delivery", "vaginal delivery", "full term delivery"] },
+  { "code": "D25.9", "name": "Leiomyoma of uterus, unspecified", "category": "Obstetrics", "keywords": ["fibroid", "uterine fibroid", "leiomyoma", "hysterectomy"] },
+
+  { "code": "E11.9", "name": "Type 2 diabetes mellitus without complications", "category": "Endocrine", "keywords": ["diabetes", "t2dm", "type 2 diabetes", "blood sugar"] },
+  { "code": "E86.0", "name": "Dehydration", "category": "Endocrine", "keywords": ["dehydration", "volume depletion"] }
+]

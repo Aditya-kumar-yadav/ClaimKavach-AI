@@ -102,9 +102,18 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
             <p className="text-xs sm:text-sm text-slate-600 mt-0.5 font-medium">
               🏥 {claim.hospitalName}
             </p>
-            <p className="text-xs text-slate-500 mt-1">
-              🩺 <strong className="text-slate-700">Diagnosis:</strong> {claim.diagnosis}
-            </p>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <p className="text-xs text-slate-500">
+                🩺 <strong className="text-slate-700">Diagnosis:</strong> {claim.diagnosis}
+              </p>
+              {result.matchedICD10 && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold flex items-center gap-1">
+                  <span>WHO/NHA ICD-10:</span>
+                  <span className="underline">{result.matchedICD10.code}</span>
+                  <span>({result.matchedICD10.name})</span>
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Score Badge */}
