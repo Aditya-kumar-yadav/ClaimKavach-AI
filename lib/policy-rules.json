@@ -1,0 +1,59 @@
+{
+  "lists": {
+    "list1_excluded_items": {
+      "title": "List I - Non-Payable Items (Excluded Consumables)",
+      "description": "Consumables, toiletries, personal comfort items excluded under IRDAI Guidelines",
+      "items": [
+        "surgical gloves", "gloves", "latex gloves", "examination gloves",
+        "face mask", "n95 mask", "surgical mask", "mask",
+        "sanitizer", "hand rub", "antiseptic lotion",
+        "ppe kit", "protective gear",
+        "thermometer", "oximeter probe",
+        "crepe bandage", "nebulizer kit", "spirometer",
+        "attendant food", "food charges", "beverages",
+        "tissue paper", "wipes", "towel", "slippers"
+      ],
+      "penalty": 10
+    },
+    "list2_subsumed_room": {
+      "title": "List II - Items Subsumed into Room Charges",
+      "description": "Administrative and nursing kits that cannot be billed separately from room rent",
+      "items": [
+        "admission kit", "patient kit", "welcome kit",
+        "housekeeping charges", "sanitation charges",
+        "visitor pass", "attendant pass",
+        "id band", "patient tag", "thermometer cover"
+      ],
+      "penalty": 8
+    },
+    "list3_subsumed_procedure": {
+      "title": "List III - Items Subsumed into Procedure Charges",
+      "description": "Surgical prep and consumable materials covered within the package rate",
+      "items": [
+        "gauze", "surgical gauze", "cotton roll", "sterile cotton",
+        "micropore tape", "surgical tape", "plaster",
+        "disposable apron", "surgical drape", "gown",
+        "blade", "disposable scalpel", "x-ray film"
+      ],
+      "penalty": 8
+    },
+    "list4_subsumed_treatment": {
+      "title": "List IV - Items Subsumed into Treatment Costs",
+      "description": "Routine inpatient treatment supplies included in standard nursing care",
+      "items": [
+        "admission fee", "registration charges", "case sheet charges",
+        "alcohol swab", "spirit", "betadine", "disinfectant",
+        "urine pot", "bedpan", "iv cannulation set fee"
+      ],
+      "penalty": 8
+    }
+  },
+  "packageCaps": {
+    "appendectomy": 22000,
+    "cholecystectomy": 28000,
+    "hernia_repair": 24000,
+    "caesarean_section": 20000,
+    "normal_delivery": 12000,
+    "cataract_surgery": 15000
+  }
+}
