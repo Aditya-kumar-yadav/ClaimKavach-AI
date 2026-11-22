@@ -1,7 +1,6 @@
 // Vernacular Voice Synthesis Engine using Browser Native Web Speech API
 
 export class VernacularTTS {
-  private static synth: SpeechSynthesis | null = null;
   private static currentUtterance: SpeechSynthesisUtterance | null = null;
 
   private static getSynth(): SpeechSynthesis | null {
@@ -18,37 +17,52 @@ export class VernacularTTS {
       return false;
     }
 
-    // Cancel any ongoing speech
+    // Always stop and cancel first to guarantee no two voices talk over each other
     this.stop();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "hi-IN";
-    utterance.rate = 0.95; // Slightly slower for crisp clarity
-    utterance.pitch = 1.0;
+    try {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "hi-IN";
+      utterance.rate = 0.95; // Slightly slower for crisp Hindi clarity
+      utterance.pitch = 1.0;
 
-    // Pick a natural Hindi voice if available
-    const voices = synth.getVoices();
-    const hindiVoice = voices.find(
-      v => v.lang.includes("hi") || v.name.toLowerCase().includes("hindi") || v.name.includes("India")
-    );
-    if (hindiVoice) {
-      utterance.voice = hindiVoice;
+      // Pick a natural Hindi voice if available
+      const voices = synth.getVoices();
+      const hindiVoice = voices.find(
+        v => v.lang.includes("hi") || v.name.toLowerCase().includes("hindi") || v.name.includes("India")
+      );
+      if (hindiVoice) {
+        utterance.voice = hindiVoice;
+      }
+
+      utterance.onend = () => {
+        VernacularTTS.currentUtterance = null;
+        if (onEnd) onEnd();
+      };
+
+      utterance.onerror = (e) => {
+        VernacularTTS.currentUtterance = null;
+        if (onEnd) onEnd();
+      };
+
+      this.currentUtterance = utterance;
+      synth.speak(utterance);
+      return true;
+    } catch (err) {
+      console.error("Speech synthesis failed:", err);
+      this.currentUtterance = null;
+      return false;
     }
-
-    if (onEnd) {
-      utterance.onend = onEnd;
-      utterance.onerror = onEnd;
-    }
-
-    this.currentUtterance = utterance;
-    synth.speak(utterance);
-    return true;
   }
 
   public static stop(): void {
     const synth = this.getSynth();
     if (synth) {
-      synth.cancel();
+      try {
+        synth.cancel();
+      } catch (e) {
+        // Safe ignore
+      }
       this.currentUtterance = null;
     }
   }

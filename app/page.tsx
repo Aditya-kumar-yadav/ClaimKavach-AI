@@ -10,7 +10,8 @@ import { ClaimPacketPrint } from "@/components/ClaimPacketPrint";
 import { ExtractedClaim, AuditResult } from "@/types/claim";
 import { FLAWED_DEMO_CLAIM, CLEAN_DEMO_CLAIM } from "@/lib/mock-data";
 import { evaluateClaim } from "@/lib/rule-engine";
-import { ShieldCheck, Sparkles, AlertCircle, FileCheck2, ArrowRight } from "lucide-react";
+import { VernacularTTS } from "@/lib/tts";
+import { ShieldCheck, Sparkles, AlertCircle, FileCheck2, ArrowRight, RotateCcw } from "lucide-react";
 
 export default function Home() {
   const [language, setLanguage] = useState<"en" | "hi">("hi");
@@ -18,11 +19,19 @@ export default function Home() {
   const [claim, setClaim] = useState<ExtractedClaim | null>(null);
   const [result, setResult] = useState<AuditResult | null>(null);
 
+  const handleReset = () => {
+    VernacularTTS.stop();
+    setClaim(null);
+    setResult(null);
+  };
+
   const handleAnalyze = async (
     billBase64?: string,
     summaryBase64?: string,
     preset?: "flawed" | "clean"
   ) => {
+    // Immediately stop any playing audio when switching presets or re-analyzing
+    VernacularTTS.stop();
     setIsLoading(true);
 
     try {
@@ -134,6 +143,18 @@ export default function Home() {
           {/* Results View */}
           {claim && result && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Reset & Switch Preset Bar */}
+              <div className="flex justify-end mb-4">
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="text-xs font-bold text-slate-600 hover:text-rose-600 bg-white hover:bg-rose-50 px-3.5 py-1.5 rounded-xl border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span>{language === "hi" ? "नया ऑडिट शुरू करें (Reset)" : "Reset & Clear Audit"}</span>
+                </button>
+              </div>
+
               {/* Spoken Hindi Explainer Banner */}
               <AudioExplainer
                 hindiSummary={getHindiAudioSummary()}

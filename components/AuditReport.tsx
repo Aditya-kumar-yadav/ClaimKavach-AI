@@ -77,29 +77,51 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
   // Dynamically calculate live simulated score
   const { simulatedScore, simulatedRisk, moneyProtected } = useMemo(() => {
     let score = result.approvalScore;
+    let saved = 0;
+    let fixedCritical = false;
     
     fixedIssueIds.forEach(id => {
-      if (id.includes("DATE")) score += 36;
-      else if (id.includes("DOC_SEAL")) score += 20;
-      else if (id.includes("DIAGNOSIS")) score += 15;
-      else if (id.includes("NON_PAYABLE")) score += 12;
-      else if (id.includes("ROOM_RENT")) score += 10;
-      else if (id.includes("WAITING_PERIOD")) score += 15;
-      else score += 10;
+      const issue = result.issues.find(i => i.id === id);
+      if (id.includes("DATE")) {
+        score += 36;
+        fixedCritical = true;
+      } else if (id.includes("DOC_SEAL")) {
+        score += 20;
+        fixedCritical = true;
+      } else if (id.includes("DIAGNOSIS")) {
+        score += 15;
+        fixedCritical = true;
+      } else if (id.includes("NON_PAYABLE")) {
+        score += 12;
+        saved += (issue?.deductedAmount || result.nonPayableAmount || 4550);
+      } else if (id.includes("ROOM_RENT")) {
+        score += 10;
+        saved += 6000;
+      } else if (id.includes("WAITING_PERIOD")) {
+        score += 15;
+        fixedCritical = true;
+      } else {
+        score += 10;
+        saved += 1500;
+      }
     });
 
-    const finalScore = Math.min(96, Math.max(result.approvalScore, score));
+    // Score strictly clamped between 0 and 100
+    const finalScore = Math.min(100, Math.max(0, score));
     const finalRisk: "GREEN" | "YELLOW" | "RED" =
       finalScore >= 80 ? "GREEN" : finalScore >= 60 ? "YELLOW" : "RED";
 
-    const protectedAmt = fixedIssueIds.size > 0 ? claim.claimedTotal : 0;
+    let protectedAmt = 0;
+    if (fixedIssueIds.size > 0) {
+      protectedAmt = fixedCritical ? claim.claimedTotal : Math.min(claim.claimedTotal, saved);
+    }
 
     return {
       simulatedScore: finalScore,
       simulatedRisk: finalRisk,
       moneyProtected: protectedAmt
     };
-  }, [fixedIssueIds, result.approvalScore, claim.claimedTotal]);
+  }, [fixedIssueIds, result.approvalScore, result.issues, result.nonPayableAmount, claim.claimedTotal]);
 
   // Trigger celebratory confetti when all critical issues are fixed
   React.useEffect(() => {
@@ -230,9 +252,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                 <span className="text-xs font-bold text-slate-500">/ 100</span>
               </div>
 
-              {fixedIssueIds.size > 0 && (
+              {fixedIssueIds.size > 0 && moneyProtected > 0 && (
                 <span className="text-[11px] font-semibold text-emerald-600 block mt-0.5">
-                  🛡️ ₹{claim.claimedTotal.toLocaleString("en-IN")} Saved from Rejection
+                  🛡️ ₹{moneyProtected.toLocaleString("en-IN")} Saved from Rejection
                 </span>
               )}
             </div>

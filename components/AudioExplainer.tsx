@@ -12,21 +12,30 @@ interface AudioExplainerProps {
 export const AudioExplainer: React.FC<AudioExplainerProps> = ({ hindiSummary, language }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
+  // When summary changes (e.g. preset switch or reset), immediately cancel any playing audio!
   useEffect(() => {
+    VernacularTTS.stop();
+    setIsPlaying(false);
+
     return () => {
       VernacularTTS.stop();
     };
-  }, []);
+  }, [hindiSummary]);
 
   const handleTogglePlay = () => {
+    // ALWAYS cancel any ongoing/queued speech first so voices never overlap
+    VernacularTTS.stop();
+
     if (isPlaying) {
-      VernacularTTS.stop();
       setIsPlaying(false);
     } else {
       setIsPlaying(true);
-      VernacularTTS.speakHindi(hindiSummary, () => {
+      const success = VernacularTTS.speakHindi(hindiSummary, () => {
         setIsPlaying(false);
       });
+      if (!success) {
+        setIsPlaying(false);
+      }
     }
   };
 
@@ -41,7 +50,7 @@ export const AudioExplainer: React.FC<AudioExplainerProps> = ({ hindiSummary, la
           <button
             type="button"
             onClick={handleTogglePlay}
-            className={`h-12 w-12 sm:h-14 sm:w-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 cursor-pointer ${
+            className={`h-12 w-12 sm:h-14 sm:w-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 cursor-pointer shrink-0 ${
               isPlaying
                 ? "bg-rose-500 text-white shadow-rose-500/30 animate-pulse"
                 : "bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/30"
