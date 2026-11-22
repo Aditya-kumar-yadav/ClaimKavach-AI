@@ -50,7 +50,7 @@ export interface StatutoryProtection {
 export interface AuditIssue {
   id: string;
   severity: "RED" | "YELLOW";
-  ruleRef: string; // e.g., "DATE_MISMATCH", "IRDAI-LIST-I", "IRDAI-2024-MORATORIUM"
+  ruleRef: string;
   titleEn: string;
   titleHi: string;
   descriptionEn: string;
@@ -58,10 +58,12 @@ export interface AuditIssue {
   fixEn: string;
   fixHi: string;
   deductedAmount?: number;
+  billingDeskMsgEn?: string; // Ready-to-send hospital billing desk correction letter (English)
+  billingDeskMsgHi?: string; // Ready-to-send hospital billing desk correction letter (Hindi)
 }
 
 export interface AuditResult {
-  approvalScore: number; // 0 to 100
+  approvalScore: number;
   riskLevel: "GREEN" | "YELLOW" | "RED";
   claimedTotal: number;
   payableAmount: number;
@@ -70,6 +72,6 @@ export interface AuditResult {
   statutoryProtections: StatutoryProtection[];
   passedChecksCount: number;
   totalChecksCount: number;
-  packetHash: string; // SHA-256 Digest
-  evaluatedAt: string; // ISO Timestamp
+  packetHash: string;
+  evaluatedAt: string;
 }

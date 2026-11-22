@@ -27,7 +27,9 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
       descriptionEn: `Hospital bill states admission as ${claim.billAdmitDate} and discharge as ${claim.billDischargeDate}, but the discharge summary records admission on ${claim.summaryAdmitDate} and discharge on ${claim.summaryDischargeDate}. Insurers flag this discrepancy as potential document tampering or clerical conflict, leading to 100% rejection.`,
       descriptionHi: `अस्पताल के बिल में भर्ती की तारीख ${claim.billAdmitDate} है, जबकि डिस्चार्ज समरी में ${claim.summaryAdmitDate} दर्ज है। बीमा कंपनी इसे डेटा विसंगति मानकर क्लेम तुरंत निरस्त कर देती है।`,
       fixEn: "Request the hospital billing desk to issue an updated, stamped bill or revised discharge summary matching the exact registered dates before submission.",
-      fixHi: "अस्पताल के बिलिंग काउंटर से कहें कि वे दोनों कागजों पर एक ही सही तारीख दर्ज करके अस्पताल की मुहर लगाकर दें।"
+      fixHi: "अस्पताल के बिलिंग काउंटर से कहें कि वे दोनों कागजों पर एक ही सही तारीख दर्ज करके अस्पताल की मुहर लगाकर दें।",
+      billingDeskMsgEn: `To: Billing & TPA Desk, ${claim.hospitalName}.\nPatient: ${claim.patientName}.\nSubject: Urgent Rectification Request - Date Mismatch on Inpatient Bill.\n\nRespected Sir/Madam,\nOur final itemized bill lists admission date as ${claim.billAdmitDate} and discharge as ${claim.billDischargeDate}, whereas the discharge summary records admission on ${claim.summaryAdmitDate} and discharge on ${claim.summaryDischargeDate}.\n\nUnder IRDAI claim settlement guidelines, this clerical conflict causes automatic rejection. We kindly request you to issue a revised stamped bill or an official hospital correction certificate (शुद्धि-पत्र) matching the exact dates.\n\nThank you,\n${claim.patientName} & Family.`,
+      billingDeskMsgHi: `सेवा में: बिलिंग एवं TPA विभाग, ${claim.hospitalName}।\nमरीज का नाम: ${claim.patientName}।\nविषय: अस्पताल बिल में भर्ती/डिस्चार्ज तारीख सुधार हेतु प्रार्थना पत्र।\n\nमहोदय,\nहमारे अस्पताल बिल में भर्ती की तारीख ${claim.billAdmitDate} है, जबकि डिस्चार्ज समरी में ${claim.summaryAdmitDate} दर्ज है।\n\nबीमा नियमों के तहत तारीख में अंतर होने से हमारा क्लेम निरस्त हो जाएगा। कृपया दोनों कागजों पर सही तारीख दर्ज करके अस्पताल की आधिकारिक मुहर लगा संशोधित बिल या शुद्धि-पत्र (Correction Letter) जारी करने की कृपा करें।\n\nधन्यवाद,\n${claim.patientName} एवं परिजन।`
     });
     scoreDeduction += 35;
   } else {
@@ -48,7 +50,9 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
       descriptionEn: `Treating doctor signature verification flag is false or medical council registration number is missing on the claim documents. IRDAI circular requires verifiable statutory registration (MCI / State Medical Council).`,
       descriptionHi: `डिस्चार्ज पेपर पर इलाज करने वाले डॉक्टर का मेडिकल काउंसिल रजिस्ट्रेशन नंबर या आधिकारिक हस्ताक्षर नहीं है। सरकारी और निजी बीमा नियमों के तहत यह अनिवार्य है।`,
       fixEn: "Ensure treating physician signs the discharge summary and affixes their official seal containing their State Medical Council registration number.",
-      fixHi: "इलाज करने वाले डॉक्टर से डिस्चार्ज समरी पर हस्ताक्षर और रजिस्ट्रेशन नंबर वाली आधिकारिक मुहर लगवाएं।"
+      fixHi: "इलाज करने वाले डॉक्टर से डिस्चार्ज समरी पर हस्ताक्षर और रजिस्ट्रेशन नंबर वाली आधिकारिक मुहर लगवाएं।",
+      billingDeskMsgEn: `To: Medical Records / Billing Desk, ${claim.hospitalName}.\nPatient: ${claim.patientName}.\nSubject: Treating Doctor Stamp & MCI Registration Number Endorsement.\n\nRespected Sir/Madam,\nThe discharge summary lacks the treating consultant ${claim.doctorName || ""}'s State Medical Council registration number seal and physical signature. The insurance TPA requires verifiable statutory registration for reimbursement approval.\n\nKindly have the treating doctor affix their official seal and signature.\n\nThank you,\n${claim.patientName}.`,
+      billingDeskMsgHi: `सेवा में: बिलिंग एवं मेडिकल रिकॉर्ड्स विभाग, ${claim.hospitalName}।\nमरीज का नाम: ${claim.patientName}।\nविषय: डिस्चार्ज पेपर पर डॉक्टर के हस्ताक्षर एवं रजिस्ट्रेशन मुहर लगवाने हेतु।\n\nमहोदय,\nहमारे डिस्चार्ज पेपर पर इलाज करने वाले डॉक्टर ${claim.doctorName || ""} का मेडिकल काउंसिल रजिस्ट्रेशन नंबर और मुहर दर्ज नहीं है। बीमा कंपनी द्वारा क्लेम पास करने के लिए यह अनिवार्य नियम है। कृपया डॉक्टर साहब से मुहर और हस्ताक्षर करवा कर देने की कृपा करें।\n\nधन्यवाद,\n${claim.patientName}।`
     });
     scoreDeduction += 25;
   } else {
@@ -138,11 +142,10 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
   // =========================================================================
   // 6. IRDAI 2024 Proportional Room Rent Capping Deduction
   // =========================================================================
-  const eligibleRoomCap = claim.roomRentCapPerDay || (claim.policySumInsured * 0.01); // 1% of Sum Insured
+  const eligibleRoomCap = claim.roomRentCapPerDay || (claim.policySumInsured * 0.01);
   if (claim.roomRentPerDay && claim.roomRentPerDay > eligibleRoomCap) {
     totalChecksCount++;
     const excessPerDay = claim.roomRentPerDay - eligibleRoomCap;
-    // Calculate 3 days proportional deduction on room rent
     const roomDeduction = excessPerDay * 3;
     nonPayableAmount += roomDeduction;
 
@@ -234,14 +237,12 @@ export function evaluateClaim(claim: ExtractedClaim): AuditResult {
     });
   }
 
-  // Calculate final score clamped between 10 and 100
   const approvalScore = Math.max(12, Math.min(100, 100 - scoreDeduction));
   const riskLevel: "GREEN" | "YELLOW" | "RED" =
     approvalScore >= 80 ? "GREEN" : approvalScore >= 60 ? "YELLOW" : "RED";
 
   const payableAmount = Math.max(0, claim.claimedTotal - nonPayableAmount);
 
-  // Generate SHA-256 Digest for Tamper-Evident Dossier
   const evaluatedAt = new Date().toISOString();
   const rawPayload = JSON.stringify({
     patientName: claim.patientName,

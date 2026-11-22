@@ -38,6 +38,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
   const [showLineItems, setShowLineItems] = useState(false);
   const [showNHCXModal, setShowNHCXModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedIssueId, setCopiedIssueId] = useState<string | null>(null);
 
   const nhcxBundle = generateNHCXClaimBundle(claim, result);
   const jsonString = JSON.stringify(nhcxBundle, null, 2);
@@ -280,6 +281,63 @@ export const AuditReport: React.FC<AuditReportProps> = ({ claim, result, languag
                         {language === "hi" ? issue.fixHi : issue.fixEn}
                       </p>
                     </div>
+
+                    {/* 1-Click WhatsApp / Hospital Billing Desk Correction Request */}
+                    {(issue.billingDeskMsgEn || issue.billingDeskMsgHi) && (
+                      <div className="mt-3 p-3.5 rounded-xl bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <span className="text-xs font-bold text-slate-200">
+                            {language === "hi"
+                              ? "अस्पताल बिलिंग काउंटर सुधार पत्र (Ready-to-Send)"
+                              : "Hospital Billing Desk Correction Letter"}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                          {/* WhatsApp Button */}
+                          <a
+                            href={`https://wa.me/?text=${encodeURIComponent(
+                              language === "hi"
+                                ? (issue.billingDeskMsgHi || issue.billingDeskMsgEn || "")
+                                : (issue.billingDeskMsgEn || issue.billingDeskMsgHi || "")
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                          >
+                            <span>WhatsApp to Hospital</span>
+                          </a>
+
+                          {/* Copy Request Letter Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const msg =
+                                language === "hi"
+                                  ? (issue.billingDeskMsgHi || issue.billingDeskMsgEn || "")
+                                  : (issue.billingDeskMsgEn || issue.billingDeskMsgHi || "");
+                              navigator.clipboard.writeText(msg);
+                              setCopiedIssueId(issue.id);
+                              setTimeout(() => setCopiedIssueId(null), 2000);
+                            }}
+                            className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all border border-slate-700 cursor-pointer"
+                          >
+                            {copiedIssueId === issue.id ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-emerald-400" />
+                                <span>Copied Letter!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3.5 w-3.5" />
+                                <span>Copy Letter</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
