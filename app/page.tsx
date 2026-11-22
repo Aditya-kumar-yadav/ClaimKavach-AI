@@ -118,6 +118,16 @@ export default function Home() {
     return `सावधान! आपके क्लेम में कुल ${result.issues.length} जरूरी गलतियां पाई गई हैं, जिनकी वजह से क्लेम रिजेक्ट हो सकता है। कृपया ध्यान दें: ${fixes}। इसे ठीक करने के बाद ही क्लेम सबमिट करें।`;
   };
 
+  // Build audio summary in English from issues
+  const getEnglishAudioSummary = (): string => {
+    if (!result || result.issues.length === 0) {
+      return "Congratulations. No compliance issues were detected in your hospital bill and discharge summary. Your claim is 100% ready for insurance approval.";
+    }
+
+    const fixes = result.issues.map(i => i.fixEn).join(". In addition, ");
+    return `Attention! In your claim, ${result.issues.length} critical issues were identified that will lead to claim rejection. Please note: ${fixes}. Please correct these at the hospital billing desk before submission.`;
+  };
+
   return (
     <div className="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
       {/* Interactive Screen Layout */}
@@ -185,9 +195,10 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Spoken Hindi Explainer Banner */}
+              {/* Spoken Hindi & English Explainer Banner */}
               <AudioExplainer
                 hindiSummary={getHindiAudioSummary()}
+                englishSummary={getEnglishAudioSummary()}
                 language={language}
               />
 
