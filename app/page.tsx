@@ -22,7 +22,7 @@ import { generateAudioSummary } from "@/lib/audio-summary";
 import { Sparkles } from "lucide-react";
 
 export default function Home() {
-  const [language, setLanguage] = useState<"en" | "hi">("hi");
+  const [language, setLanguage] = useState<"en" | "hi">("en");
   const [isLoading, setIsLoading] = useState(false);
   const [processingStep, setProcessingStep] = useState<1 | 2 | 3 | null>(null);
   const [claim, setClaim] = useState<ExtractedClaim | null>(null);
@@ -209,9 +209,23 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
+    <div className="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white relative">
+      {/* Fixed Fullscreen Background Image - Zero-Lag High-Performance Ambient Wave */}
+      <div className="bg-wave-container no-print" aria-hidden="true">
+        <picture>
+          <source srcSet="/images/hero-wave-bg.webp" type="image/webp" />
+          <img
+            src="/images/hero-wave-bg.jpg"
+            alt=""
+            className="bg-wave-image"
+            loading="eager"
+            decoding="async"
+          />
+        </picture>
+      </div>
+
       {/* Interactive Screen Layout */}
-      <div className="no-print flex-1 flex flex-col">
+      <div className="no-print flex-1 flex flex-col relative z-10">
         <Header 
           language={language} 
           setLanguage={setLanguage} 
@@ -219,35 +233,24 @@ export default function Home() {
           hasCustomKey={hasCustomKey}
           onSelectScenario={(preset) => handleAnalyze(undefined, undefined, preset)}
           isLoading={isLoading}
+          onResetHome={handleReset}
         />
 
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
-          {/* Hero Banner - Sleek & visible initially; smoothly hides when audit or running */}
+          {/* Hero Banner - Matches exact layout and typography */}
           {!(claim || isLoading) && (
             <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10 animate-in fade-in duration-300">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-bold mb-3 border border-sky-200">
-                <Sparkles className="h-3.5 w-3.5 text-sky-600" />
-                <span>
-                  {language === "hi"
-                    ? "भारत का पहला एआई क्लेम प्री-वैलिडेशन इंजन"
-                    : "India's 1st Pre-Adjudication Engine for Micro-Insurance"}
-                </span>
-              </div>
-              <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black text-slate-950 tracking-[-0.025em] leading-[1.12]">
                 {language === "hi" ? (
-                  <>
-                    कागजी गलतियों से <span className="text-rose-600 underline decoration-rose-300">क्लेम रिजेक्ट</span> होने से बचाएं
-                  </>
+                  "कागजी गलतियों से क्लेम रिजेक्ट होने से बचाएं"
                 ) : (
                   <>
                     Stop Micro-Insurance Rejections <br className="hidden sm:inline" />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-indigo-600">
-                      Before They Happen
-                    </span>
+                    Before They Happen
                   </>
                 )}
               </h1>
-              <p className="text-sm sm:text-base text-slate-600 mt-3 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-600 font-medium mt-3.5 max-w-2xl mx-auto leading-relaxed">
                 {language === "hi"
                   ? "आयुष्मान भारत (PM-JAY) एवं गिग वर्कर्स के लिए अस्पताल बिलों का लाइव ऑडिट। तारीखों का मिलान, गैर-मान्य आइटम की कटौती और बोलकर हिंदी में समाधान।"
                   : "Multimodal OCR reads handwritten hospital bills, checks IRDAI non-payable items, identifies date discrepancies, and outputs a SHA-256 verified dossier."}
