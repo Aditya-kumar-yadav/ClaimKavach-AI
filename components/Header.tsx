@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Shield, Languages, User } from "lucide-react";
-import { SignedIn, SignedOut, UserButton, useUser, ClerkLoading, ClerkLoaded } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { Shield, Languages, User, LogOut } from "lucide-react";
+import { SignedIn, SignedOut, UserButton, useUser, useClerk, ClerkLoading, ClerkLoaded } from "@clerk/nextjs";
 
 interface HeaderProps {
   language: "en" | "hi";
@@ -23,6 +24,24 @@ export const Header: React.FC<HeaderProps> = ({
   isLoading = false
 }) => {
   const { user } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  // Pre-fetch /sign-in so the browser has the route ready in cache without delay
+  useEffect(() => {
+    router.prefetch("/sign-in");
+  }, [router]);
+
+  const handleFastSignOut = async () => {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await signOut({ redirectUrl: "/sign-in" });
+    } catch {
+      window.location.assign("/sign-in");
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 glass-panel border-b border-slate-200/80 shadow-xs">
@@ -117,7 +136,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <ClerkLoaded>
               <SignedIn>
-                <div className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all">
+                <div className="flex items-center gap-1.5 pl-1 pr-1.5 py-1 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all">
                   <UserButton 
                     afterSignOutUrl="/sign-in"
                     userProfileMode="modal"
@@ -134,14 +153,29 @@ export const Header: React.FC<HeaderProps> = ({
                       }
                     }}
                   />
-                  <div className="hidden xs:flex flex-col text-left leading-none">
-                    <span className="text-xs font-black text-slate-900 max-w-[130px] truncate">
+                  <div className="hidden xs:flex flex-col text-left leading-none pr-1">
+                    <span className="text-xs font-black text-slate-900 max-w-[120px] truncate">
                       {user?.fullName || (user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : (user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "User"))}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-semibold max-w-[130px] truncate mt-0.5">
+                    <span className="text-[10px] text-slate-400 font-semibold max-w-[120px] truncate mt-0.5">
                       {user?.primaryEmailAddress?.emailAddress || "Verified"}
                     </span>
                   </div>
+
+                  {/* Instant 1-Click Fast Sign Out Button */}
+                  <button
+                    type="button"
+                    onClick={handleFastSignOut}
+                    disabled={isSigningOut}
+                    className="h-7 w-7 rounded-full bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 flex items-center justify-center transition-colors cursor-pointer border border-slate-200/80 shrink-0"
+                    title={language === "hi" ? "लॉग आउट करें (Sign Out)" : "Instant Log Out"}
+                  >
+                    {isSigningOut ? (
+                      <div className="h-3.5 w-3.5 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <LogOut className="h-3.5 w-3.5" />
+                    )}
+                  </button>
                 </div>
               </SignedIn>
               <SignedOut>
