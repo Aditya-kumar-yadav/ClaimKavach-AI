@@ -22,7 +22,7 @@ import { generateAudioSummary } from "@/lib/audio-summary";
 import { Sparkles } from "lucide-react";
 
 export default function Home() {
-  const [language, setLanguage] = useState<"en" | "hi">("hi");
+  const [language, setLanguage] = useState<"en" | "hi">("en");
   const [isLoading, setIsLoading] = useState(false);
   const [processingStep, setProcessingStep] = useState<1 | 2 | 3 | null>(null);
   const [claim, setClaim] = useState<ExtractedClaim | null>(null);
@@ -209,9 +209,23 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
+    <div className="min-h-screen flex flex-col selection:bg-sky-500 selection:text-white relative bg-transparent">
+      {/* Fixed Fullscreen Background Video & Readability Veil */}
+      <div className="bg-video-container no-print" aria-hidden="true">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="bg-video-element"
+        >
+          <source src="/bgvideo.mp4" type="video/mp4" />
+        </video>
+        <div className="bg-video-veil"></div>
+      </div>
+
       {/* Interactive Screen Layout */}
-      <div className="no-print flex-1 flex flex-col">
+      <div className="no-print flex-1 flex flex-col relative z-10">
         <Header 
           language={language} 
           setLanguage={setLanguage} 
@@ -219,6 +233,7 @@ export default function Home() {
           hasCustomKey={hasCustomKey}
           onSelectScenario={(preset) => handleAnalyze(undefined, undefined, preset)}
           isLoading={isLoading}
+          onResetHome={handleReset}
         />
 
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">

@@ -12,7 +12,74 @@ interface HeaderProps {
   hasCustomKey?: boolean;
   onSelectScenario?: (preset: "flawed" | "overbilled" | "waiting" | "roomrent" | "clean") => void;
   isLoading?: boolean;
+  onResetHome?: () => void;
 }
+
+type ScenarioId = "flawed" | "overbilled" | "waiting" | "roomrent" | "clean";
+
+interface ScenarioConfig {
+  id: ScenarioId;
+  titleEn: string;
+  titleHi: string;
+  riskBadge: string;
+  riskBadgeHi: string;
+  badgeStyle: string;
+  iconBg: string;
+  icon: React.ReactNode;
+}
+
+const DEMO_SCENARIOS: ScenarioConfig[] = [
+  {
+    id: "flawed",
+    titleEn: "Date Mismatch",
+    titleHi: "तारीखों में विसंगति",
+    riskBadge: "28% Risk",
+    riskBadgeHi: "28% जोखिम",
+    badgeStyle: "bg-amber-50 text-amber-700 border-amber-200/90",
+    iconBg: "bg-amber-100/80 text-amber-700 border-amber-200/70",
+    icon: <CalendarX2 className="h-3.5 w-3.5" />
+  },
+  {
+    id: "overbilled",
+    titleEn: "PM-JAY Overbilling",
+    titleHi: "PM-JAY अधिक बिलिंग",
+    riskBadge: "48% Risk",
+    riskBadgeHi: "48% जोखिम",
+    badgeStyle: "bg-rose-50 text-rose-700 border-rose-200/90",
+    iconBg: "bg-rose-100/80 text-rose-700 border-rose-200/70",
+    icon: <AlertCircle className="h-3.5 w-3.5" />
+  },
+  {
+    id: "waiting",
+    titleEn: "36-Mo Waiting Period",
+    titleHi: "36-माह वेटिंग पीरियड",
+    riskBadge: "38% Risk",
+    riskBadgeHi: "38% जोखिम",
+    badgeStyle: "bg-amber-50 text-amber-700 border-amber-200/90",
+    iconBg: "bg-amber-100/80 text-amber-700 border-amber-200/70",
+    icon: <Clock className="h-3.5 w-3.5" />
+  },
+  {
+    id: "roomrent",
+    titleEn: "Room Rent 1% Cap",
+    titleHi: "रूम रेंट 1% कैप",
+    riskBadge: "56% Risk",
+    riskBadgeHi: "56% जोखिम",
+    badgeStyle: "bg-rose-50 text-rose-700 border-rose-200/90",
+    iconBg: "bg-rose-100/80 text-rose-700 border-rose-200/70",
+    icon: <Building2 className="h-3.5 w-3.5" />
+  },
+  {
+    id: "clean",
+    titleEn: "Clean Pass",
+    titleHi: "क्लीन पास",
+    riskBadge: "100% Shield",
+    riskBadgeHi: "100% सुरक्षित",
+    badgeStyle: "bg-emerald-50 text-emerald-700 border-emerald-200/90",
+    iconBg: "bg-emerald-100/80 text-emerald-700 border-emerald-200/70",
+    icon: <ShieldCheck className="h-3.5 w-3.5" />
+  }
+];
 
 export const Header: React.FC<HeaderProps> = ({
   language,
@@ -20,74 +87,142 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenApiKeyModal,
   hasCustomKey = false,
   onSelectScenario,
-  isLoading = false
+  isLoading = false,
+  onResetHome
 }) => {
   const { user } = useUser();
 
   return (
-    <header className="sticky top-0 z-40 glass-panel border-b border-slate-200/80 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3">
-        {/* Brand */}
-        <div className="flex items-center space-x-3 shrink-0">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20">
-            <Shield className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900">
-                ClaimKavach <span className="text-sky-600 font-black">AI</span>
-              </span>
-              <span className="hidden sm:inline-flex text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                PM-JAY & IRDAI Aligned
-              </span>
+    <header className="sticky top-0 z-40 glass-panel">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3 relative">
+        {/* Left: Brand Link - Redirects to Home */}
+        <div className="flex items-center shrink-0">
+          <Link
+            href="/"
+            onClick={(e) => {
+              if (onResetHome) {
+                onResetHome();
+              }
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="flex items-center space-x-2.5 sm:space-x-3 group cursor-pointer select-none"
+            title={language === "hi" ? "होम पेज पर जाएं (Home)" : "Return to Home"}
+          >
+            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20 group-hover:scale-105 group-hover:shadow-sky-500/30 transition-all duration-200">
+              <Shield className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <p className="hidden xs:block text-[11px] sm:text-xs text-slate-500 font-medium truncate max-w-[200px] sm:max-w-none">
-              {language === "hi"
-                ? "माइक्रो-इंश्योरेंस क्लेम प्री-एडजुडिकेशन एवं दस्तावेज़ अनुपालन प्रणाली"
-                : "Deterministic Pre-Adjudication & Compliance Engine for Bharat"}
-            </p>
-          </div>
+            <div>
+              <div className="flex items-center">
+                <span className="font-extrabold text-base sm:text-xl tracking-tight text-slate-900 group-hover:text-sky-600 transition-colors">
+                  ClaimKavach <span className="text-sky-600 font-black">AI</span>
+                </span>
+              </div>
+              <p className="hidden lg:block text-[11px] text-slate-500 font-medium truncate max-w-[280px]">
+                {language === "hi"
+                  ? "माइक्रो-इंश्योरेंस क्लेम प्री-एडजुडिकेशन प्रणाली"
+                  : "Deterministic Pre-Adjudication Engine for Bharat"}
+              </p>
+            </div>
+          </Link>
         </div>
 
-        {/* Right Controls */}
-        <div className="flex items-center space-x-2 sm:space-x-2.5 shrink-0">
-          {/* Pre-loaded Demo Scenarios Dropdown (Placed on Very Top to Save Space on Main Page) */}
-          <div className="relative">
-            <select
+        {/* Center: Demo Cases Dropdown & Gemini API Key Button */}
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2.5 md:absolute md:left-1/2 md:-translate-x-1/2">
+          {/* Custom Liquid Glass Demo Scenarios Dropdown */}
+          <div ref={dropdownRef} className="relative inline-flex items-center">
+            <button
+              type="button"
               disabled={isLoading}
-              defaultValue=""
-              onChange={(e) => {
-                if (e.target.value && onSelectScenario) {
-                  onSelectScenario(e.target.value as any);
-                  e.target.value = "";
-                }
-              }}
-              className="text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 hover:border-sky-400 text-slate-800 focus:ring-2 focus:ring-sky-500/20 outline-none cursor-pointer transition-all shadow-2xs truncate max-w-[150px] xs:max-w-[185px] sm:max-w-none"
+              onClick={() => setIsOpen(!isOpen)}
+              className="liquid-glass-pill gap-1.5 px-3 sm:px-3.5 text-xs font-bold cursor-pointer select-none"
               title={language === "hi" ? "5 आईआरडीएआई केस में से चुनें (Hackathon Demo)" : "Select Pre-Loaded IRDAI Case (Hackathon Demo)"}
+              aria-haspopup="true"
+              aria-expanded={isOpen}
             >
-              <option value="" disabled>
+              <span className="text-slate-900 truncate max-w-[130px] xs:max-w-[170px] sm:max-w-none">
                 {language === "hi" ? "🎯 टेस्ट केस (5 Cases)..." : "🎯 Demo Cases (5 Scenarios)..."}
-              </option>
-              <option value="flawed">🚨 1. Date Mismatch (28% Risk)</option>
-              <option value="overbilled">⚠️ 2. PM-JAY Overbilling (48% Risk)</option>
-              <option value="waiting">⏳ 3. 36-Mo Waiting Period (38% Risk)</option>
-              <option value="roomrent">🏨 4. Room Rent 1% Cap (56% Risk)</option>
-              <option value="clean">🛡️ 5. Clean Pass (100% Shield)</option>
-            </select>
+              </span>
+              <ChevronDown className={`h-3.5 w-3.5 text-slate-700 transition-transform duration-200 shrink-0 ${isOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {/* Floating Solid White Menu Panel (100% Opaque - Centered Under Trigger) */}
+            {isOpen && (
+              <div 
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[290px] sm:w-[320px] rounded-[18px] p-2 bg-white border border-slate-200 shadow-[0_20px_45px_-10px_rgba(15,23,42,0.18),0_6px_18px_-2px_rgba(15,23,42,0.08)] z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                role="menu"
+              >
+                {/* Clean Menu Header */}
+                <div className="px-3 py-1.5 mb-1 flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-400 tracking-[0.06em] uppercase">
+                    {language === "hi" ? "डेमो केस चुनें" : "Select a Demo Scenario"}
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                    5 Cases
+                  </span>
+                </div>
+
+                {/* Scenario Rows with Risk Badges */}
+                <div className="space-y-1">
+                  {DEMO_SCENARIOS.map((sc) => {
+                    const isSelected = selectedScenario === sc.id;
+                    return (
+                      <button
+                        key={sc.id}
+                        type="button"
+                        onClick={() => handleSelect(sc)}
+                        className={`w-full flex items-center justify-between gap-2.5 p-2.5 rounded-xl transition-all duration-150 text-left cursor-pointer group ${
+                          isSelected 
+                            ? "bg-sky-50/90 text-sky-950 border border-sky-200/70 shadow-2xs" 
+                            : "hover:bg-slate-100/70 text-slate-800 border border-transparent"
+                        }`}
+                        role="menuitem"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 border ${sc.iconBg}`}>
+                            {sc.icon}
+                          </div>
+                          <span className="text-xs font-bold truncate">
+                            {language === "hi" ? sc.titleHi : sc.titleEn}
+                          </span>
+                        </div>
+
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 border ${sc.badgeStyle}`}>
+                          {language === "hi" ? sc.riskBadgeHi : sc.riskBadge}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Language Switcher */}
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
-              onClick={() => setLanguage("hi")}
-              className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                language === "hi"
-                  ? "bg-white text-sky-700 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+              type="button"
+              onClick={() => setLanguage("en")}
+              className={`relative z-10 px-2.5 sm:px-3 py-1 text-xs font-bold tracking-tight text-center transition-colors duration-200 cursor-pointer ${
+                language === "en"
+                  ? "text-slate-950 font-extrabold"
+                  : "text-slate-500 hover:text-slate-800 font-semibold"
               }`}
+              title="English"
+              aria-label="Switch to English"
             >
-              <Languages className="h-3 w-3 text-sky-600" />
+              English
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanguage("hi")}
+              className={`relative z-10 px-2.5 sm:px-3 py-1 text-xs font-bold tracking-tight text-center transition-colors duration-200 cursor-pointer ${
+                language === "hi"
+                  ? "text-slate-950 font-extrabold"
+                  : "text-slate-500 hover:text-slate-800 font-semibold"
+              }`}
+              title="हिंदी"
+              aria-label="हिंदी चुनें"
+            >
               हिंदी
             </button>
             <button
