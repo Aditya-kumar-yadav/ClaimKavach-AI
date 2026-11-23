@@ -19,7 +19,7 @@ import {
 } from "@/lib/mock-data";
 import { VernacularTTS } from "@/lib/tts";
 import { generateAudioSummary } from "@/lib/audio-summary";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Scale, Lock, Mic } from "lucide-react";
 
 export default function Home() {
   const [language, setLanguage] = useState<"en" | "hi">("en");
@@ -255,6 +255,53 @@ export default function Home() {
                   ? "आयुष्मान भारत (PM-JAY) एवं गिग वर्कर्स के लिए अस्पताल बिलों का लाइव ऑडिट। तारीखों का मिलान, गैर-मान्य आइटम की कटौती और बोलकर हिंदी में समाधान।"
                   : "Multimodal OCR reads handwritten hospital bills, checks IRDAI non-payable items, identifies date discrepancies, and outputs a SHA-256 verified dossier."}
               </p>
+            </div>
+          )}
+
+          {/* Statutory & Technical Trust Signals */}
+          {!(claim || isLoading) && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-4xl mx-auto mb-7 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="bg-white/80 backdrop-blur-md rounded-2xl p-3 sm:py-3 sm:px-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-sky-50 text-sky-700 border border-sky-100 flex items-center justify-center shrink-0">
+                  <Scale className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-xs text-slate-900 tracking-tight">
+                    {language === "hi" ? "IRDAI 2024 मास्टर सर्कुलर" : "IRDAI 2024 Statutory Engine"}
+                  </div>
+                  <div className="text-[11px] text-slate-500 truncate">
+                    {language === "hi" ? "मई 2024 सर्कुलर • पैरा 13 मोरेटोरियम" : "Lists I–IV non-payables & 3-hr SLA"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/80 backdrop-blur-md rounded-2xl p-3 sm:py-3 sm:px-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center shrink-0">
+                  <Lock className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-xs text-slate-900 tracking-tight">
+                    {language === "hi" ? "NHCX FHIR R4 डिजिटल सील" : "NHCX FHIR R4 Bundle"}
+                  </div>
+                  <div className="text-[11px] text-slate-500 truncate">
+                    {language === "hi" ? "NHA-ABDM अनुरूप • SHA-256 हैश" : "Cryptographic SHA-256 hash seal"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/80 backdrop-blur-md rounded-2xl p-3 sm:py-3 sm:px-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
+                  <Mic className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-xs text-slate-900 tracking-tight">
+                    {language === "hi" ? "द्विभाषी वॉयस गाइड" : "Dual-Language Voice AI"}
+                  </div>
+                  <div className="text-[11px] text-slate-500 truncate">
+                    {language === "hi" ? "हिंदी एवं अंग्रेज़ी में लाइव बोलकर समाधान" : "Vernacular audio guidance for Bharat"}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

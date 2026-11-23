@@ -10,11 +10,11 @@ import {
 
 // High-speed, high-quota models tested for Gemini Vision Multimodal Extraction
 const CANDIDATE_MODELS = [
-  "gemini-flash-lite-latest",
-  "gemini-3.5-flash",
-  "gemini-3.6-flash",
   "gemini-3.5-flash-lite",
-  "gemini-3.8-flash"
+  "gemini-3.6-flash",
+  "gemini-3.8-flash",
+  "gemini-3.5-flash",
+  "gemini-flash-lite-latest"
 ];
 
 function parseBase64File(dataUrl: string): { mimeType: string; data: string } {
@@ -129,7 +129,12 @@ Rules:
     try {
       console.log(`[ClaimKavach AI] Attempting Gemini OCR extraction with model: ${modelName}`);
       const model = genAI.getGenerativeModel({ model: modelName });
-      const response = await model.generateContent(parts);
+      
+      // Enforce a 12-second per-model timeout so congested models fail over rapidly
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout: ${modelName} took longer than 12s`)), 12000)
+      );
+      const response = await Promise.race([model.generateContent(parts), timeoutPromise]);
       const text = response.response.text().trim();
 
       // Robust JSON extraction: look for the first JSON object in text

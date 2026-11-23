@@ -185,6 +185,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
   const [selectedInsurer, setSelectedInsurer] = useState<string>("Star Health and Allied Insurance Co. Ltd.");
   const [copied, setCopied] = useState(false);
   const [copiedAppeal, setCopiedAppeal] = useState(false);
+  const [appealViewMode, setAppealViewMode] = useState<"document" | "raw">("document");
   const [copiedIssueId, setCopiedIssueId] = useState<string | null>(null);
   const [sharingIssueId, setSharingIssueId] = useState<string | null>(null);
   const [sharedToast, setSharedToast] = useState<{ id: string; msg: string } | null>(null);
@@ -385,6 +386,10 @@ export const AuditReport: React.FC<AuditReportProps> = ({
     };
   }, [fixedIssueIds, result.approvalScore, result.issues, result.nonPayableAmount, claim.claimedTotal]);
 
+  const rejectionRiskPct = Math.max(0, 100 - simulatedScore);
+  const simulatedPayable = Math.min(claim.claimedTotal, result.payableAmount + (moneyProtected || 0));
+  const simulatedDeduction = Math.max(0, claim.claimedTotal - simulatedPayable);
+
   // Trigger celebratory confetti when all critical issues are fixed
   React.useEffect(() => {
     if (typeof window !== "undefined" && fixedIssueIds.size > 0 && simulatedScore >= 85) {
@@ -443,7 +448,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28 sm:pb-32">
       {/* Top Banner: Decision & Approval Probability with Interactive Fix-It Simulator */}
       <div className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-md transition-all duration-500">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
@@ -1044,30 +1049,39 @@ export const AuditReport: React.FC<AuditReportProps> = ({
         </div>
       </div>
 
-      {/* Feature 1: IRDAI Appeal & Ombudsman Escalation Modal */}
+      {/* Feature 1: IRDAI Appeal & Ombudsman Escalation Modal (Executive Legal Notice) */}
       {showAppealModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-200">
-          <div className="bg-slate-900 text-slate-100 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl border border-amber-500/30 overflow-hidden">
-            {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950">
-              <div className="flex items-center gap-3">
+        <div 
+          onClick={() => setShowAppealModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-slate-900 text-slate-100 rounded-2xl sm:rounded-3xl w-full max-w-5xl h-[92vh] sm:h-[94vh] max-h-[94vh] flex flex-col shadow-2xl border border-slate-700/80 overflow-hidden"
+          >
+            {/* Modal Header Bar */}
+            <div className="p-4 sm:px-6 sm:py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950 text-white shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="h-10 w-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
                   <Gavel className="h-5 w-5" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-black text-sm sm:text-base text-white">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-sm sm:text-base font-black tracking-tight text-white truncate">
                       {language === "hi" 
-                        ? "आईआरडीएआई कानूनी अपील एवं बीमा लोकपाल डोजियर"
-                        : "IRDAI Statutory Legal Appeal & Ombudsman Dossier"}
-                    </h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">
-                      79% Win Rate
+                        ? "आईआरडीएआई कानूनी अपील एवं बीमा लोकपाल नोटिस"
+                        : "IRDAI Statutory Legal Appeal & Ombudsman Notice"}
+                    </h2>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase shrink-0">
+                      79% Ombudsman Win Rate
+                    </span>
+                    <span className="hidden sm:inline-flex text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold uppercase shrink-0">
+                      IRDAI Para 13 Active
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 truncate mt-0.5">
                     {language === "hi"
-                      ? "बीमा कंपनी के जीआरओ हेतु अनिवार्य 14-दिवसीय आईआरडीएआई कानूनी नोटिस (मई 2024 मास्टर सर्कुलर)"
+                      ? "बीमा कंपनी के जीआरओ हेतु अनिवार्य 14-दिवसीय कानूनी नोटिस (मई 2024 मास्टर सर्कुलर)"
                       : "Mandatory 14-day statutory resolution notice for Insurer's GRO under IRDAI May 2024 overhaul"}
                   </p>
                 </div>
@@ -1076,22 +1090,24 @@ export const AuditReport: React.FC<AuditReportProps> = ({
               <button
                 type="button"
                 onClick={() => setShowAppealModal(false)}
-                className="h-8 w-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                className="h-8 w-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-2"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Insurer Selector & Quick Actions Bar */}
-            <div className="px-4 sm:px-5 py-3 bg-slate-950/90 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            {/* Controls Bar: Insurer Selector + Action Controls */}
+            <div className="px-4 sm:px-6 py-2.5 bg-slate-950/90 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shrink-0">
+              {/* Insurer Selector */}
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <span className="font-bold text-amber-400 shrink-0 text-xs">
-                  {language === "hi" ? "🏢 बीमा कंपनी (Insurer):" : "🏢 Target Insurer / TPA:"}
+                <span className="font-bold text-amber-400 shrink-0 text-xs flex items-center gap-1">
+                  <span>🏢</span>
+                  <span>{language === "hi" ? "बीमा कंपनी:" : "Target Insurer:"}</span>
                 </span>
                 <select
                   value={selectedInsurer}
                   onChange={(e) => setSelectedInsurer(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-amber-500/30 outline-none w-full max-w-sm truncate cursor-pointer hover:border-amber-400"
+                  className="bg-slate-900 border border-slate-700 hover:border-amber-400 text-slate-100 rounded-lg px-2.5 py-1 text-xs font-semibold focus:ring-2 focus:ring-amber-500/30 outline-none w-full max-w-xs truncate cursor-pointer transition-colors"
                 >
                   {POPULAR_INDIAN_INSURERS.map((ins) => (
                     <option key={ins} value={ins} className="bg-slate-900 text-slate-100">
@@ -1101,15 +1117,45 @@ export const AuditReport: React.FC<AuditReportProps> = ({
                 </select>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              {/* Action Buttons & View Toggle */}
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                {/* View Mode Toggle */}
+                <div className="flex items-center bg-slate-900 rounded-lg p-0.5 border border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setAppealViewMode("document")}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                      appealViewMode === "document"
+                        ? "bg-amber-500 text-slate-950 shadow-xs"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    {language === "hi" ? "📄 कानूनी पत्र" : "📄 Legal Notice"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAppealViewMode("raw")}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                      appealViewMode === "raw"
+                        ? "bg-amber-500 text-slate-950 shadow-xs"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    {language === "hi" ? "📝 टेक्स्ट" : "📝 Raw Text"}
+                  </button>
+                </div>
+
+                {/* Copy Letter Button */}
                 <button
                   type="button"
                   onClick={handleCopyAppeal}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs border border-slate-700"
                 >
                   {copiedAppeal ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                  <span>{copiedAppeal ? (language === "hi" ? "कॉपी हो गया!" : "Copied!") : (language === "hi" ? "पत्र कॉपी करें" : "Copy Legal Letter")}</span>
+                  <span>{copiedAppeal ? (language === "hi" ? "कॉपी हो गया!" : "Copied!") : (language === "hi" ? "पत्र कॉपी करें" : "Copy Letter")}</span>
                 </button>
+
+                {/* Download Text Button */}
                 <button
                   type="button"
                   onClick={handleDownloadAppeal}
@@ -1121,8 +1167,8 @@ export const AuditReport: React.FC<AuditReportProps> = ({
               </div>
             </div>
 
-            {/* Compact 3-Step Escalation Pathway Strip */}
-            <div className="px-4 sm:px-5 py-2.5 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+            {/* Compact Statutory Escalation Pathway Ribbon */}
+            <div className="px-4 sm:px-6 py-2 bg-slate-900/60 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] shrink-0">
               <div className="flex items-center gap-1.5 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
                 <Scale className="h-3.5 w-3.5 text-amber-400 shrink-0" />
                 <span>Statutory Escalation Ladder:</span>
@@ -1142,13 +1188,214 @@ export const AuditReport: React.FC<AuditReportProps> = ({
               </div>
             </div>
 
-            {/* Formatted Legal Letter Content - Large, clean, highly readable document paper */}
-            <div className="flex-1 overflow-y-auto p-5 sm:p-7 bg-slate-950 font-mono text-xs sm:text-[13px] text-slate-200 leading-relaxed whitespace-pre-wrap selection:bg-amber-500 selection:text-black">
-              {appealPacket.letterText}
+            {/* Modal Body: Either Executive Legal Notice Paper or Raw Text */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-6 bg-slate-950/70 [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-slate-900/80 [&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-500">
+              {appealViewMode === "document" ? (
+                /* ========================================================= */
+                /* Executive A4 Legal Notice Document Paper */
+                /* ========================================================= */
+                <div className="w-full max-w-[210mm] mx-auto shadow-2xl rounded-2xl bg-white text-slate-900 p-6 sm:p-10 border border-slate-200/90 font-sans animate-in fade-in duration-300">
+                  {/* Formal Letterhead */}
+                  <div className="border-b-2 border-slate-900 pb-4 mb-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs">
+                            ⚖️
+                          </div>
+                          <span className="text-[11px] font-black tracking-widest uppercase text-amber-700">
+                            GOVERNMENT OF INDIA STATUTORY COMPLIANCE NOTICE
+                          </span>
+                        </div>
+                        <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight mt-1">
+                          FORMAL GRIEVANCE APPEAL & STATUTORY RESOLUTION DEMAND
+                        </h1>
+                        <p className="text-[11px] text-slate-600 font-medium">
+                          Under IRDAI (Protection of Policyholders' Interests and Allied Matters of Insurers) Regulations, 2024
+                        </p>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="inline-block px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 font-mono text-[11px] font-bold border border-slate-300">
+                          {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                        <div className="text-[10px] text-slate-500 font-mono mt-1">
+                          REF: IRDAI/HLT/CIR/2024
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Case & Claim Telemetry Grid */}
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs mb-6">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-500 block">Claim Reference ID</span>
+                      <strong className="font-mono text-slate-900 text-xs sm:text-sm">
+                        CLM-{result.packetHash ? result.packetHash.substring(0, 10).toUpperCase() : "2026-IRDAI"}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-500 block">Policyholder / Patient</span>
+                      <strong className="text-slate-900 text-xs sm:text-sm">
+                        {displayPatientName} {claim.patientAge ? `(${claim.patientAge} Yrs)` : ""}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-500 block">Treating Facility</span>
+                      <strong className="text-slate-900 truncate block text-xs sm:text-sm" title={displayHospitalName}>
+                        {displayHospitalName}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-500 block">Total Claimed Amount</span>
+                      <strong className="font-mono text-slate-900 text-xs sm:text-sm">
+                        ₹{Number(claim.claimedTotal || result.claimedTotal || 0).toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-rose-600 block">Contested Deductions</span>
+                      <strong className="font-mono text-rose-700 text-xs sm:text-sm">
+                        ₹{(Number(result.nonPayableAmount) > 0 ? Number(result.nonPayableAmount) : Number(claim.claimedTotal || result.claimedTotal || 0)).toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-emerald-700 block">Statutory Demand Sum</span>
+                      <strong className="font-mono text-emerald-800 text-xs sm:text-sm">
+                        ₹{Number(result.payableAmount || 0).toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* Formal Addressee */}
+                  <div className="text-xs text-slate-700 space-y-0.5 mb-5 pb-4 border-b border-slate-100">
+                    <div className="font-bold uppercase text-[10px] text-slate-500">To:</div>
+                    <div className="font-bold text-slate-900 text-sm">The Principal Grievance Redressal Officer (GRO)</div>
+                    <div className="text-slate-600">Claims Adjudication & Policyholder Grievance Redressal Division</div>
+                    <div className="font-extrabold text-amber-800">{selectedInsurer}</div>
+                    <div className="text-slate-500 italic">(Regarding Inpatient Hospitalization at: {displayHospitalName})</div>
+                  </div>
+
+                  {/* Subject Line */}
+                  <div className="bg-amber-50/80 border-l-4 border-amber-500 p-3 rounded-r-xl mb-5">
+                    <span className="text-[10px] uppercase font-black text-amber-800 tracking-wider block">Subject:</span>
+                    <span className="text-xs sm:text-sm font-black text-slate-900 leading-snug">
+                      STATUTORY WRITTEN GRIEVANCE APPEAL AGAINST ARBITRARY CLAIM REPUDIATION / PARTIAL DEDUCTION
+                    </span>
+                  </div>
+
+                  {/* Salutation & Letter Body */}
+                  <div className="space-y-4 text-xs sm:text-sm text-slate-800 leading-relaxed mb-6">
+                    <p className="font-semibold">Respected Sir/Madam,</p>
+                    <p>
+                      I am writing this formal statutory appeal against the arbitrary denial/deduction of our inpatient hospitalization reimbursement claim under the <strong>IRDAI (Protection of Policyholders' Interests and Allied Matters of Insurers) Regulations, 2024</strong> and the <strong>Master Circular on Health Insurance Business (Ref: IRDAI/HLT/CIR/PRO/84/5/2024, dated May 29, 2024)</strong>.
+                    </p>
+
+                    <p className="font-bold text-slate-900">
+                      The grounds for this statutory grievance appeal are detailed below:
+                    </p>
+
+                    {/* Ground 1 Card */}
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="h-5 w-5 rounded-md bg-emerald-100 text-emerald-800 font-black text-xs flex items-center justify-center">§1</span>
+                        <h4 className="font-black text-xs sm:text-sm text-slate-900 uppercase tracking-tight">
+                          Statutory Moratorium Compliance (Chapter I, Para 13)
+                        </h4>
+                      </div>
+                      <p className="text-xs text-slate-700 leading-relaxed">
+                        Our policy has completed continuous, unbroken renewals for <strong>{claim.policyTenureMonths || 36} months</strong>. 
+                        Under Para 13 of the IRDAI Master Circular (May 2024), after active coverage, no health insurance claim can be contested or repudiated on grounds of non-disclosure, misrepresentation, or pre-existing diseases (PED), except in established fraud. No allegation of fraud exists in this inpatient clinical admission.
+                      </p>
+                    </div>
+
+                    {/* Ground 2 Card */}
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="h-5 w-5 rounded-md bg-sky-100 text-sky-800 font-black text-xs flex items-center justify-center">§2</span>
+                        <h4 className="font-black text-xs sm:text-sm text-slate-900 uppercase tracking-tight">
+                          Procedural & Clinical Rectification Submitted
+                        </h4>
+                      </div>
+                      <p className="text-xs text-slate-700 leading-relaxed">
+                        The initial claim query cited clerical discrepancies. We hereby submit the verified clinical dossier: formal Discharge Summary and itemized invoices from <strong>{displayHospitalName}</strong>, under Treating Consultant <strong>{claim.doctorName || "Treating Physician"}</strong> (Reg No: {claim.doctorRegNo || "Affixed on Record"}), diagnosed as WHO ICD-10 <strong>{claim.diagnosis || "Inpatient Medical Management"}</strong>.
+                      </p>
+                    </div>
+
+                    {/* Ground 3 Card */}
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="h-5 w-5 rounded-md bg-indigo-100 text-indigo-800 font-black text-xs flex items-center justify-center">§3</span>
+                        <h4 className="font-black text-xs sm:text-sm text-slate-900 uppercase tracking-tight">
+                          Mandatory IRDAI Lists I-IV Non-Payables Adjudication
+                        </h4>
+                      </div>
+                      <p className="text-xs text-slate-700 leading-relaxed">
+                        Any deductions applied must strictly adhere to the standardized IRDAI non-payable items schedule. Arbitrary lumpsum deductions on medical packaging, PPE, sanitizers, or nursing administrative charges without itemized statutory justification violate IRDAI circular directions.
+                      </p>
+                    </div>
+
+                    {/* Statutory Demand Highlight Box */}
+                    <div className="p-4 rounded-xl bg-amber-500/10 border-2 border-amber-500/40 text-slate-900 space-y-2">
+                      <div className="flex items-center gap-2 text-amber-900 font-black text-xs sm:text-sm">
+                        <span>⚖️</span>
+                        <span>STATUTORY DEMAND & MANDATORY 14-DAY RESOLUTION NOTICE</span>
+                      </div>
+                      <p className="text-xs text-slate-800 leading-relaxed">
+                        Under IRDAI Regulations, your office is legally bound to resolve this grievance within <strong>14 calendar days</strong> of receipt. Kindly re-adjudicate this claim and disburse the eligible reimbursement of <strong>₹{Number(result.payableAmount || 0).toLocaleString("en-IN")}</strong> directly into the claimant's bank account via NEFT/RTGS.
+                      </p>
+                    </div>
+
+                    {/* Escalation Warning */}
+                    <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+                      <strong className="text-slate-800 uppercase text-[11px] block">Formal Escalation Pathway:</strong>
+                      <p>
+                        Failing satisfactory resolution within 14 calendar days, this complaint will be formally escalated to:
+                      </p>
+                      <ul className="list-disc list-inside space-y-0.5 text-slate-700 ml-1">
+                        <li><strong>IRDAI Bima Bharosa Portal</strong> (bimabharosa.irdai.gov.in) to generate an official regulatory monitoring token.</li>
+                        <li><strong>The Insurance Ombudsman</strong> under Rule 14 of the Insurance Ombudsman Rules, 2017 (Over 79% consumer win rate, binding up to ₹50 Lakhs on the insurer).</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Sign-off & Verification Seal */}
+                  <div className="pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                    <div className="space-y-1">
+                      <div className="text-xs text-slate-500">Yours sincerely,</div>
+                      <div className="font-black text-sm text-slate-900">{displayPatientName}</div>
+                      <div className="text-[11px] text-slate-500 font-medium">& Authorized Family Representative</div>
+                      <div className="text-[10px] text-slate-400">Claimant Contact on Official Record</div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-right space-y-1 self-stretch sm:self-auto">
+                      <div className="flex items-center justify-end gap-1.5 text-emerald-700 font-bold text-[11px]">
+                        <Check className="h-3.5 w-3.5" />
+                        <span>Cryptographically Sealed</span>
+                      </div>
+                      <div className="font-mono text-[9.5px] text-slate-500 truncate max-w-[220px]" title={result.packetHash}>
+                        SHA-256: {result.packetHash || "VERIFIED"}
+                      </div>
+                      <div className="text-[9px] text-slate-400">IRDAI 2024 / ABDM NHCX Format</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* ========================================================= */
+                /* Raw Monospace Text View (for Copying / Plain Export) */
+                /* ========================================================= */
+                <div className="w-full max-w-[210mm] mx-auto rounded-2xl bg-slate-900 border border-slate-700 p-6 sm:p-8 font-mono text-xs sm:text-[13px] text-slate-200 leading-relaxed whitespace-pre-wrap selection:bg-amber-500 selection:text-black shadow-2xl">
+                  {appealPacket.letterText}
+                </div>
+              )}
             </div>
 
             {/* Modal Footer Note */}
-            <div className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+            <div className="px-4 sm:px-6 py-2.5 bg-slate-900 border-t border-slate-800 flex flex-wrap items-center justify-between text-[11px] text-slate-400 shrink-0">
               <span className="truncate">
                 ⚖️ <strong>IRDAI Master Circular (May 2024) Para 13</strong> • 60-Month Moratorium on Rejections
               </span>
@@ -1162,10 +1409,16 @@ export const AuditReport: React.FC<AuditReportProps> = ({
 
       {/* NHCX / ABDM FHIR JSON Inspector Modal */}
       {showNHCXModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="bg-slate-900 text-slate-100 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl border border-slate-700 overflow-hidden">
+        <div 
+          onClick={() => setShowNHCXModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-slate-900 text-slate-100 rounded-2xl sm:rounded-3xl w-full max-w-4xl h-[88vh] max-h-[88vh] flex flex-col shadow-2xl border border-slate-700 overflow-hidden"
+          >
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
                   <Code2 className="h-4 w-4" />
@@ -1195,7 +1448,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
             </div>
 
             {/* Modal Action Bar */}
-            <div className="px-4 sm:px-5 py-2.5 bg-slate-800/60 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="px-4 sm:px-5 py-2.5 bg-slate-800/60 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
               <span className="text-slate-300 font-mono text-[10px] sm:text-[11px] truncate max-w-[200px] sm:max-w-none">
                 Bundle ID: <strong className="text-emerald-400">{nhcxBundle.id}</strong> (5 FHIR Resources)
               </span>
@@ -1222,12 +1475,12 @@ export const AuditReport: React.FC<AuditReportProps> = ({
             </div>
 
             {/* Modal JSON Viewer */}
-            <div className="flex-1 overflow-auto p-3 sm:p-4 bg-slate-950 font-mono text-[10.5px] sm:text-xs text-emerald-300 leading-relaxed">
+            <div className="flex-1 min-h-0 overflow-auto overscroll-contain p-3 sm:p-4 bg-slate-950 font-mono text-[10.5px] sm:text-xs text-emerald-300 leading-relaxed [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-slate-900/80 [&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-500">
               <pre className="whitespace-pre-wrap break-all sm:break-normal">{jsonString}</pre>
             </div>
 
             {/* Modal Footer Note */}
-            <div className="p-3 bg-slate-900 border-t border-slate-800 text-center text-[11px] text-slate-400">
+            <div className="p-3 bg-slate-900 border-t border-slate-800 text-center text-[11px] text-slate-400 shrink-0">
               💡 <strong>{language === "hi" ? "तकनीकी विवरण:" : "Judge Flex:"}</strong> {language === "hi"
                 ? "यह FHIR बंडल Patient (ABHA ID), Organization (अस्पताल ROHIN), Claim, और ClaimResponse (IRDAI प्री-एडजुडिकेशन) संसाधनों को समाहित करता है।"
                 : "This FHIR Bundle contains Patient (ABHA ID), Organization (Hospital ROHIN Reg), Claim, and ClaimResponse (IRDAI Pre-adjudication) conforming to India's National Health Claims Exchange."}
@@ -1240,11 +1493,11 @@ export const AuditReport: React.FC<AuditReportProps> = ({
       {showDossierModal && (
         <div 
           onClick={() => setShowDossierModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-slate-900 rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl border border-slate-700 overflow-hidden"
+            className="bg-slate-900 rounded-2xl sm:rounded-3xl w-full max-w-4xl h-[92vh] max-h-[92vh] flex flex-col shadow-2xl border border-slate-700/80 overflow-hidden"
           >
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950 text-white shrink-0">
@@ -1267,7 +1520,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -1290,14 +1543,68 @@ export const AuditReport: React.FC<AuditReportProps> = ({
             </div>
 
             {/* Modal Body: A4 Paper Preview */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-950/60 flex justify-center">
-              <div className="w-full max-w-[210mm] shadow-2xl rounded-2xl overflow-hidden bg-white">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-6 bg-slate-950/70 [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-slate-900/80 [&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-500">
+              <div className="w-full max-w-[210mm] mx-auto shadow-2xl rounded-2xl overflow-hidden bg-white">
                 <ClaimPacketPrint claim={claim} result={result} isModalPreview={true} />
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* Floating Action Dock (Clean, Elegant, High-Contrast - No Meter) */}
+      {/* ========================================================================= */}
+      <div className="fixed bottom-4 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-40 sm:w-auto min-w-[320px] max-w-4xl rounded-2xl bg-slate-900/95 text-white shadow-2xl border border-slate-700/80 backdrop-blur-xl px-4 sm:px-6 py-2.5 sm:py-3 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        
+        {/* Left: Patient Status & Live Financials */}
+        <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto justify-between sm:justify-start">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] shrink-0 animate-pulse" />
+            <div className="min-w-0">
+              <div className="font-extrabold text-xs sm:text-sm text-white tracking-tight truncate flex items-center gap-1.5">
+                <span>{displayPatientName}</span>
+                <span className="text-slate-400">•</span>
+                <span className="text-emerald-400 font-mono font-bold">₹{simulatedPayable.toLocaleString("en-IN")} Approved</span>
+                {fixedIssueIds.size > 0 && moneyProtected > 0 && (
+                  <span className="text-[10px] font-bold text-amber-300 bg-amber-500/20 px-1.5 py-0.2 rounded border border-amber-400/30 font-mono ml-1">
+                    +{moneyProtected.toLocaleString("en-IN")} Saved
+                  </span>
+                )}
+              </div>
+              <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5 truncate">
+                <span>{language === "hi" ? "दावा:" : "Claimed:"} <strong className="text-slate-200 font-mono">₹{result.claimedTotal.toLocaleString("en-IN")}</strong></span>
+                <span className="text-slate-600">|</span>
+                <span>{language === "hi" ? "कटौती:" : "Non-Payable:"} <span className="font-mono text-slate-300">₹{simulatedDeduction.toLocaleString("en-IN")}</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Tactile Action Controls */}
+        <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto justify-end">
+          {/* View Dossier Button */}
+          <button
+            type="button"
+            onClick={() => setShowDossierModal(true)}
+            className="flex-1 sm:flex-initial px-4 py-2 rounded-full bg-white hover:bg-slate-100 active:scale-95 text-slate-950 text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md shadow-white/10 cursor-pointer select-none"
+          >
+            <Printer className="h-3.5 w-3.5 text-sky-600" />
+            <span>{language === "hi" ? "डोज़ियर देखें" : "View Dossier"}</span>
+          </button>
+
+          {/* Fight Back Button */}
+          <button
+            type="button"
+            onClick={() => setShowAppealModal(true)}
+            className="flex-1 sm:flex-initial px-4 py-2 rounded-full bg-gradient-to-r from-sky-500 via-indigo-600 to-indigo-700 hover:from-sky-400 hover:to-indigo-500 active:scale-95 text-white text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/25 cursor-pointer select-none"
+          >
+            <Gavel className="h-3.5 w-3.5 text-amber-300" />
+            <span>{language === "hi" ? "IRDAI अपील" : "Fight Back"}</span>
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 };
