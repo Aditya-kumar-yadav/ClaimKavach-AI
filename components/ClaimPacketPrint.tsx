@@ -277,13 +277,27 @@ export const ClaimPacketPrint: React.FC<ClaimPacketPrintProps> = ({ claim, resul
       {/* 6. Cryptographic Hash, Verification QR & Official Sign-Off Block */}
       {/* ============================================================ */}
       <div className="border border-slate-300 rounded-xl p-2.5 bg-white shadow-2xs flex justify-between items-center gap-4">
-        {/* Left: Cryptographic Tamper-Evident SHA-256 Digest */}
-        <div className="flex items-center gap-2.5 max-w-[55%]">
-          {/* Aesthetic SVG QR Code Stamp */}
-          <div className="h-12 w-12 bg-white p-1 rounded-lg border border-slate-300 shrink-0 shadow-2xs flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-full h-full text-slate-900" fill="currentColor">
-              <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm10 0h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2zm2-2h2v2h-2v-2zm-4-4h2v2h-2v-2zm6-2h2v2h-2v-2zm-2 6h2v2h-2v-2zM6 6h2v2H6V6zm10 0h2v2h-2V6zM6 18h2v2H6v-2z"/>
-            </svg>
+        {/* Left: Cryptographic Tamper-Evident SHA-256 Digest & Scannable QR */}
+        <div className="flex items-center gap-2.5 max-w-[58%]">
+          {/* 100% Real Scannable ISO QR Code (Opens PDF on any smartphone) */}
+          <div className="flex flex-col items-center shrink-0">
+            <a
+              href="https://github.com/Aditya-kumar-yadav/ClaimKavach-AI/blob/main/public/ClaimKavach_Pre_Adjudication_Dossier.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-14 w-14 bg-white p-1 rounded-lg border border-slate-300 shrink-0 shadow-2xs flex items-center justify-center hover:opacity-95 transition-opacity"
+              title="Scan with any smartphone camera to open live PDF"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src="/images/dossier-qr.png" 
+                alt="Scan to verify Pre-Adjudication Dossier PDF" 
+                className="w-full h-full object-contain"
+              />
+            </a>
+            <span className="text-[6.5px] font-black text-sky-800 uppercase tracking-tight mt-0.5 text-center leading-none">
+              Scan to Open PDF
+            </span>
           </div>
 
           <div>
@@ -294,7 +308,7 @@ export const ClaimPacketPrint: React.FC<ClaimPacketPrintProps> = ({ claim, resul
               {result.packetHash}
             </div>
             <span className="text-[7.5px] text-slate-500 block mt-0.5">
-              Verified & sealed on NHCX HL7 FHIR R4 DPI rails • Non-repudiable audit certificate
+              Verified & sealed on NHCX HL7 FHIR R4 DPI rails • Point phone camera at QR to view original PDF
             </span>
           </div>
         </div>

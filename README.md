@@ -106,8 +106,29 @@ ClaimKavach is the first platform to encode the landmark **IRDAI Master Circular
 * Allows claimants or hospital counsellors to simulate remediating errors live.
 * Ticking checkboxes dynamically raises the **Approval Probability Score** (e.g. **28% RED → 64% YELLOW → 96% GREEN**) with live confetti celebrations and money saved counters.
 
-### 8. 🔒 Cryptographic SHA-256 Tamper-Evident Dossier
-* Generates a printable A4 insurance dossier equipped with a cryptographic SHA-256 digest seal for submission to TPAs and dispute resolution tribunals.
+### 8. 🔒 Cryptographic SHA-256 Tamper-Evident Dossier with 100% Scannable QR Code
+
+ClaimKavach AI generates an **Official Executive A4 Compliance Certificate** equipped with cryptographic tamper-evident authentication:
+
+<div align="center">
+  <br />
+  <a href="https://github.com/Aditya-kumar-yadav/ClaimKavach-AI/blob/main/public/ClaimKavach_Pre_Adjudication_Dossier.pdf" target="_blank">
+    <img src="public/images/dossier-qr.png" alt="Scan to Verify ClaimKavach Dossier PDF" width="180" style="border-radius: 14px; border: 2px solid #0284c7; padding: 6px; background: #ffffff; box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.25);" />
+  </a>
+  <br />
+  <p><strong>📱 Try it now: Point your smartphone camera or Google Lens at this QR code!</strong></p>
+  <p>
+    <a href="https://github.com/Aditya-kumar-yadav/ClaimKavach-AI/blob/main/public/ClaimKavach_Pre_Adjudication_Dossier.pdf">
+      <b>📄 Click Here to Open Full A4 Pre-Adjudication Dossier (PDF)</b>
+    </a>
+  </p>
+  <br />
+</div>
+
+* **Universal Mobile Verification:** Anyone (patients, TPA desk clerks, hospital superintendents, hackathon judges) can scan the QR code using any smartphone camera with **zero apps installed**. It immediately opens the authentic pre-adjudication certificate in their mobile browser.
+* **Non-Repudiable Cryptographic Integrity:** Every evaluated claim generates a deterministic **SHA-256 digital fingerprint** encoding all line items, statutory deductions, ICD-10 diagnosis codes, and hospital registration numbers. Any alteration to dates or amounts invalidates the hash.
+* **1-Page Executive Format:** Structured to standard A4 printing constraints with zero browser headers/footers (`@page { size: A4; margin: 8mm; }`), complete with hospital seal stamp blocks and authorized medical officer sign-off lines.
+* **In-App Lightbox Preview:** Users can inspect the certificate right inside the web application via the **"Preview Dossier (डोजियर देखें)"** modal prior to physical printing.
 
 ---
 
@@ -222,6 +243,9 @@ Follow these steps to demonstrate maximum innovation in 60 seconds:
    * Inspect the official 5-resource HL7 FHIR Bundle compliant with India's National Health Claims Exchange.
 7. **Step 7 (The Legal Protection Flex):** Switch the scenario dropdown to **"100% Moratorium Protected Pass"**:
    * Show the green statutory badge: **IRDAI 2024 Master Circular Para 13 (60-Month Moratorium on Rejections)**!
+8. **Step 8 (The Physical Proof & Live QR Scan):** Click **"Preview Dossier"** or **"Print Dossier (A4)"**:
+   * Inspect the official pre-adjudication compliance certificate.
+   * Point any smartphone camera at the **embedded QR code** — it instantly scans and loads the authentic PDF on your mobile device!
 
 ---
 
