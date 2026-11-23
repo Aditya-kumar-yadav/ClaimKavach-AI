@@ -34,6 +34,36 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
+/**
+ * Normalizes all currency symbols and representations into spoken words (रुपये in Hindi / rupees in English)
+ * so speech synthesis engines NEVER pronounce "dollar" or "rupee dollar".
+ */
+export function normalizeCurrencyForSpeech(text: string, language: "hi" | "en" = "hi"): string {
+  if (!text) return "";
+
+  let cleaned = text;
+
+  if (language === "hi") {
+    cleaned = cleaned.replace(/₹\s*([0-9,]+)/g, (_, amt) => `${amt} रुपये`);
+    cleaned = cleaned.replace(/Rs\.?\s*([0-9,]+)/gi, (_, amt) => `${amt} रुपये`);
+    cleaned = cleaned.replace(/INR\s*([0-9,]+)/gi, (_, amt) => `${amt} रुपये`);
+    cleaned = cleaned.replace(/\$\s*([0-9,]+)/g, (_, amt) => `${amt} रुपये`);
+    cleaned = cleaned.replace(/₹/g, " रुपये ");
+    cleaned = cleaned.replace(/\$/g, " ");
+    cleaned = cleaned.replace(/\bdollars?\b/gi, "रुपये");
+  } else {
+    cleaned = cleaned.replace(/₹\s*([0-9,]+)/g, (_, amt) => `${amt} rupees`);
+    cleaned = cleaned.replace(/Rs\.?\s*([0-9,]+)/gi, (_, amt) => `${amt} rupees`);
+    cleaned = cleaned.replace(/INR\s*([0-9,]+)/gi, (_, amt) => `${amt} rupees`);
+    cleaned = cleaned.replace(/\$\s*([0-9,]+)/g, (_, amt) => `${amt} rupees`);
+    cleaned = cleaned.replace(/₹/g, " rupees ");
+    cleaned = cleaned.replace(/\$/g, " ");
+    cleaned = cleaned.replace(/\bdollars?\b/gi, "rupees");
+  }
+
+  return cleaned.replace(/\s+/g, " ").trim();
+}
+
 export class VernacularTTS {
   private static currentSource: AudioBufferSourceNode | null = null;
   private static currentAudio: HTMLAudioElement | null = null;
@@ -59,10 +89,14 @@ export class VernacularTTS {
   ): Promise<boolean> {
     this.stop();
 
+    // Normalize text so currency is always pronounced in rupees (रुपये), never "dollar"
+    const cleanText = normalizeCurrencyForSpeech(text, language);
+    const cleanFallback = englishFallbackText ? normalizeCurrencyForSpeech(englishFallbackText, "en") : undefined;
+
     // Unlock Web Audio Context during this user interaction
     const ctx = getAudioContext();
 
-    const cacheKey = `${language}:${text.trim()}`;
+    const cacheKey = `${language}:${cleanText.trim()}`;
 
     // 1. Try Gemini Flash Neural Studio Audio via /api/tts
     try {
@@ -72,7 +106,7 @@ export class VernacularTTS {
         const res = await fetch("/api/tts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, language })
+          body: JSON.stringify({ text: cleanText, language })
         });
 
         if (res.ok) {
@@ -144,9 +178,13 @@ export class VernacularTTS {
             v => v.lang.includes("hi") || v.name.toLowerCase().includes("hindi")
           );
 
+          // Always normalize currency to spoken words (रुपये / rupees)
+          const cleanText = normalizeCurrencyForSpeech(text, language);
+          const cleanFallback = englishFallbackText ? normalizeCurrencyForSpeech(englishFallbackText, "en") : undefined;
+
           // If Windows has no Hindi voice installed, speak the English summary using the Indian English voice
           // This ensures sound ALWAYS comes out of the speakers!
-          let textToSpeak = text;
+          let textToSpeak = cleanText;
           let langCode = "hi-IN";
 
           if (language === "hi") {
@@ -154,12 +192,12 @@ export class VernacularTTS {
               langCode = "hi-IN";
             } else {
               // Fallback to English summary with Indian accent voice so sound actually plays
-              textToSpeak = englishFallbackText || "Attention! Please check your hospital bill for admission date mismatch and missing doctor registration seal.";
+              textToSpeak = cleanFallback || "Attention! Please check your hospital bill for admission date mismatch and missing doctor registration seal.";
               langCode = "en-IN";
             }
           } else {
             langCode = "en-IN";
-            textToSpeak = englishFallbackText || text;
+            textToSpeak = cleanFallback || cleanText;
           }
 
           const utterance = new SpeechSynthesisUtterance(textToSpeak);

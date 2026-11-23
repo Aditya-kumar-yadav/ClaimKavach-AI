@@ -39,10 +39,13 @@ export function generateAudioSummary(
     }
   });
 
-  const formattedClaimed = `₹${claim.claimedTotal.toLocaleString("en-IN")}`;
-  const formattedDeduction = totalDeduction > 0 ? `₹${totalDeduction.toLocaleString("en-IN")}` : null;
+  // Format amounts explicitly in spoken currency words (रुपये / rupees) so TTS never speaks "dollar"
+  const claimedTotalStr = claim.claimedTotal.toLocaleString("en-IN");
+  const deductionTotalStr = totalDeduction > 0 ? totalDeduction.toLocaleString("en-IN") : null;
 
   if (language === "hi") {
+    const formattedClaimedHi = `${claimedTotalStr} रुपये`;
+    const formattedDeductionHi = deductionTotalStr ? `${deductionTotalStr} रुपये` : null;
     const issuePoints: string[] = [];
 
     nonCheckedIssues.forEach(issue => {
@@ -54,7 +57,7 @@ export function generateAudioSummary(
       } else if (id.includes("NON_PAYABLE") || id.includes("CONSUMABLE")) {
         issuePoints.push(
           issue.deductedAmount 
-            ? `बिल में लगभग ₹${issue.deductedAmount.toLocaleString("en-IN")} के गैर-मान्य खर्च जैसे ग्लव्स और पट्टियाँ हैं, जो बीमा कंपनी काट लेगी।`
+            ? `बिल में लगभग ${issue.deductedAmount.toLocaleString("en-IN")} रुपये के गैर-मान्य खर्च जैसे ग्लव्स और पट्टियाँ हैं, जो बीमा कंपनी काट लेगी।`
             : "बिल में गैर-मान्य मेडिकल कंज्यूमेबल्स जोड़े गए हैं, जो इंश्योरेंस कंपनी पास नहीं करेगी।"
         );
       } else if (id.includes("ROOM_RENT")) {
@@ -72,11 +75,11 @@ export function generateAudioSummary(
 
     const summaryParts: string[] = [];
     summaryParts.push(
-      `ध्यान दें! ${patient} के कुल ${formattedClaimed} के अस्पताल बिल में ${nonCheckedIssues.length} मुख्य कागजी कमियाँ बाकी हैं।`
+      `ध्यान दें! ${patient} के कुल ${formattedClaimedHi} के अस्पताल बिल में ${nonCheckedIssues.length} मुख्य कागजी कमियाँ बाकी हैं।`
     );
 
-    if (formattedDeduction) {
-      summaryParts.push(`इन कमियों के कारण लगभग ${formattedDeduction} कटने या क्लेम अटकने का खतरा है।`);
+    if (formattedDeductionHi) {
+      summaryParts.push(`इन कमियों के कारण लगभग ${formattedDeductionHi} कटने या क्लेम अटकने का खतरा है।`);
     }
 
     // Join individual issue details
@@ -88,7 +91,9 @@ export function generateAudioSummary(
 
     return summaryParts.join(" ");
   } else {
-    // English Summary
+    // English Summary with spoken "rupees"
+    const formattedClaimedEn = `${claimedTotalStr} rupees`;
+    const formattedDeductionEn = deductionTotalStr ? `${deductionTotalStr} rupees` : null;
     const issuePoints: string[] = [];
 
     nonCheckedIssues.forEach(issue => {
@@ -100,7 +105,7 @@ export function generateAudioSummary(
       } else if (id.includes("NON_PAYABLE") || id.includes("CONSUMABLE")) {
         issuePoints.push(
           issue.deductedAmount
-            ? `Approximately ₹${issue.deductedAmount.toLocaleString("en-IN")} in non-payable consumables like braces or surgical gloves have been billed, which your insurer will deduct.`
+            ? `Approximately ${issue.deductedAmount.toLocaleString("en-IN")} rupees in non-payable consumables like braces or surgical gloves have been billed, which your insurer will deduct.`
             : "Non-payable medical consumables are billed, which insurers deduct from reimbursements."
         );
       } else if (id.includes("ROOM_RENT")) {
@@ -118,11 +123,11 @@ export function generateAudioSummary(
 
     const summaryParts: string[] = [];
     summaryParts.push(
-      `Attention. In the hospital records for ${patient}, out of ${formattedClaimed} claimed, ${nonCheckedIssues.length} unresolved issues were detected.`
+      `Attention. In the hospital records for ${patient}, out of ${formattedClaimedEn} claimed, ${nonCheckedIssues.length} unresolved issues were detected.`
     );
 
-    if (formattedDeduction) {
-      summaryParts.push(`There is an estimated deduction risk of ${formattedDeduction}.`);
+    if (formattedDeductionEn) {
+      summaryParts.push(`There is an estimated deduction risk of ${formattedDeductionEn}.`);
     }
 
     summaryParts.push(issuePoints.slice(0, 3).join(" "));

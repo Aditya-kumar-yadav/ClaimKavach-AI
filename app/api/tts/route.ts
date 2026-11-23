@@ -27,9 +27,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 });
     }
 
-    // Pass the clean text directly without any "Speak the following" prompt wrapper!
-    // The TTS model speaks whatever string is passed in the part.
-    const cleanSpeechText = text.trim();
+    // Normalize currency symbols into exact spoken words (रुपये in Hindi / rupees in English)
+    // This strictly prevents the neural voice model from ever pronouncing currency signs as "dollar"
+    const cleanSpeechText = (language === "hi"
+      ? text.replace(/₹\s*([0-9,]+)/g, "$1 रुपये").replace(/Rs\.?\s*([0-9,]+)/gi, "$1 रुपये").replace(/\$\s*([0-9,]+)/g, "$1 रुपये").replace(/₹/g, " रुपये ").replace(/\bdollars?\b/gi, "रुपये")
+      : text.replace(/₹\s*([0-9,]+)/g, "$1 rupees").replace(/Rs\.?\s*([0-9,]+)/gi, "$1 rupees").replace(/\$\s*([0-9,]+)/g, "$1 rupees").replace(/₹/g, " rupees ").replace(/\bdollars?\b/gi, "rupees")
+    ).replace(/\$/g, " ").replace(/\s+/g, " ").trim();
 
     // Target Google Gemini Studio-Quality Flash TTS models (Flash-Lite first for maximum speed and quota)
     const models = ["gemini-3.8-flash-lite-tts", "gemini-3.8-flash-tts", "gemini-3.1-flash-tts-preview"];
