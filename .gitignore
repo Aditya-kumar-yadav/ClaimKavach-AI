@@ -22,8 +22,24 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Local environment secrets
-.env*.local
+# Local environment secrets & files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.test
+*.env
+
+# Certificates, Keys & Credentials
+*.pem
+*.key
+*.cert
+*.crt
+id_rsa*
+credentials.json
+service-account*.json
+client_secret*.json
 
 # Vercel
 .vercel
