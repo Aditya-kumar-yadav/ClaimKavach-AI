@@ -1,19 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Volume2, VolumeX, Sparkles, Loader2, Languages } from "lucide-react";
+import { Mic, Square, Sparkles, Loader2, Volume2 } from "lucide-react";
 import { VernacularTTS } from "@/lib/tts";
 
 interface AudioExplainerProps {
   hindiSummary: string;
   englishSummary?: string;
   language: "en" | "hi";
+  pendingIssueCount?: number;
 }
 
 export const AudioExplainer: React.FC<AudioExplainerProps> = ({ 
   hindiSummary, 
   englishSummary,
-  language 
+  language,
+  pendingIssueCount
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -79,112 +81,194 @@ export const AudioExplainer: React.FC<AudioExplainerProps> = ({
     setActiveVoiceLang(lang);
   };
 
+  // Left & Right Waveform heights matching the reference image
+  const leftWaveHeights = [14, 24, 16, 44, 22, 36, 20, 28];
+  const rightWaveHeights = [28, 20, 36, 22, 44, 16, 24, 14];
+
   return (
-    <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-sky-950 rounded-2xl p-5 sm:p-6 text-white shadow-xl mb-6 relative overflow-hidden border border-indigo-500/30">
-      {/* Ambient Radial Glow */}
-      <div className="absolute -right-12 -top-12 w-48 h-48 bg-sky-500/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm relative overflow-hidden transition-all">
+      {/* Soft Ambient Radial Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-50/60 via-white to-sky-50/40 pointer-events-none" />
+      <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-sky-100/40 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full bg-emerald-100/30 blur-3xl pointer-events-none" />
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-        <div className="flex items-start sm:items-center gap-4">
-          {/* Main Audio Trigger Button */}
-          <button
-            type="button"
-            onClick={handleTogglePlay}
-            disabled={isLoading && false}
-            className={`h-12 w-12 sm:h-14 sm:w-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 cursor-pointer shrink-0 ${
-              isPlaying
-                ? "bg-rose-500 text-white shadow-rose-500/40 animate-pulse"
-                : isLoading
-                ? "bg-amber-500 text-white shadow-amber-500/40"
-                : "bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/30 hover:scale-105"
-            }`}
-            title={isPlaying ? "Click to stop" : "Click to play voice explanation"}
-          >
-            {isLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin text-white" />
-            ) : isPlaying ? (
-              <VolumeX className="h-6 w-6 text-white" />
-            ) : (
-              <Volume2 className="h-6 w-6 text-white" />
-            )}
-          </button>
-
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs uppercase font-bold tracking-wider text-sky-300 flex items-center gap-1">
-                <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                <span>
-                  {activeVoiceLang === "hi" 
-                    ? "आवाज़ में सहायता (Gemini Neural Voice Assistant)" 
-                    : "Voice Explainer (Gemini Neural Voice Assistant)"}
-                </span>
+      <div className="relative z-10 flex flex-col items-center text-center">
+        
+        {/* Top Header Controls: Accessible Badge + Big Language Buttons */}
+        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <span className="h-8 px-3 rounded-full bg-sky-50 border border-sky-200/80 text-sky-800 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-2xs">
+              <Sparkles className="h-3.5 w-3.5 text-sky-600 animate-pulse" />
+              <span>
+                {activeVoiceLang === "hi" ? "आवाज़ में सहायता (Voice Assistant)" : "Vernacular Voice Assistant"}
               </span>
+            </span>
 
-              {isPlaying && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 font-semibold animate-pulse">
-                  {activeVoiceLang === "hi" ? "बोल रहा है..." : "Speaking..."}
-                </span>
-              )}
-              {isLoading && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold animate-pulse">
-                  {activeVoiceLang === "hi" ? "आवाज तैयार हो रही है..." : "Synthesizing AI Audio..."}
-                </span>
-              )}
-            </div>
-
-            <h3 className="font-bold text-base sm:text-lg text-white mt-0.5">
-              {activeVoiceLang === "hi"
-                ? "कागजी गलतियों और समाधान को बोलकर सुनें"
-                : "Listen to Audit Findings in Reassuring Voice"}
-            </h3>
-            <p className="text-xs text-slate-300 mt-0.5 max-w-xl">
-              {activeVoiceLang === "hi"
-                ? "कम पढ़े-लिखे परिवारों के लिए सरल हिंदी में समझाया गया विवरण। अस्पताल काउंटर पर क्या ठीक कराना है।"
-                : "Spoken remediation guide explaining what exact documents need fixing at the hospital desk."}
-            </p>
+            {pendingIssueCount !== undefined && (
+              <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full border shadow-2xs ${
+                pendingIssueCount === 0
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-300"
+                  : "bg-amber-50 text-amber-800 border-amber-300"
+              }`}>
+                {pendingIssueCount === 0
+                  ? (activeVoiceLang === "hi" ? "✓ 0 कमियां बाकी (100% फिट)" : "✓ All Issues Fixed")
+                  : (activeVoiceLang === "hi" ? `⚠️ ${pendingIssueCount} कमियों का सारांश` : `⚠️ ${pendingIssueCount} Pending Issues`)}
+              </span>
+            )}
           </div>
-        </div>
 
-        {/* Right Section: Language Toggle & Audio Equalizer */}
-        <div className="flex flex-wrap sm:flex-col items-end gap-2.5 self-end sm:self-center">
-          {/* Dual Language Switcher */}
-          <div className="flex items-center gap-1 bg-white/10 p-1 rounded-xl border border-white/10 text-xs font-bold">
+          {/* Large, Easy-to-Tap Language Selector */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-2xs">
             <button
               type="button"
               onClick={() => handleLanguageSwitch("hi")}
-              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                activeVoiceLang === "hi" 
-                  ? "bg-sky-500 text-white shadow-xs" 
-                  : "text-slate-300 hover:text-white"
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeVoiceLang === "hi"
+                  ? "bg-white text-sky-700 shadow-sm shadow-slate-200"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              हिन्दी
+              <span>🇮🇳</span>
+              <span>हिन्दी</span>
             </button>
             <button
               type="button"
               onClick={() => handleLanguageSwitch("en")}
-              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                activeVoiceLang === "en" 
-                  ? "bg-sky-500 text-white shadow-xs" 
-                  : "text-slate-300 hover:text-white"
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeVoiceLang === "en"
+                  ? "bg-white text-sky-700 shadow-sm shadow-slate-200"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              English
+              <span>🇬🇧</span>
+              <span>English</span>
+            </button>
+          </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* Main Waveform & Big Circular Tactile Mic Button Stage    */}
+        {/* ======================================================== */}
+        <div className="w-full max-w-xl my-3 flex items-center justify-center gap-2 sm:gap-3 py-2">
+          
+          {/* Left Waveform Bars */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {leftWaveHeights.map((h, i) => (
+              <div
+                key={`left-wave-${i}`}
+                style={{
+                  height: `${h}px`,
+                  animationDelay: `${i * 0.12}s`,
+                }}
+                className={`w-1.5 sm:w-2 rounded-full transition-all duration-300 ${
+                  isPlaying
+                    ? "bg-sky-500 animate-wave shadow-xs shadow-sky-400/40"
+                    : isLoading
+                    ? "bg-amber-400 animate-pulse"
+                    : "bg-slate-200 hover:bg-slate-300"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Central Prominent Tactile Mic Button (Matching Reference Image) */}
+          <div className="relative mx-2 sm:mx-4 shrink-0">
+            {/* Animated Halo Rings when playing */}
+            {isPlaying && (
+              <>
+                <div className="absolute -inset-3 rounded-full bg-sky-400/20 animate-ping pointer-events-none" />
+                <div className="absolute -inset-1.5 rounded-full bg-sky-500/30 animate-pulse pointer-events-none" />
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={handleTogglePlay}
+              aria-label={isPlaying ? "Stop voice explanation" : "Play voice explanation in Hindi"}
+              className={`relative z-10 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex flex-col items-center justify-center transition-all duration-200 shadow-[0_12px_32px_rgba(15,23,42,0.12)] active:scale-95 cursor-pointer border-2 ${
+                isPlaying
+                  ? "bg-rose-500 hover:bg-rose-600 border-rose-400 text-white shadow-rose-500/30 ring-4 ring-rose-500/20"
+                  : isLoading
+                  ? "bg-amber-500 hover:bg-amber-600 border-amber-400 text-white shadow-amber-500/30"
+                  : "bg-white hover:bg-slate-50 border-slate-200/90 text-slate-800 hover:border-sky-400 hover:text-sky-600 hover:shadow-[0_16px_36px_rgba(2,132,199,0.22)] hover:scale-105"
+              }`}
+            >
+              {isLoading ? (
+                <Loader2 className="h-8 w-8 sm:h-9 sm:w-9 animate-spin text-white" />
+              ) : isPlaying ? (
+                <Square className="h-7 w-7 sm:h-8 sm:w-8 fill-current text-white" />
+              ) : (
+                <Mic className="h-9 w-9 sm:h-10 sm:w-10 stroke-[2.2] transition-transform" />
+              )}
             </button>
           </div>
 
-          {/* Equalizer Frequency Bars */}
-          <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-            <div className={`w-1 bg-sky-400 rounded-full transition-all duration-300 ${isPlaying ? "h-5 animate-wave" : "h-2"}`}></div>
-            <div className={`w-1 bg-sky-300 rounded-full transition-all duration-300 ${isPlaying ? "h-7 animate-wave delay-75" : "h-3"}`}></div>
-            <div className={`w-1 bg-indigo-400 rounded-full transition-all duration-300 ${isPlaying ? "h-4 animate-wave delay-150" : "h-2"}`}></div>
-            <div className={`w-1 bg-amber-400 rounded-full transition-all duration-300 ${isPlaying ? "h-6 animate-wave delay-100" : "h-3"}`}></div>
-            <div className={`w-1 bg-sky-400 rounded-full transition-all duration-300 ${isPlaying ? "h-3 animate-wave delay-200" : "h-2"}`}></div>
-            <span className="text-[11px] font-mono text-slate-300 ml-1.5 font-semibold">
-              {isPlaying ? "Playing AI Audio" : isLoading ? "Loading" : "Studio Voice Ready"}
-            </span>
+          {/* Right Waveform Bars */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {rightWaveHeights.map((h, i) => (
+              <div
+                key={`right-wave-${i}`}
+                style={{
+                  height: `${h}px`,
+                  animationDelay: `${i * 0.12 + 0.1}s`,
+                }}
+                className={`w-1.5 sm:w-2 rounded-full transition-all duration-300 ${
+                  isPlaying
+                    ? "bg-sky-500 animate-wave shadow-xs shadow-sky-400/40"
+                    : isLoading
+                    ? "bg-amber-400 animate-pulse"
+                    : "bg-slate-200 hover:bg-slate-300"
+                }`}
+              />
+            ))}
           </div>
+
         </div>
+
+        {/* ======================================================== */}
+        {/* Clear, Big, Readable Prompt for All Users                */}
+        {/* ======================================================== */}
+        <div className="mt-3 max-w-lg">
+          {isPlaying ? (
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-800 font-extrabold text-xs sm:text-sm animate-pulse mb-1">
+              <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
+              <span>
+                {activeVoiceLang === "hi"
+                  ? "🔊 आवाज़ चालू है... रोकने के लिए बटन दबाएं"
+                  : "🔊 Speaking... Tap button to Stop"}
+              </span>
+            </div>
+          ) : isLoading ? (
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 font-bold text-xs sm:text-sm animate-pulse mb-1">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-600" />
+              <span>
+                {activeVoiceLang === "hi"
+                  ? "आवाज़ तैयार हो रही है, कृपया प्रतीक्षा करें..."
+                  : "Synthesizing voice audio, please wait..."}
+              </span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleTogglePlay}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-900 font-black text-xs sm:text-sm transition-all cursor-pointer shadow-2xs hover:shadow-xs active:scale-98 mb-1 group"
+            >
+              <Volume2 className="h-4 w-4 text-sky-600 group-hover:scale-110 transition-transform" />
+              <span>
+                {activeVoiceLang === "hi"
+                  ? "👆 यहाँ दबाएं और हिंदी में पूरी बात सुनें"
+                  : "👆 Tap here to listen in English"}
+              </span>
+            </button>
+          )}
+
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1 leading-relaxed">
+            {activeVoiceLang === "hi"
+              ? "कम पढ़े-लिखे मरीजों व परिजनों के लिए: अस्पताल के बिल में क्या कमी है, उसे सीधे अपनी भाषा में बोलकर समझें।"
+              : "Designed for accessible care: spoken guidance explaining what exact hospital corrections are needed."}
+          </p>
+        </div>
+
       </div>
     </div>
   );

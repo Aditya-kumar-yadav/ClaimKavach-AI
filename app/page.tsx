@@ -15,12 +15,11 @@ import {
   CLEAN_DEMO_CLAIM, 
   OVERBILLED_PMJAY_CLAIM, 
   WAITING_PERIOD_CLAIM, 
-  ROOM_RENT_CAPPING_CLAIM,
-  DEMO_SCENARIO_LIST 
+  ROOM_RENT_CAPPING_CLAIM 
 } from "@/lib/mock-data";
-import { evaluateClaim } from "@/lib/rule-engine";
 import { VernacularTTS } from "@/lib/tts";
-import { ShieldCheck, Sparkles, AlertCircle, FileCheck2, ArrowRight, RotateCcw } from "lucide-react";
+import { generateAudioSummary } from "@/lib/audio-summary";
+import { Sparkles } from "lucide-react";
 
 export default function Home() {
   const [language, setLanguage] = useState<"en" | "hi">("hi");
@@ -30,6 +29,7 @@ export default function Home() {
   const [result, setResult] = useState<AuditResult | null>(null);
   const [billDoc, setBillDoc] = useState<string | null>(null);
   const [summaryDoc, setSummaryDoc] = useState<string | null>(null);
+  const [fixedIssueIds, setFixedIssueIds] = useState<Set<string>>(new Set());
 
   // Custom Gemini API Key State for Hackathon Evaluators
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
@@ -51,6 +51,19 @@ export default function Home() {
     setBillDoc(null);
     setSummaryDoc(null);
     setExtractionError(null);
+    setFixedIssueIds(new Set());
+  };
+
+  const handleToggleFixIssue = (id: string) => {
+    setFixedIssueIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   const handleAnalyze = async (
@@ -66,6 +79,7 @@ export default function Home() {
     setResult(null);
     setBillDoc(billBase64 || null);
     setSummaryDoc(summaryBase64 || null);
+    setFixedIssueIds(new Set());
 
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -178,30 +192,20 @@ export default function Home() {
     window.print();
   };
 
-  // Build audio summary in Hindi from issues
-  const getHindiAudioSummary = (): string => {
-    if (!result || result.issues.length === 0) {
-      return "बधाई हो। आपके अस्पताल बिल और डिस्चार्ज समरी में कोई कागजी कमी नहीं पाई गई है। आपका क्लेम बीमा कंपनी से पास होने के लिए पूरी तरह तैयार है।";
-    }
+  // Unresolved (non-checked) issues count
+  const nonCheckedCount = result 
+    ? result.issues.filter(i => !fixedIssueIds.has(i.id)).length 
+    : 0;
 
-    const patient = (!claim?.patientName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.patientName.trim()))
-      ? "मरीज"
-      : claim.patientName;
-    const topIssues = result.issues.slice(0, 2).map(i => i.titleHi).join(", और ");
-    return `ध्यान दें! ${patient} के अस्पताल कागजों में ${topIssues} पाया गया है। बीमा क्लेम रिजेक्ट होने से बचाने के लिए इसे तुरंत अस्पताल के बिलिंग काउंटर से ठीक करवा लें।`;
+  // Build intelligent audio summary focusing on non-checked deductions & billing desk fixes
+  const getHindiAudioSummary = (): string => {
+    if (!claim || !result) return "";
+    return generateAudioSummary(claim, result, fixedIssueIds, "hi");
   };
 
-  // Build audio summary in English from issues
   const getEnglishAudioSummary = (): string => {
-    if (!result || result.issues.length === 0) {
-      return "Congratulations. No compliance issues were detected in your hospital bill and discharge summary. Your claim is 100% ready for insurance approval.";
-    }
-
-    const patient = (!claim?.patientName || /^(not[ _-]?found|unknown|na|n\/a|null|undefined)$/i.test(claim.patientName.trim()))
-      ? "the patient"
-      : claim.patientName;
-    const topIssues = result.issues.slice(0, 2).map(i => i.titleEn).join(", and ");
-    return `Attention! In hospital records for ${patient}, ${topIssues} were detected. Please have these rectified at the hospital billing desk to prevent claim rejection.`;
+    if (!claim || !result) return "";
+    return generateAudioSummary(claim, result, fixedIssueIds, "en");
   };
 
   return (
@@ -218,36 +222,38 @@ export default function Home() {
         />
 
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
-          {/* Hero Banner */}
-          <div className={`text-center max-w-3xl mx-auto transition-all duration-300 ${claim ? "mb-4" : "mb-10"}`}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-bold mb-3 border border-sky-200">
-              <Sparkles className="h-3.5 w-3.5 text-sky-600" />
-              <span>
+          {/* Hero Banner - Sleek & visible initially; smoothly hides when audit or running */}
+          {!(claim || isLoading) && (
+            <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10 animate-in fade-in duration-300">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-bold mb-3 border border-sky-200">
+                <Sparkles className="h-3.5 w-3.5 text-sky-600" />
+                <span>
+                  {language === "hi"
+                    ? "भारत का पहला एआई क्लेम प्री-वैलिडेशन इंजन"
+                    : "India's 1st Pre-Adjudication Engine for Micro-Insurance"}
+                </span>
+              </div>
+              <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                {language === "hi" ? (
+                  <>
+                    कागजी गलतियों से <span className="text-rose-600 underline decoration-rose-300">क्लेम रिजेक्ट</span> होने से बचाएं
+                  </>
+                ) : (
+                  <>
+                    Stop Micro-Insurance Rejections <br className="hidden sm:inline" />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-indigo-600">
+                      Before They Happen
+                    </span>
+                  </>
+                )}
+              </h1>
+              <p className="text-sm sm:text-base text-slate-600 mt-3 max-w-2xl mx-auto leading-relaxed">
                 {language === "hi"
-                  ? "भारत का पहला एआई क्लेम प्री-वैलिडेशन इंजन"
-                  : "India's 1st Pre-Adjudication Engine for Micro-Insurance"}
-              </span>
+                  ? "आयुष्मान भारत (PM-JAY) एवं गिग वर्कर्स के लिए अस्पताल बिलों का लाइव ऑडिट। तारीखों का मिलान, गैर-मान्य आइटम की कटौती और बोलकर हिंदी में समाधान।"
+                  : "Multimodal OCR reads handwritten hospital bills, checks IRDAI non-payable items, identifies date discrepancies, and outputs a SHA-256 verified dossier."}
+              </p>
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-              {language === "hi" ? (
-                <>
-                  कागजी गलतियों से <span className="text-rose-600 underline decoration-rose-300">क्लेम रिजेक्ट</span> होने से बचाएं
-                </>
-              ) : (
-                <>
-                  Stop Micro-Insurance Rejections <br className="hidden sm:inline" />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-indigo-600">
-                    Before They Happen
-                  </span>
-                </>
-              )}
-            </h1>
-            <p className="text-sm sm:text-base text-slate-600 mt-3 max-w-2xl mx-auto leading-relaxed">
-              {language === "hi"
-                ? "आयुष्मान भारत (PM-JAY) एवं गिग वर्कर्स के लिए अस्पताल बिलों का लाइव ऑडिट। तारीखों का मिलान, गैर-मान्य आइटम की कटौती और बोलकर हिंदी में समाधान।"
-                : "Multimodal OCR reads handwritten hospital bills, checks IRDAI non-payable items, identifies date discrepancies, and outputs a SHA-256 verified dossier."}
-            </p>
-          </div>
+          )}
 
           {/* Document Ingestion Zone - Auto-Collapses to 1-line bar when audit is active */}
           <UploadZone
@@ -268,24 +274,13 @@ export default function Home() {
           {/* Results View */}
           {claim && result && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              {/* Reset & Switch Preset Bar */}
-              <div className="flex justify-end mb-4">
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="text-xs font-bold text-slate-600 hover:text-rose-600 bg-white hover:bg-rose-50 px-3.5 py-1.5 rounded-xl border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  <span>{language === "hi" ? "नया ऑडिट शुरू करें (Reset)" : "Reset & Clear Audit"}</span>
-                </button>
-              </div>
-
               {/* Vernacular Audio Explainer Card */}
               <div className="mb-6">
                 <AudioExplainer
                   hindiSummary={getHindiAudioSummary()}
                   englishSummary={getEnglishAudioSummary()}
                   language={language}
+                  pendingIssueCount={nonCheckedCount}
                 />
               </div>
 
@@ -297,6 +292,8 @@ export default function Home() {
                 onPrint={handlePrint}
                 billDoc={billDoc}
                 summaryDoc={summaryDoc}
+                fixedIssueIds={fixedIssueIds}
+                onToggleFixIssue={handleToggleFixIssue}
               />
             </div>
           )}

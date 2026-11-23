@@ -159,40 +159,56 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
     activeError.includes("API key")
   );
 
-  // Once an audit is active, collapse into a slim 1-line bar
+  // 1. When running: immediately make the upload zone and the two divs gone!
+  if (isLoading) {
+    return null;
+  }
+
+  // 2. Once an audit is active, show the professional "Change Document for Another Check" bar
   if (activeClaim && isCollapsed) {
     return (
-      <div className="glass-card rounded-2xl px-4 sm:px-6 py-3 mb-6 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/95 backdrop-blur-sm transition-all duration-300">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="h-8 w-8 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center shrink-0">
-            <FileText className="h-4 w-4" />
+      <div className="bg-white rounded-2xl p-4 sm:p-5 mb-6 border border-slate-200/90 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-300">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
+            <FileCheck2 className="h-5 w-5" />
           </div>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-sm min-w-0">
-            <span className="font-semibold text-slate-400 text-[11px] uppercase tracking-wider">
-              {language === "hi" ? "ऑडिट दस्तावेज़:" : "Auditing:"}
-            </span>
-            <span className="font-black text-slate-900 truncate">
-              {activeClaim.patientName}
-            </span>
-            <span className="text-slate-300">•</span>
-            <span className="font-mono text-xs font-bold text-slate-700">
-              ₹{activeClaim.claimedTotal.toLocaleString("en-IN")}
-            </span>
-            <span className="text-slate-300 hidden sm:inline">•</span>
-            <span className="text-slate-500 text-xs truncate max-w-[200px] hidden sm:inline">
-              🏥 {activeClaim.hospitalName}
-            </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {language === "hi" ? "ऑडिट पूर्ण" : "Audit Complete"}
+              </span>
+              <span className="font-black text-slate-900 text-sm sm:text-base truncate">
+                {activeClaim.patientName}
+              </span>
+              <span className="text-slate-300 hidden sm:inline">•</span>
+              <span className="font-mono text-sm font-bold text-slate-800">
+                ₹{activeClaim.claimedTotal.toLocaleString("en-IN")}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5 truncate flex items-center gap-1.5 font-medium">
+              <span>🏥 {activeClaim.hospitalName}</span>
+              <span className="text-slate-300">•</span>
+              <span>{activeClaim.doctorName ? `Dr. ${activeClaim.doctorName}` : "Pre-Adjudicated Dossier"}</span>
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+        <div className="flex items-center gap-2.5 self-stretch md:self-auto shrink-0">
           <button
             type="button"
-            onClick={() => setIsCollapsed(false)}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            onClick={() => {
+              if (onReset) onReset();
+              setIsCollapsed(false);
+            }}
+            className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-slate-900/15 hover:shadow-lg hover:shadow-slate-900/20 active:scale-98"
           >
-            <RefreshCw className="h-3.5 w-3.5 text-slate-500" />
-            <span>{language === "hi" ? "दस्तावेज़ बदलें" : "Change Document"}</span>
+            <RefreshCw className="h-4 w-4 text-emerald-400" />
+            <span>
+              {language === "hi"
+                ? "दस्तावेज़ बदलें (Change Document)"
+                : "Change Document for Another Check"}
+            </span>
           </button>
         </div>
       </div>

@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import { Shield, Languages, HeartHandshake, Key } from "lucide-react";
+import Link from "next/link";
+import { Shield, Languages, User } from "lucide-react";
+import { SignedIn, SignedOut, UserButton, useUser, ClerkLoading, ClerkLoaded } from "@clerk/nextjs";
 
 interface HeaderProps {
   language: "en" | "hi";
@@ -20,6 +22,8 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectScenario,
   isLoading = false
 }) => {
+  const { user } = useUser();
+
   return (
     <header className="sticky top-0 z-40 glass-panel border-b border-slate-200/80 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3">
@@ -73,26 +77,6 @@ export const Header: React.FC<HeaderProps> = ({
             </select>
           </div>
 
-          {/* EXCLUSIVE SINGLE GEMINI API KEY BUTTON AT THE TOP (For Judges & Evaluators) */}
-          <button
-            type="button"
-            onClick={onOpenApiKeyModal}
-            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-2xs hover:scale-102 active:scale-98 ${
-              hasCustomKey
-                ? "bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-900"
-                : "bg-amber-50/90 hover:bg-amber-100 border-amber-300 text-amber-950"
-            }`}
-            title={language === "hi" ? "Google Gemini API की सेटिंग्स" : "Configure Google Gemini API Key"}
-          >
-            <Key className={`h-3.5 w-3.5 ${hasCustomKey ? "text-emerald-600" : "text-amber-600"}`} />
-            <span className="font-extrabold hidden xs:inline">
-              {hasCustomKey 
-                ? (language === "hi" ? "Gemini Key: Active ✓" : "Gemini Key: Active ✓") 
-                : (language === "hi" ? "🔑 Gemini Key" : "🔑 Gemini Key")}
-            </span>
-            <span className={`h-2 w-2 rounded-full shrink-0 ${hasCustomKey ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}></span>
-          </button>
-
           {/* Language Switcher */}
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
@@ -118,10 +102,61 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
 
-          {/* Hackathon Badge */}
-          <div className="hidden xl:flex items-center space-x-1.5 text-xs font-medium text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-            <HeartHandshake className="h-3.5 w-3.5 text-rose-500" />
-            <span>Hack with Delhi 4.0</span>
+          {/* User Profile Icon / Auth (Displays Name & Email on Profile) */}
+          <div className="flex items-center shrink-0">
+            {/* Instant Skeleton while Clerk JS initializes - eliminates waiting delay */}
+            <ClerkLoading>
+              <div className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-2xl bg-white border border-slate-200/90 shadow-2xs animate-pulse">
+                <div className="h-8 w-8 rounded-full bg-slate-200 ring-2 ring-slate-100 shrink-0" />
+                <div className="hidden xs:flex flex-col gap-1 w-20">
+                  <div className="h-2.5 bg-slate-200 rounded-sm w-16" />
+                  <div className="h-2 bg-slate-100 rounded-sm w-12" />
+                </div>
+              </div>
+            </ClerkLoading>
+
+            <ClerkLoaded>
+              <SignedIn>
+                <div className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all">
+                  <UserButton 
+                    afterSignOutUrl="/sign-in"
+                    userProfileMode="modal"
+                    appearance={{
+                      elements: {
+                        modalCloseButton: "right-6 top-4 h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-500 hover:text-slate-900 shadow-xs transition-all flex items-center justify-center z-50 cursor-pointer",
+                        userButtonAvatarBox: "h-8 w-8 ring-2 ring-sky-500/30 hover:ring-sky-500 transition-all",
+                        userButtonPopoverCard: "shadow-2xl rounded-2xl border border-slate-200/90 overflow-hidden font-sans",
+                        userButtonPopoverFooter: "!hidden",
+                        userPreviewMainIdentifier: "font-extrabold text-slate-900 text-sm",
+                        userPreviewSecondaryIdentifier: "text-xs text-slate-500 font-medium",
+                        userButtonPopoverActionButton: "hover:bg-slate-50 transition-colors font-semibold text-slate-700 text-xs py-2.5",
+                        userButtonPopoverActionButtonIcon: "text-sky-600",
+                      }
+                    }}
+                  />
+                  <div className="hidden xs:flex flex-col text-left leading-none">
+                    <span className="text-xs font-black text-slate-900 max-w-[130px] truncate">
+                      {user?.fullName || (user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : (user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "User"))}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-semibold max-w-[130px] truncate mt-0.5">
+                      {user?.primaryEmailAddress?.emailAddress || "Verified"}
+                    </span>
+                  </div>
+                </div>
+              </SignedIn>
+              <SignedOut>
+                <Link
+                  href="/sign-in"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 border border-slate-300 hover:border-sky-400 text-slate-700 hover:text-sky-700 transition-all shadow-2xs hover:shadow-xs active:scale-98 cursor-pointer"
+                  title={language === "hi" ? "उपयोगकर्ता प्रोफ़ाइल / लॉगिन" : "User Profile / Log In"}
+                >
+                  <div className="h-5 w-5 rounded-full bg-sky-100 flex items-center justify-center text-sky-700">
+                    <User className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="hidden xs:inline">{language === "hi" ? "प्रोफ़ाइल" : "Profile"}</span>
+                </Link>
+              </SignedOut>
+            </ClerkLoaded>
           </div>
         </div>
       </div>
