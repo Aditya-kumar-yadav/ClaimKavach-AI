@@ -294,7 +294,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = "login" }) => 
                       <form onSubmit={handleLoginSubmit} className="space-y-3.5">
                         <div>
                           <label className="block text-xs font-semibold text-slate-600 mb-1 ml-1">
-                            Login, email or phone number
+                            Email or Username
                           </label>
                           <div className="relative">
                             <input
@@ -302,7 +302,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = "login" }) => 
                               required
                               value={identifier}
                               onChange={(e) => setIdentifier(e.target.value)}
-                              placeholder="Enter email or phone"
+                              placeholder="Enter email or username"
                               className="w-full pl-5 pr-4 py-2.5 sm:py-3 rounded-full border border-slate-300 hover:border-slate-400 focus:border-[#2d4a3e] focus:ring-2 focus:ring-[#2d4a3e]/15 outline-none text-xs sm:text-sm text-slate-800 transition-all bg-white shadow-2xs font-medium"
                             />
                           </div>
