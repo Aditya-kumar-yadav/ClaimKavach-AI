@@ -18,6 +18,7 @@ import {
   Copy,
   Check,
   ExternalLink,
+  Eye,
   X,
   Sparkles,
   Gavel,
@@ -30,6 +31,7 @@ import {
 import { ExtractedClaim, AuditResult, AuditIssue } from "@/types/claim";
 import { generateNHCXClaimBundle } from "@/lib/nhcx-fhir";
 import { generateIRDAIAppealLetter, POPULAR_INDIAN_INSURERS } from "@/lib/appeal-generator";
+import { ClaimPacketPrint } from "@/components/ClaimPacketPrint";
 
 interface AuditReportProps {
   claim: ExtractedClaim;
@@ -179,6 +181,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
   const [showLineItems, setShowLineItems] = useState(false);
   const [showNHCXModal, setShowNHCXModal] = useState(false);
   const [showAppealModal, setShowAppealModal] = useState(false);
+  const [showDossierModal, setShowDossierModal] = useState(false);
   const [selectedInsurer, setSelectedInsurer] = useState<string>("Star Health and Allied Insurance Co. Ltd.");
   const [copied, setCopied] = useState(false);
   const [copiedAppeal, setCopiedAppeal] = useState(false);
@@ -601,6 +604,16 @@ export const AuditReport: React.FC<AuditReportProps> = ({
               <span>{language === "hi" ? "NHCX FHIR JSON देखें" : "Export NHCX FHIR JSON"}</span>
             </button>
 
+            {/* Preview Dossier Button */}
+            <button
+              type="button"
+              onClick={() => setShowDossierModal(true)}
+              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs shadow-2xs border border-slate-300 flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+            >
+              <Eye className="h-3.5 w-3.5 text-slate-600" />
+              <span>{language === "hi" ? "डोजियर देखें" : "Preview Dossier"}</span>
+            </button>
+
             {/* Print Dossier Button */}
             <button
               type="button"
@@ -1014,6 +1027,14 @@ export const AuditReport: React.FC<AuditReportProps> = ({
           </button>
           <button
             type="button"
+            onClick={() => setShowDossierModal(true)}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 transition-all cursor-pointer flex items-center gap-1"
+          >
+            <Eye className="h-3.5 w-3.5 text-sky-600" />
+            <span>{language === "hi" ? "डोजियर देखें" : "Preview Dossier"}</span>
+          </button>
+          <button
+            type="button"
             onClick={onPrint}
             className="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition-all cursor-pointer flex items-center gap-1"
           >
@@ -1210,6 +1231,69 @@ export const AuditReport: React.FC<AuditReportProps> = ({
               💡 <strong>{language === "hi" ? "तकनीकी विवरण:" : "Judge Flex:"}</strong> {language === "hi"
                 ? "यह FHIR बंडल Patient (ABHA ID), Organization (अस्पताल ROHIN), Claim, और ClaimResponse (IRDAI प्री-एडजुडिकेशन) संसाधनों को समाहित करता है।"
                 : "This FHIR Bundle contains Patient (ABHA ID), Organization (Hospital ROHIN Reg), Claim, and ClaimResponse (IRDAI Pre-adjudication) conforming to India's National Health Claims Exchange."}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Feature 5: Official A4 Dossier Certificate Lightbox Modal */}
+      {showDossierModal && (
+        <div 
+          onClick={() => setShowDossierModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-slate-900 rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl border border-slate-700 overflow-hidden"
+          >
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950 text-white shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center border border-sky-500/30 shrink-0">
+                  <FileCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-2">
+                    <span>{language === "hi" ? "आधिकारिक A4 प्री-एडजुडिकेशन क्लेम प्रमाणपत्र" : "Official A4 Pre-Adjudication Dossier Certificate"}</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      IRDAI 2024 Verified
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {language === "hi"
+                      ? "यह प्रमाणपत्र सीधे बीमा कंपनी (TPA) या अस्पताल बिलिंग डेस्क पर जमा करने योग्य है।"
+                      : "Executive compliance certificate ready for direct submission to TPA or hospital billing desk."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDossierModal(false);
+                    setTimeout(() => onPrint(), 250);
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-sky-500/20 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  <span>{language === "hi" ? "प्रिंट / PDF सेव करें" : "Print / Save as PDF"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDossierModal(false)}
+                  className="h-8 w-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: A4 Paper Preview */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-950/60 flex justify-center">
+              <div className="w-full max-w-[210mm] shadow-2xl rounded-2xl overflow-hidden bg-white">
+                <ClaimPacketPrint claim={claim} result={result} isModalPreview={true} />
+              </div>
             </div>
           </div>
         </div>
