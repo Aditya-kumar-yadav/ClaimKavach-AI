@@ -593,9 +593,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({
             <button
               type="button"
               onClick={() => setShowAppealModal(true)}
-              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+              className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-slate-950 hover:bg-black text-white font-bold text-xs shadow-md border border-slate-800 hover:border-slate-700 flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer"
             >
-              <Gavel className="h-3.5 w-3.5 text-amber-200" />
+              <Gavel className="h-3.5 w-3.5 text-slate-200" />
               <span>{language === "hi" ? "अपील दर्ज करें: IRDAI पत्र" : "Fight Back: IRDAI Appeal"}</span>
             </button>
 
@@ -1062,7 +1062,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
             {/* Modal Header Bar */}
             <div className="p-4 sm:px-6 sm:py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950 text-white shrink-0">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="h-10 w-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-white/10 text-white flex items-center justify-center border border-white/20 shrink-0 shadow-xs">
                   <Gavel className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
@@ -1072,7 +1072,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
                         ? "आईआरडीएआई कानूनी अपील एवं बीमा लोकपाल नोटिस"
                         : "IRDAI Statutory Legal Appeal & Ombudsman Notice"}
                     </h2>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase shrink-0">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-slate-200 border border-white/20 font-bold uppercase shrink-0">
                       79% Ombudsman Win Rate
                     </span>
                     <span className="hidden sm:inline-flex text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold uppercase shrink-0">
@@ -1100,14 +1100,14 @@ export const AuditReport: React.FC<AuditReportProps> = ({
             <div className="px-4 sm:px-6 py-2.5 bg-slate-950/90 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shrink-0">
               {/* Insurer Selector */}
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <span className="font-bold text-amber-400 shrink-0 text-xs flex items-center gap-1">
+                <span className="font-bold text-slate-300 shrink-0 text-xs flex items-center gap-1">
                   <span>🏢</span>
                   <span>{language === "hi" ? "बीमा कंपनी:" : "Target Insurer:"}</span>
                 </span>
                 <select
                   value={selectedInsurer}
                   onChange={(e) => setSelectedInsurer(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 hover:border-amber-400 text-slate-100 rounded-lg px-2.5 py-1 text-xs font-semibold focus:ring-2 focus:ring-amber-500/30 outline-none w-full max-w-xs truncate cursor-pointer transition-colors"
+                  className="bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-100 rounded-lg px-2.5 py-1 text-xs font-semibold focus:ring-2 focus:ring-white/20 outline-none w-full max-w-xs truncate cursor-pointer transition-colors"
                 >
                   {POPULAR_INDIAN_INSURERS.map((ins) => (
                     <option key={ins} value={ins} className="bg-slate-900 text-slate-100">
@@ -1124,9 +1124,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({
                   <button
                     type="button"
                     onClick={() => setAppealViewMode("document")}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all duration-200 cursor-pointer ${
                       appealViewMode === "document"
-                        ? "bg-amber-500 text-slate-950 shadow-xs"
+                        ? "bg-white text-slate-950 shadow-xs font-black"
                         : "text-slate-400 hover:text-white"
                     }`}
                   >
@@ -1135,9 +1135,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({
                   <button
                     type="button"
                     onClick={() => setAppealViewMode("raw")}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all duration-200 cursor-pointer ${
                       appealViewMode === "raw"
-                        ? "bg-amber-500 text-slate-950 shadow-xs"
+                        ? "bg-white text-slate-950 shadow-xs font-black"
                         : "text-slate-400 hover:text-white"
                     }`}
                   >
@@ -1149,7 +1149,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
                 <button
                   type="button"
                   onClick={handleCopyAppeal}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs border border-slate-700"
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 font-semibold flex items-center gap-1.5 transition-all duration-200 cursor-pointer shadow-xs border border-slate-700 hover:border-slate-600"
                 >
                   {copiedAppeal ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                   <span>{copiedAppeal ? (language === "hi" ? "कॉपी हो गया!" : "Copied!") : (language === "hi" ? "पत्र कॉपी करें" : "Copy Letter")}</span>
@@ -1159,9 +1159,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({
                 <button
                   type="button"
                   onClick={handleDownloadAppeal}
-                  className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 active:scale-95 text-slate-950 font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer shadow-xs border border-white"
                 >
-                  <Download className="h-3.5 w-3.5" />
+                  <Download className="h-3.5 w-3.5 text-slate-950" />
                   <span>{language === "hi" ? "डाउनलोड (.txt)" : "Download (.txt)"}</span>
                 </button>
               </div>
@@ -1170,15 +1170,15 @@ export const AuditReport: React.FC<AuditReportProps> = ({
             {/* Compact Statutory Escalation Pathway Ribbon */}
             <div className="px-4 sm:px-6 py-2 bg-slate-900/60 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] shrink-0">
               <div className="flex items-center gap-1.5 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
-                <Scale className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                <Scale className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                 <span>Statutory Escalation Ladder:</span>
               </div>
               <div className="flex flex-wrap items-center gap-1.5 text-[10.5px]">
-                <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/25 font-medium">
+                <span className="px-2 py-0.5 rounded-md bg-white/10 text-slate-200 border border-white/20 font-medium">
                   <strong>Step 1:</strong> Insurer GRO (14-Day Clock)
                 </span>
                 <span className="text-slate-600">→</span>
-                <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700 font-medium">
+                <span className="px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 border border-slate-700 font-medium">
                   <strong>Step 2:</strong> Bima Bharosa (Day 15+ Token)
                 </span>
                 <span className="text-slate-600">→</span>
@@ -1200,10 +1200,10 @@ export const AuditReport: React.FC<AuditReportProps> = ({
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs">
+                          <div className="h-7 w-7 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
                             ⚖️
                           </div>
-                          <span className="text-[11px] font-black tracking-widest uppercase text-amber-700">
+                          <span className="text-[11px] font-black tracking-widest uppercase text-slate-700">
                             GOVERNMENT OF INDIA STATUTORY COMPLIANCE NOTICE
                           </span>
                         </div>
@@ -1276,13 +1276,13 @@ export const AuditReport: React.FC<AuditReportProps> = ({
                     <div className="font-bold uppercase text-[10px] text-slate-500">To:</div>
                     <div className="font-bold text-slate-900 text-sm">The Principal Grievance Redressal Officer (GRO)</div>
                     <div className="text-slate-600">Claims Adjudication & Policyholder Grievance Redressal Division</div>
-                    <div className="font-extrabold text-amber-800">{selectedInsurer}</div>
+                    <div className="font-extrabold text-slate-950">{selectedInsurer}</div>
                     <div className="text-slate-500 italic">(Regarding Inpatient Hospitalization at: {displayHospitalName})</div>
                   </div>
 
                   {/* Subject Line */}
-                  <div className="bg-amber-50/80 border-l-4 border-amber-500 p-3 rounded-r-xl mb-5">
-                    <span className="text-[10px] uppercase font-black text-amber-800 tracking-wider block">Subject:</span>
+                  <div className="bg-slate-100 border-l-4 border-slate-900 p-3.5 rounded-r-xl mb-5">
+                    <span className="text-[10px] uppercase font-black text-slate-500 tracking-wider block">Subject:</span>
                     <span className="text-xs sm:text-sm font-black text-slate-900 leading-snug">
                       STATUTORY WRITTEN GRIEVANCE APPEAL AGAINST ARBITRARY CLAIM REPUDIATION / PARTIAL DEDUCTION
                     </span>
@@ -1340,8 +1340,8 @@ export const AuditReport: React.FC<AuditReportProps> = ({
                     </div>
 
                     {/* Statutory Demand Highlight Box */}
-                    <div className="p-4 rounded-xl bg-amber-500/10 border-2 border-amber-500/40 text-slate-900 space-y-2">
-                      <div className="flex items-center gap-2 text-amber-900 font-black text-xs sm:text-sm">
+                    <div className="p-4 rounded-xl bg-slate-100 border border-slate-300 text-slate-900 space-y-2">
+                      <div className="flex items-center gap-2 text-slate-950 font-black text-xs sm:text-sm">
                         <span>⚖️</span>
                         <span>STATUTORY DEMAND & MANDATORY 14-DAY RESOLUTION NOTICE</span>
                       </div>
@@ -1399,7 +1399,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
               <span className="truncate">
                 ⚖️ <strong>IRDAI Master Circular (May 2024) Para 13</strong> • 60-Month Moratorium on Rejections
               </span>
-              <span className="text-amber-400 font-semibold shrink-0">
+              <span className="text-slate-300 font-semibold shrink-0">
                 14-Day Mandatory GRO Resolution Window
               </span>
             </div>
@@ -1587,9 +1587,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({
           <button
             type="button"
             onClick={() => setShowDossierModal(true)}
-            className="flex-1 sm:flex-initial px-4 py-2 rounded-full bg-white hover:bg-slate-100 active:scale-95 text-slate-950 text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md shadow-white/10 cursor-pointer select-none"
+            className="flex-1 sm:flex-initial px-4 py-2 rounded-full bg-slate-900/90 hover:bg-slate-800 active:scale-95 text-slate-100 text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 border border-slate-700/80 cursor-pointer select-none hover:border-slate-500 shadow-xs"
           >
-            <Printer className="h-3.5 w-3.5 text-sky-600" />
+            <Printer className="h-3.5 w-3.5 text-slate-300" />
             <span>{language === "hi" ? "डोज़ियर देखें" : "View Dossier"}</span>
           </button>
 
@@ -1597,9 +1597,9 @@ export const AuditReport: React.FC<AuditReportProps> = ({
           <button
             type="button"
             onClick={() => setShowAppealModal(true)}
-            className="flex-1 sm:flex-initial px-4 py-2 rounded-full bg-gradient-to-r from-sky-500 via-indigo-600 to-indigo-700 hover:from-sky-400 hover:to-indigo-500 active:scale-95 text-white text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/25 cursor-pointer select-none"
+            className="flex-1 sm:flex-initial px-4 py-2 rounded-full bg-white hover:bg-slate-100 active:scale-95 text-slate-950 text-xs font-black transition-all duration-200 flex items-center justify-center gap-1.5 shadow-lg shadow-white/10 border border-white cursor-pointer select-none hover:shadow-xl"
           >
-            <Gavel className="h-3.5 w-3.5 text-amber-300" />
+            <Gavel className="h-3.5 w-3.5 text-slate-950" />
             <span>{language === "hi" ? "IRDAI अपील" : "Fight Back"}</span>
           </button>
         </div>
