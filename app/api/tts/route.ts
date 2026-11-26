@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 });
+      return NextResponse.json({ success: false, reason: "No TTS key configured, use Web Speech fallback" }, { status: 200 });
     }
 
     // Normalize currency symbols into exact spoken words (रुपये in Hindi / rupees in English)
