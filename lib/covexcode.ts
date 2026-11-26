@@ -117,14 +117,14 @@ Rules:
       }
     ],
     temperature: 0.1,
-    max_tokens: 3000
+    max_tokens: 4000
   };
 
   const endpoint = `${COVEXCODE_CONFIG.endpoint.replace(/\/+$/, "")}/chat/completions`;
   console.log(`[ClaimKavach AI] Calling CovexCode API (${COVEXCODE_CONFIG.model}) at ${endpoint}...`);
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
 
   try {
     const res = await fetch(endpoint, {
@@ -151,14 +151,27 @@ Rules:
       throw new Error("Empty response returned from CovexCode DeepSeek-v4-Flash");
     }
 
-    // Extract JSON from potential code fences
-    let jsonStr = content;
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      jsonStr = jsonMatch[0];
+    // Robust JSON extraction
+    let jsonStr = content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    const firstBrace = jsonStr.indexOf("{");
+    const lastBrace = jsonStr.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
     }
 
-    const parsedJson = JSON.parse(jsonStr);
+    let parsedJson: any;
+    try {
+      parsedJson = JSON.parse(jsonStr);
+    } catch {
+      // Clean control characters and retry
+      const sanitized = jsonStr.replace(/[\x00-\x09\x0B-\x0C\x0E-\x1F\x7F]/g, " ");
+      const match = sanitized.match(/\{[\s\S]*\}/);
+      if (match) {
+        parsedJson = JSON.parse(match[0]);
+      } else {
+        throw new Error("Unable to parse JSON structure from CovexCode response");
+      }
+    }
 
     // Cross-fill missing dates
     if (!parsedJson.summaryAdmitDate && parsedJson.billAdmitDate) {
