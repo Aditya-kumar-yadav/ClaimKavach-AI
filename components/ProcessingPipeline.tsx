@@ -13,10 +13,10 @@ export const ProcessingPipeline: React.FC<ProcessingPipelineProps> = ({ currentS
     {
       step: 1,
       icon: Scan,
-      titleEn: "Multimodal Gemini Vision OCR",
-      titleHi: "मल्टीमॉडल जेमिनी विजन ओसीआर",
-      descEn: "Extracting itemized bill line items & cross-document discharge dates...",
-      descHi: "अस्पताल बिल की मदें एवं दोनों कागजों से भर्ती/डिस्चार्ज तारीखों का निष्कर्षण..."
+      titleEn: "Multimodal CovexCode (DeepSeek-v4-Flash) Vision OCR",
+      titleHi: "कोवेक्सकोड (डीपसीक विजन ओसीआर)",
+      descEn: "Extracting itemized bill line items & cross-document discharge dates via CovexCode...",
+      descHi: "कोवेक्सकोड डीपसीक इंजन द्वारा अस्पताल बिल की मदें एवं दोनों कागजों से तारीखों का निष्कर्षण..."
     },
     {
       step: 2,

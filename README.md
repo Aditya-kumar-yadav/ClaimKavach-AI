@@ -8,6 +8,7 @@
 [![IRDAI 2024 Master Circular](https://img.shields.io/badge/Statutory%20Rules-IRDAI%202024%20Master%20Circular-success)](https://irdai.gov.in/)
 [![NHA NHCX / ABDM](https://img.shields.io/badge/DPI%20Ready-NHA%20NHCX%20FHIR%20R4-emerald)](https://github.com/NHA-ABDM)
 [![Clerk Authentication](https://img.shields.io/badge/Auth-Clerk%20v5-purple?logo=clerk)](https://clerk.com/)
+[![CovexCode](https://img.shields.io/badge/LLM%20Partner-CovexCode%20(DeepSeek--v4--Flash)-blueviolet)](https://covexcode.com/)
 [![Gemini Multimodal Vision](https://img.shields.io/badge/Vision%20OCR-Google%20Gemini%20Multimodal-orange?logo=google)](https://ai.google.dev/)
 
 ---
@@ -76,10 +77,10 @@ Most apps simply feed raw on-screen text to a robot voice. **ClaimKavach AI feat
 * **Real-Time Interactive Recalculation:** When a user checks **[ Mark as Fixed ]** in the audit report, the audio summary recalculates live. If all issues are resolved, it warmly congratulates the patient that their paperwork is 100% ready for full reimbursement!
 * **High-Tactile Vernacular UI:** Engineered for vernacular and uneducated citizens with an oversized 96px tactile microphone, 16 animated waveform frequency bars, and single-tap language toggling.
 
-### 2. ⚡ 2-Stage Hybrid Architecture (AI Vision + Deterministic Rule Engine)
+### 2. ⚡ 2-Stage Hybrid Architecture (CovexCode DeepSeek-v4-Flash + Deterministic Rule Engine)
 * **Why not LLMs alone?** Large language models hallucinate arithmetic and legal guidelines. In health insurance, an incorrect calculation ruins financial lives.
 * **The Hybrid Solution:** 
-  * **Stage 1 (Gemini Vision):** Ingests messy, handwritten, stamped Indian hospital bills and clinical discharge summaries into clean structured JSON.
+  * **Stage 1 (CovexCode Multimodal OCR):** Ingests messy, handwritten, stamped Indian hospital bills and clinical discharge summaries into clean structured JSON using **CovexCode (`deepseek-v4-flash`)** with failover support for Google Gemini.
   * **Stage 2 (Deterministic Rule Engine):** Zero AI hallucination. Mathematical and statutory IRDAI 2024 compliance rules are evaluated through pure, auditable TypeScript code.
 
 ### 3. 🏥 1-Click WhatsApp Hospital Billing Counter Rectification

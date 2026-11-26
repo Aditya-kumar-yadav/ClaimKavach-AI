@@ -105,13 +105,15 @@ export default function Home() {
         await sleep(350);
         extracted = CLEAN_DEMO_CLAIM;
       } else {
-        const storedKey = typeof window !== "undefined" ? localStorage.getItem("claimkavach_gemini_api_key") : null;
+        const storedKey = typeof window !== "undefined" 
+          ? (localStorage.getItem("claimkavach_covex_api_key") || localStorage.getItem("claimkavach_gemini_api_key")) 
+          : null;
         
         const res = await fetch("/api/extract", {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
-            ...(storedKey ? { "x-gemini-key": storedKey } : {})
+            ...(storedKey?.startsWith("bx-") ? { "x-covexcode-key": storedKey } : storedKey ? { "x-gemini-key": storedKey } : {})
           },
           body: JSON.stringify({ 
             billBase64, 
@@ -123,7 +125,7 @@ export default function Home() {
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error || data.details || "Failed to process document with Gemini OCR");
+          throw new Error(data.error || data.details || "Failed to process document with CovexCode OCR");
         }
 
         extracted = ExtractedClaimSchema.parse(data);

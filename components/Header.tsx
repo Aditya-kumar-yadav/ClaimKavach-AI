@@ -242,6 +242,20 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             )}
           </div>
+
+          {/* CovexCode Official Event Partner Badge & Key Inspector */}
+          {onOpenApiKeyModal && (
+            <button
+              type="button"
+              onClick={onOpenApiKeyModal}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-50/90 hover:bg-violet-100 border border-violet-200/90 shadow-2xs text-[11px] font-bold text-violet-800 transition-all cursor-pointer group select-none"
+              title="Official Hack With Delhi 4.0 LLM Partner: CovexCode (DeepSeek-v4-Flash) Active"
+            >
+              <span className="h-2 w-2 rounded-full bg-violet-600 animate-pulse shrink-0"></span>
+              <span className="font-extrabold tracking-tight">CovexCode</span>
+              <span className="text-[9.5px] font-mono text-violet-600 font-semibold group-hover:underline">DeepSeek-v4</span>
+            </button>
+          )}
         </div>
 
         {/* Right: Language Toggle & User Auth */}

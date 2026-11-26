@@ -24,7 +24,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("claimkavach_gemini_api_key");
+      const stored = localStorage.getItem("claimkavach_covex_api_key") || localStorage.getItem("claimkavach_gemini_api_key");
       if (stored) {
         setApiKey(stored);
         setHasCustomKey(true);
@@ -42,7 +42,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
     if (!trimmed) {
       setStatusMessage({
         type: "error",
-        text: language === "hi" ? "कृपया एक मान्य जेमिनी एपीआई की (API Key) दर्ज करें।" : "Please enter a valid Gemini API key."
+        text: language === "hi" ? "कृपया एक मान्य एपीआई की (API Key) दर्ज करें।" : "Please enter a valid API key."
       });
       return;
     }
@@ -60,43 +60,25 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
       const data = await res.json();
 
       if (res.ok && data.valid) {
-        localStorage.setItem("claimkavach_gemini_api_key", trimmed);
+        if (trimmed.startsWith("bx-")) {
+          localStorage.setItem("claimkavach_covex_api_key", trimmed);
+          localStorage.removeItem("claimkavach_gemini_api_key");
+        } else {
+          localStorage.setItem("claimkavach_gemini_api_key", trimmed);
+        }
         setHasCustomKey(true);
         setStatusMessage({
           type: "success",
           text: language === "hi" 
             ? "✓ एपीआई की सफलतापूर्वक सत्यापित और सुरक्षित हो गई! अब आप लाइव क्लेम टेस्ट कर सकते हैं।" 
-            : "✓ Gemini API key verified & saved! Live OCR extraction is now active."
+            : `✓ ${data.engine === "covexcode" ? "CovexCode (DeepSeek-v4-Flash)" : "API"} key verified & saved! Live OCR extraction is now active.`
         });
         if (onKeyUpdated) onKeyUpdated(trimmed);
         setTimeout(() => {
           onClose();
         }, 1200);
       } else {
-        // Fallback: Check if client direct fetch to Google works
-        try {
-          const directRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${trimmed}`);
-          const directData = await directRes.json();
-          if (directRes.ok && directData.models && directData.models.length > 0) {
-            localStorage.setItem("claimkavach_gemini_api_key", trimmed);
-            setHasCustomKey(true);
-            setStatusMessage({
-              type: "success",
-              text: language === "hi" 
-                ? "✓ एपीआई की सुरक्षित हो गई!" 
-                : "✓ Key saved successfully!"
-            });
-            if (onKeyUpdated) onKeyUpdated(trimmed);
-            setTimeout(() => {
-              onClose();
-            }, 1200);
-            return;
-          }
-        } catch {
-          // Ignore secondary failure
-        }
-
-        const errMsg = data.error || "Invalid API key response from Google AI Studio";
+        const errMsg = data.error || "Invalid API key response.";
         setStatusMessage({
           type: "error",
           text: `${language === "hi" ? "अमान्य की:" : "Validation Error:"} ${errMsg}`
@@ -104,7 +86,11 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
       }
     } catch (err: any) {
       // Network issue: save anyway so user is not blocked
-      localStorage.setItem("claimkavach_gemini_api_key", trimmed);
+      if (trimmed.startsWith("bx-")) {
+        localStorage.setItem("claimkavach_covex_api_key", trimmed);
+      } else {
+        localStorage.setItem("claimkavach_gemini_api_key", trimmed);
+      }
       setHasCustomKey(true);
       setStatusMessage({
         type: "success",
@@ -120,6 +106,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
   };
 
   const handleClearKey = () => {
+    localStorage.removeItem("claimkavach_covex_api_key");
     localStorage.removeItem("claimkavach_gemini_api_key");
     setApiKey("");
     setHasCustomKey(false);
@@ -127,7 +114,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
       type: "info",
       text: language === "hi" 
         ? "कस्टम एपीआई की हटा दी गई है।" 
-        : "Custom API key removed. Reverted to system default."
+        : "Custom API key removed. Reverted to CovexCode system default."
     });
     if (onKeyUpdated) onKeyUpdated(null);
   };
@@ -149,46 +136,62 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-sky-500/25 shrink-0">
+          <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-violet-500/25 shrink-0">
             <Key className="h-5 w-5" />
           </div>
           <div>
             <h3 className="text-lg font-black tracking-tight text-slate-900">
-              {language === "hi" ? "Google Gemini API की सेटिंग्स" : "Google Gemini API Key Settings"}
+              {language === "hi" ? "AI इंजन सेटिंग्स (CovexCode & Gemini)" : "AI Engine Settings (CovexCode & Gemini)"}
             </h3>
             <p className="text-xs text-slate-500 font-medium">
               {language === "hi"
-                ? "हैकाथॉन मूल्यांकन के लिए अपनी निजी नि:शुल्क की जोड़ें"
-                : "Plug in your free Google AI Studio key for live OCR evaluation"}
+                ? "हैकाथॉन मूल्यांकन के लिए CovexCode (DeepSeek-v4-Flash) सक्रिय है"
+                : "Powered by CovexCode (DeepSeek-v4-Flash) for Hack With Delhi 4.0"}
             </p>
           </div>
         </div>
 
+        {/* CovexCode Active Partner Banner */}
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200/90 text-xs text-slate-800 mb-4 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 font-extrabold text-violet-950">
+              <span className="h-2.5 w-2.5 rounded-full bg-violet-600 animate-pulse"></span>
+              <span>CovexCode (DeepSeek-v4-Flash)</span>
+            </div>
+            <span className="px-2 py-0.5 rounded-md bg-violet-200/80 text-violet-900 font-mono text-[10px] font-bold">
+              Event Sponsor Active
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-600 leading-relaxed">
+            <strong>Hackathon Allowance:</strong> 20,000,000 tokens pre-configured on endpoint <code className="bg-white/90 px-1 py-0.5 rounded text-violet-800 font-mono">llm.covexcode.com/event/v1</code>. Live document OCR is fully active.
+          </p>
+        </div>
+
         {/* Info Box */}
-        <div className="p-3.5 rounded-2xl bg-sky-50/80 border border-sky-200 text-xs text-slate-700 mb-5 leading-relaxed">
-          <p className="font-semibold text-sky-950 flex items-center gap-1.5 mb-1">
-            <Sparkles className="h-3.5 w-3.5 text-sky-600" />
-            {language === "hi" ? "हैकाथॉन जूरी एवं लाइव मूल्यांकन हेतु:" : "For Judges & Hackathon Evaluators:"}
+        <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 mb-4 leading-relaxed">
+          <p className="font-semibold text-slate-900 flex items-center gap-1.5 mb-1">
+            <Sparkles className="h-3.5 w-3.5 text-violet-600" />
+            {language === "hi" ? "जूरी एवं लाइव मूल्यांकन हेतु वैकल्पिक की:" : "Custom Key Override (Optional for Judges):"}
           </p>
           <span>
             {language === "hi"
-              ? "अपनी Google AI Studio की डालकर किसी भी अस्पताल बिल और डिस्चार्ज समरी का लाइव टेस्ट करें। यह सीधे ब्राउज़र में सुरक्षित रहता है।"
-              : "Paste your free personal Gemini API key below to audit any uploaded hospital bill live with Google Gemini. Key is stored locally in your browser."}
+              ? "यदि आप अपनी व्यक्तिगत CovexCode (bx-...) या Google Gemini (AIza...) की से टेस्ट करना चाहते हैं, तो नीचे दर्ज करें।"
+              : "Paste your personal CovexCode key (bx-...) or Google Gemini key (AIza...) below to override the system key."}
           </span>
         </div>
 
         {/* Key Input */}
         <div className="space-y-2 mb-4">
           <label className="text-xs font-bold text-slate-700 block">
-            {language === "hi" ? "Gemini API Key (AIzaSy...):" : "Gemini API Key (starts with AIzaSy...):"}
+            {language === "hi" ? "API Key (CovexCode bx-... या Gemini AIza...):" : "API Key (CovexCode bx-... or Gemini AIza...):"}
           </label>
           <div className="relative">
             <input
               type={showKey ? "text" : "password"}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="AIzaSy..."
-              className="w-full text-xs font-mono font-medium px-3.5 py-2.5 pr-20 rounded-xl bg-slate-50 border border-slate-300 focus:bg-white focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 outline-hidden transition-all text-slate-900"
+              placeholder="bx-live-... or AIzaSy..."
+              className="w-full text-xs font-mono font-medium px-3.5 py-2.5 pr-20 rounded-xl bg-slate-50 border border-slate-300 focus:bg-white focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-hidden transition-all text-slate-900"
             />
             <button
               type="button"
