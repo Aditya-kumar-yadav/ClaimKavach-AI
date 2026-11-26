@@ -1189,7 +1189,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
             </div>
 
             {/* Modal Body: Either Executive Legal Notice Paper or Raw Text */}
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-6 bg-slate-950/70 [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-slate-900/80 [&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-500">
+            <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth executive-scrollbar p-3 sm:p-6 pb-28 sm:pb-36 bg-slate-950/80">
               {appealViewMode === "document" ? (
                 /* ========================================================= */
                 /* Executive A4 Legal Notice Document Paper */
@@ -1475,7 +1475,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
             </div>
 
             {/* Modal JSON Viewer */}
-            <div className="flex-1 min-h-0 overflow-auto overscroll-contain p-3 sm:p-4 bg-slate-950 font-mono text-[10.5px] sm:text-xs text-emerald-300 leading-relaxed [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-slate-900/80 [&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-500">
+            <div className="flex-1 min-h-0 overflow-auto scroll-smooth executive-scrollbar p-3 sm:p-4 pb-20 bg-slate-950 font-mono text-[10.5px] sm:text-xs text-emerald-300 leading-relaxed">
               <pre className="whitespace-pre-wrap break-all sm:break-normal">{jsonString}</pre>
             </div>
 
@@ -1543,7 +1543,7 @@ export const AuditReport: React.FC<AuditReportProps> = ({
             </div>
 
             {/* Modal Body: A4 Paper Preview */}
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-6 bg-slate-950/70 [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-slate-900/80 [&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-500">
+            <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth executive-scrollbar p-3 sm:p-6 pb-28 sm:pb-36 bg-slate-950/80">
               <div className="w-full max-w-[210mm] mx-auto shadow-2xl rounded-2xl overflow-hidden bg-white">
                 <ClaimPacketPrint claim={claim} result={result} isModalPreview={true} />
               </div>
