@@ -44,15 +44,20 @@ export async function POST(req: NextRequest) {
         model: "deepseek-v4-flash",
         endpoint: covexEndpoint,
         latencyMs,
-        tokenAllowance: "100,000,000 Tokens (5 Team Candidates Active)",
+        tokenAllowance: "100,000,000 Tokens (5 Team Candidates Active) + 5 Web Accounts",
         teamKeys: [
-          { label: "Candidate 1 (Teammate)", key: "bx-live-e05b279d..." },
-          { label: "Candidate 2 (Teammate)", key: "bx-live-b0393ac6..." },
-          { label: "Candidate 3 (Teammate)", key: "bx-live-3a34b070..." },
-          { label: "Candidate 4 (Teammate)", key: "bx-live-47a60f8c..." },
-          { label: "Candidate 5 (Teammate)", key: "bx-live-e3ad305b..." }
+          { label: "Candidate 1 (Teammate)", key: "bx-live-e05b279d...", sector: "Hackathon Event (20M)" },
+          { label: "Candidate 2 (Teammate)", key: "bx-live-b0393ac6...", sector: "Hackathon Event (20M)" },
+          { label: "Candidate 3 (Teammate)", key: "bx-live-3a34b070...", sector: "Hackathon Event (20M)" },
+          { label: "Candidate 4 (Teammate)", key: "bx-live-47a60f8c...", sector: "Hackathon Event (20M)" },
+          { label: "Candidate 5 (Teammate)", key: "bx-live-e3ad305b...", sector: "Hackathon Event (20M)" },
+          { label: "Teammate 1 (Web)", key: "bx-live-9ee9d61f...", sector: "Web Dashboard ($10)" },
+          { label: "Teammate 2 (Web)", key: "bx-live-bdf0f799...", sector: "Web Dashboard ($10)" },
+          { label: "Teammate 3 (Web)", key: "bx-live-c5b177b5...", sector: "Web Dashboard ($10)" },
+          { label: "User / Lead (Web)", key: "bx-live-c5a034ef...", sector: "Web Dashboard ($10)" },
+          { label: "Teammate 5 (Web)", key: "bx-live-01709486...", sector: "Web Dashboard ($10)" }
         ],
-        message: "CovexCode (DeepSeek-v4-Flash) is live & authenticated! 200 OK.",
+        message: "CovexCode 10-Key Super Pool (DeepSeek-v4-Flash) is live & authenticated! 200 OK.",
         models: modelsData?.data?.map((m: any) => m.id) || ["deepseek-v4-flash"]
       });
     }

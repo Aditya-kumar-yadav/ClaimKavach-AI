@@ -109,28 +109,29 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
               <strong className="text-slate-900 text-sm font-black">deepseek-v4-flash</strong>
             </div>
             <span className="px-2.5 py-1 rounded-md bg-violet-600 text-white font-mono text-[10.5px] font-bold shadow-xs">
-              100M Tokens (5 Team Candidates)
+              100M Tokens (10 Keys Pooled)
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 pt-1 text-[11.5px]">
             <div className="p-2.5 rounded-xl bg-white/80 border border-slate-200/80">
-              <span className="text-[10px] uppercase font-bold text-slate-500 block">LLM Endpoint</span>
-              <span className="font-mono text-slate-800 font-semibold truncate block" title="https://llm.covexcode.com/event/v1">
-                llm.covexcode.com/event/v1
+              <span className="text-[10px] uppercase font-bold text-slate-500 block">Gateways</span>
+              <span className="font-mono text-slate-800 font-semibold truncate block" title="/event/v1 + /v1">
+                event/v1 · v1 (Auto)
               </span>
             </div>
             <div className="p-2.5 rounded-xl bg-white/80 border border-slate-200/80">
               <span className="text-[10px] uppercase font-bold text-slate-500 block">Candidate Authentication</span>
               <span className="font-mono text-emerald-700 font-bold flex items-center gap-1">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                5 Candidate Keys Pooled
+                10 Keys Active & Pooled
               </span>
             </div>
           </div>
 
           {/* Candidate Keys Status List */}
-          <div className="pt-1 border-t border-violet-100 flex flex-col gap-1.5 text-[10.5px] font-mono">
+          <div className="pt-1 border-t border-violet-100 flex flex-col gap-1.5 text-[10.5px] font-mono max-h-40 overflow-y-auto pr-1">
+            <div className="text-[10px] font-bold text-violet-800 uppercase tracking-wider px-1 pt-0.5">Sector 1: Hackathon Shortlist (20M Tokens Each)</div>
             <div className="flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60">
               <span className="text-slate-600">Candidate 1: <strong className="text-slate-900">bx-live-e05b...</strong></span>
               <span className="text-emerald-700 font-bold">● Active (20M)</span>
@@ -150,6 +151,27 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
             <div className="flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60">
               <span className="text-slate-600">Candidate 5: <strong className="text-slate-900">bx-live-e3ad...</strong></span>
               <span className="text-emerald-700 font-bold">● Active (20M)</span>
+            </div>
+            <div className="text-[10px] font-bold text-indigo-800 uppercase tracking-wider px-1 pt-1.5">Sector 2: Web Dashboard Accounts (Live Spend)</div>
+            <div className="flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60">
+              <span className="text-slate-600">Teammate 1 Web: <strong className="text-slate-900">bx-live-9ee9...</strong></span>
+              <span className="text-indigo-700 font-bold">● Active ($10)</span>
+            </div>
+            <div className="flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60">
+              <span className="text-slate-600">Teammate 2 Web: <strong className="text-slate-900">bx-live-bdf0...</strong></span>
+              <span className="text-indigo-700 font-bold">● Active ($10)</span>
+            </div>
+            <div className="flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60">
+              <span className="text-slate-600">Teammate 3 Web: <strong className="text-slate-900">bx-live-c5b1...</strong></span>
+              <span className="text-indigo-700 font-bold">● Active ($10)</span>
+            </div>
+            <div className="flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60">
+              <span className="text-slate-600">User / Lead Web: <strong className="text-slate-900">bx-live-c5a0...</strong></span>
+              <span className="text-indigo-700 font-bold">● Active ($10)</span>
+            </div>
+            <div className="flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60">
+              <span className="text-slate-600">Teammate 5 Web: <strong className="text-slate-900">bx-live-0170...</strong></span>
+              <span className="text-indigo-700 font-bold">● Active ($10)</span>
             </div>
           </div>
         </div>
