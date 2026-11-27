@@ -109,7 +109,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
               <strong className="text-slate-900 text-sm font-black">deepseek-v4-flash</strong>
             </div>
             <span className="px-2.5 py-1 rounded-md bg-violet-600 text-white font-mono text-[10.5px] font-bold shadow-xs">
-              80M Tokens (4 Team Candidates)
+              100M Tokens (5 Team Candidates)
             </span>
           </div>
 
@@ -124,7 +124,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
               <span className="text-[10px] uppercase font-bold text-slate-500 block">Candidate Authentication</span>
               <span className="font-mono text-emerald-700 font-bold flex items-center gap-1">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                4 Candidate Keys Pooled
+                5 Candidate Keys Pooled
               </span>
             </div>
           </div>
@@ -145,6 +145,10 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
             </div>
             <div className="flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60">
               <span className="text-slate-600">Candidate 4: <strong className="text-slate-900">bx-live-47a6...</strong></span>
+              <span className="text-emerald-700 font-bold">● Active (20M)</span>
+            </div>
+            <div className="flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60">
+              <span className="text-slate-600">Candidate 5: <strong className="text-slate-900">bx-live-e3ad...</strong></span>
               <span className="text-emerald-700 font-bold">● Active (20M)</span>
             </div>
           </div>
