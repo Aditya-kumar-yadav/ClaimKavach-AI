@@ -109,7 +109,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
               <strong className="text-slate-900 text-sm font-black">deepseek-v4-flash</strong>
             </div>
             <span className="px-2.5 py-1 rounded-md bg-violet-600 text-white font-mono text-[10.5px] font-bold shadow-xs">
-              20M Tokens Active
+              40M Tokens (2 Team Candidates)
             </span>
           </div>
 
@@ -121,11 +121,23 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
               </span>
             </div>
             <div className="p-2.5 rounded-xl bg-white/80 border border-slate-200/80">
-              <span className="text-[10px] uppercase font-bold text-slate-500 block">Authentication</span>
+              <span className="text-[10px] uppercase font-bold text-slate-500 block">Candidate Authentication</span>
               <span className="font-mono text-emerald-700 font-bold flex items-center gap-1">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                bx-live (Metered)
+                2 Candidate Keys Pooled
               </span>
+            </div>
+          </div>
+
+          {/* Candidate Keys Status List */}
+          <div className="pt-1 border-t border-violet-100 flex flex-col gap-1.5 text-[10.5px] font-mono">
+            <div className="flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60">
+              <span className="text-slate-600">Candidate 1: <strong className="text-slate-900">bx-live-b039...</strong></span>
+              <span className="text-emerald-700 font-bold">● Active (20M)</span>
+            </div>
+            <div className="flex items-center justify-between bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/60">
+              <span className="text-slate-600">Candidate 2: <strong className="text-slate-900">bx-live-3a34...</strong></span>
+              <span className="text-emerald-700 font-bold">● Active (20M)</span>
             </div>
           </div>
         </div>

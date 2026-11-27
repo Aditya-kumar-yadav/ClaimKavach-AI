@@ -1,10 +1,35 @@
 import { ExtractedClaim } from "@/types/claim";
 
+// Teammate Candidate Keys for HACK WITH DELHI 4.0 (Both candidates registered)
+export const TEAM_COVEX_KEYS = [
+  "bx-live-b0393ac6e1340e5786d607bc6f5211c6", // Candidate 2 (Teammate)
+  "bx-live-3a34b070d83f74f9a78cad54f0b119ed"  // Candidate 1 (Teammate)
+];
+
 export const COVEXCODE_CONFIG = {
   endpoint: process.env.COVEXCODE_ENDPOINT || "https://llm.covexcode.com/event/v1",
   model: process.env.COVEXCODE_MODEL || "deepseek-v4-flash",
-  apiKey: process.env.COVEXCODE_API_KEY || "bx-live-3a34b070d83f74f9a78cad54f0b119ed"
+  apiKey: process.env.COVEXCODE_API_KEY || TEAM_COVEX_KEYS[0]
 };
+
+let keyRotationIndex = 0;
+
+/**
+ * Returns the active CovexCode candidate key.
+ * Rotates between team candidates so both teammates register token usage with the hackathon organizer!
+ */
+export function getActiveCovexKey(customKey?: string): string {
+  if (customKey && customKey.trim().startsWith("bx-")) {
+    return customKey.trim();
+  }
+  const envKey = process.env.COVEXCODE_API_KEY;
+  if (envKey && envKey.trim().startsWith("bx-") && !TEAM_COVEX_KEYS.includes(envKey.trim())) {
+    return envKey.trim();
+  }
+  const key = TEAM_COVEX_KEYS[keyRotationIndex % TEAM_COVEX_KEYS.length];
+  keyRotationIndex++;
+  return key;
+}
 
 function ensureDataUrl(base64OrDataUrl: string): string {
   const trimmed = base64OrDataUrl.trim();
@@ -32,17 +57,19 @@ export function isCovexCodeAvailable(customKey?: string): boolean {
 /**
  * Multimodal OCR Extraction using CovexCode (DeepSeek-v4-Flash)
  * Hack With Delhi 4.0 Official LLM Partner
+ * Seamlessly pools and rotates teammate keys for 100% hackathon compliance and redundancy.
  */
 export async function extractWithCovexCode(
   billBase64?: string,
   summaryBase64?: string,
   customApiKey?: string
 ): Promise<ExtractedClaim> {
-  const apiKey = (customApiKey && customApiKey.trim().length > 0)
-    ? customApiKey.trim()
-    : COVEXCODE_CONFIG.apiKey;
+  const primaryKey = getActiveCovexKey(customApiKey);
+  const candidateKeys = (customApiKey && customApiKey.trim().length > 0)
+    ? [customApiKey.trim()]
+    : [primaryKey, ...TEAM_COVEX_KEYS.filter(k => k !== primaryKey)];
 
-  if (!apiKey || apiKey.length < 10) {
+  if (!candidateKeys.length || !candidateKeys[0]) {
     throw new Error("COVEXCODE_KEY_MISSING: Missing CovexCode event key.");
   }
 
@@ -121,94 +148,101 @@ Rules:
   };
 
   const endpoint = `${COVEXCODE_CONFIG.endpoint.replace(/\/+$/, "")}/chat/completions`;
-  console.log(`[ClaimKavach AI] Calling CovexCode API (${COVEXCODE_CONFIG.model}) at ${endpoint}...`);
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
+  let lastError: any = null;
 
-  try {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    });
+  for (const apiKey of candidateKeys) {
+    console.log(`[ClaimKavach AI] Calling CovexCode API (${COVEXCODE_CONFIG.model}) using candidate key ${apiKey.substring(0, 16)}...`);
 
-    clearTimeout(timeoutId);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
 
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`CovexCode API error (${res.status}): ${errText}`);
-    }
-
-    const data = await res.json();
-    const content = data?.choices?.[0]?.message?.content?.trim();
-
-    if (!content) {
-      throw new Error("Empty response returned from CovexCode DeepSeek-v4-Flash");
-    }
-
-    // Robust JSON extraction
-    let jsonStr = content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-    const firstBrace = jsonStr.indexOf("{");
-    const lastBrace = jsonStr.lastIndexOf("}");
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
-    }
-
-    let parsedJson: any;
     try {
-      parsedJson = JSON.parse(jsonStr);
-    } catch {
-      // Clean control characters and retry
-      const sanitized = jsonStr.replace(/[\x00-\x09\x0B-\x0C\x0E-\x1F\x7F]/g, " ");
-      const match = sanitized.match(/\{[\s\S]*\}/);
-      if (match) {
-        parsedJson = JSON.parse(match[0]);
-      } else {
-        throw new Error("Unable to parse JSON structure from CovexCode response");
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`CovexCode API error (${res.status}): ${errText}`);
       }
-    }
 
-    // Cross-fill missing dates
-    if (!parsedJson.summaryAdmitDate && parsedJson.billAdmitDate) {
-      parsedJson.summaryAdmitDate = parsedJson.billAdmitDate;
-    }
-    if (!parsedJson.summaryDischargeDate && parsedJson.billDischargeDate) {
-      parsedJson.summaryDischargeDate = parsedJson.billDischargeDate;
-    }
-    if (!parsedJson.billAdmitDate && parsedJson.summaryAdmitDate) {
-      parsedJson.billAdmitDate = parsedJson.summaryAdmitDate;
-    }
-    if (!parsedJson.billDischargeDate && parsedJson.summaryDischargeDate) {
-      parsedJson.billDischargeDate = parsedJson.summaryDischargeDate;
-    }
+      const data = await res.json();
+      const content = data?.choices?.[0]?.message?.content?.trim();
 
-    // Sanitize totals and numbers
-    parsedJson.claimedTotal = Number(parsedJson.claimedTotal) || 0;
-    parsedJson.patientAge = Number(parsedJson.patientAge) || 40;
-    parsedJson.extractionConfidence = Number(parsedJson.extractionConfidence) || 96;
+      if (!content) {
+        throw new Error("Empty response returned from CovexCode DeepSeek-v4-Flash");
+      }
 
-    if (!Array.isArray(parsedJson.lineItems)) {
-      parsedJson.lineItems = [];
-    } else {
-      parsedJson.lineItems = parsedJson.lineItems.map((item: any) => ({
-        name: String(item.name || "Medical Service / Charge"),
-        category: item.category || "OTHER",
-        amount: Number(item.amount) || 0,
-        isNonPayable: Boolean(item.isNonPayable),
-        nonPayableReason: item.nonPayableReason || ""
-      }));
+      // Robust JSON extraction
+      let jsonStr = content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+      const firstBrace = jsonStr.indexOf("{");
+      const lastBrace = jsonStr.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+      }
+
+      let parsedJson: any;
+      try {
+        parsedJson = JSON.parse(jsonStr);
+      } catch {
+        // Clean control characters and retry
+        const sanitized = jsonStr.replace(/[\x00-\x09\x0B-\x0C\x0E-\x1F\x7F]/g, " ");
+        const match = sanitized.match(/\{[\s\S]*\}/);
+        if (match) {
+          parsedJson = JSON.parse(match[0]);
+        } else {
+          throw new Error("Unable to parse JSON structure from CovexCode response");
+        }
+      }
+
+      // Cross-fill missing dates
+      if (!parsedJson.summaryAdmitDate && parsedJson.billAdmitDate) {
+        parsedJson.summaryAdmitDate = parsedJson.billAdmitDate;
+      }
+      if (!parsedJson.summaryDischargeDate && parsedJson.billDischargeDate) {
+        parsedJson.summaryDischargeDate = parsedJson.billDischargeDate;
+      }
+      if (!parsedJson.billAdmitDate && parsedJson.summaryAdmitDate) {
+        parsedJson.billAdmitDate = parsedJson.summaryAdmitDate;
+      }
+      if (!parsedJson.billDischargeDate && parsedJson.summaryDischargeDate) {
+        parsedJson.billDischargeDate = parsedJson.summaryDischargeDate;
+      }
+
+      // Sanitize totals and numbers
+      parsedJson.claimedTotal = Number(parsedJson.claimedTotal) || 0;
+      parsedJson.patientAge = Number(parsedJson.patientAge) || 40;
+      parsedJson.extractionConfidence = Number(parsedJson.extractionConfidence) || 96;
+
+      if (!Array.isArray(parsedJson.lineItems)) {
+        parsedJson.lineItems = [];
+      } else {
+        parsedJson.lineItems = parsedJson.lineItems.map((item: any) => ({
+          name: String(item.name || "Medical Service / Charge"),
+          category: item.category || "OTHER",
+          amount: Number(item.amount) || 0,
+          isNonPayable: Boolean(item.isNonPayable),
+          nonPayableReason: item.nonPayableReason || ""
+        }));
+      }
+
+      console.log(`[ClaimKavach AI] CovexCode OCR successfully extracted claim for: ${parsedJson.patientName || "Admitted Patient"} via candidate key ${apiKey.substring(0, 16)}...`);
+      return parsedJson as ExtractedClaim;
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      lastError = err;
+      console.warn(`[ClaimKavach AI] Candidate key ${apiKey.substring(0, 16)}... failed, failing over to next teammate key:`, err?.message || err);
     }
-
-    console.log(`[ClaimKavach AI] CovexCode OCR successfully extracted claim for: ${parsedJson.patientName || "Admitted Patient"}`);
-    return parsedJson as ExtractedClaim;
-  } catch (err: any) {
-    clearTimeout(timeoutId);
-    console.error("[ClaimKavach AI] CovexCode extraction failed:", err?.message || err);
-    throw err;
   }
+
+  throw lastError;
 }

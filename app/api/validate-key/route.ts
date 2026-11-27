@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const covexEndpoint = process.env.COVEXCODE_ENDPOINT || "https://llm.covexcode.com/event/v1";
     const targetKey = (apiKey && typeof apiKey === "string" && apiKey.trim().length > 5)
       ? apiKey.trim()
-      : (process.env.COVEXCODE_API_KEY || "bx-live-3a34b070d83f74f9a78cad54f0b119ed");
+      : (process.env.COVEXCODE_API_KEY || "bx-live-b0393ac6e1340e5786d607bc6f5211c6");
 
     // 1. CovexCode Event API Key Check (starts with bx- or system default)
     if (targetKey.startsWith("bx-")) {
@@ -44,7 +44,11 @@ export async function POST(req: NextRequest) {
         model: "deepseek-v4-flash",
         endpoint: covexEndpoint,
         latencyMs,
-        tokenAllowance: "20,000,000 Tokens (Event Metred)",
+        tokenAllowance: "40,000,000 Tokens (2 Team Candidates Active)",
+        teamKeys: [
+          { label: "Candidate 1 (Teammate)", key: "bx-live-b0393ac6...", status: "Active" },
+          { label: "Candidate 2 (Teammate)", key: "bx-live-3a34b070...", status: "Active" }
+        ],
         message: "CovexCode (DeepSeek-v4-Flash) is live & authenticated! 200 OK.",
         models: modelsData?.data?.map((m: any) => m.id) || ["deepseek-v4-flash"]
       });
