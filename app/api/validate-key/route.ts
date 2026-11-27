@@ -44,10 +44,12 @@ export async function POST(req: NextRequest) {
         model: "deepseek-v4-flash",
         endpoint: covexEndpoint,
         latencyMs,
-        tokenAllowance: "40,000,000 Tokens (2 Team Candidates Active)",
+        tokenAllowance: "80,000,000 Tokens (4 Team Candidates Active)",
         teamKeys: [
-          { label: "Candidate 1 (Teammate)", key: "bx-live-b0393ac6...", status: "Active" },
-          { label: "Candidate 2 (Teammate)", key: "bx-live-3a34b070...", status: "Active" }
+          { label: "Candidate 1 (Teammate)", key: "bx-live-e05b279d..." },
+          { label: "Candidate 2 (Teammate)", key: "bx-live-b0393ac6..." },
+          { label: "Candidate 3 (Teammate)", key: "bx-live-3a34b070..." },
+          { label: "Candidate 4 (Teammate)", key: "bx-live-47a60f8c..." }
         ],
         message: "CovexCode (DeepSeek-v4-Flash) is live & authenticated! 200 OK.",
         models: modelsData?.data?.map((m: any) => m.id) || ["deepseek-v4-flash"]

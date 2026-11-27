@@ -47,3 +47,6 @@ client_secret*.json
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local testing & simulation scripts
+/scripts/

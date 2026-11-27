@@ -1,9 +1,11 @@
 import { ExtractedClaim } from "@/types/claim";
 
-// Teammate Candidate Keys for HACK WITH DELHI 4.0 (Both candidates registered)
+// Teammate Candidate Keys for HACK WITH DELHI 4.0 (All 4 team candidates registered)
 export const TEAM_COVEX_KEYS = [
+  "bx-live-e05b279d69f3bd43177875715a2522b6", // Candidate 1 (Teammate)
   "bx-live-b0393ac6e1340e5786d607bc6f5211c6", // Candidate 2 (Teammate)
-  "bx-live-3a34b070d83f74f9a78cad54f0b119ed"  // Candidate 1 (Teammate)
+  "bx-live-3a34b070d83f74f9a78cad54f0b119ed", // Candidate 3 (Teammate)
+  "bx-live-47a60f8cf79b8de3d2125faf355a5372"  // Candidate 4 (Teammate)
 ];
 
 export const COVEXCODE_CONFIG = {
